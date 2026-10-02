@@ -18,10 +18,12 @@ var escalationTriggerFilter = 'eventType IN (\'incident.triggered\',\'incident.e
 var subscriptions = [
   {
     name: serviceBusEntities.slaSchedulerSubscription
+    ruleName: 'triggered-or-escalated'
     filter: escalationTriggerFilter
   }
   {
     name: serviceBusEntities.notifierSubscription
+    ruleName: 'paging-severities'
     filter: '${escalationTriggerFilter} AND severity IN (\'Sev1\',\'Sev2\')'
   }
 ]
@@ -72,7 +74,7 @@ resource topicSubscriptions 'Microsoft.ServiceBus/namespaces/topics/subscription
 resource subscriptionFilters 'Microsoft.ServiceBus/namespaces/topics/subscriptions/rules@2026-01-01' = [
   for (subscription, index) in subscriptions: {
     parent: topicSubscriptions[index]
-    name: '$Default'
+    name: subscription.ruleName
     properties: {
       filterType: 'SqlFilter'
       sqlFilter: {
