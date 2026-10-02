@@ -262,7 +262,7 @@ infra/
 
 ## Naming and tags
 
-Names follow the Cloud Adoption Framework abbreviations (`log`, `appi`, `cae`, `ca`, `sql`, `sqldb`, `sigr`, `sbns`, `asp`, `func`, `st`, `logic`, `oai`, `stapp`). `naming.bicep` exports one function, `resourceNames(workload, suffix)`; globally unique names carry a six-character suffix from `uniqueString(resourceGroup().id)`, so names are stable across redeploys. Names fixed by the shared contract (`ca-incident-ops-api`, `ca-incident-ops-insights`, `func-incident-ops`, Service Bus entities) are not suffixed.
+Names follow the Cloud Adoption Framework abbreviations (`log`, `appi`, `cae`, `ca`, `sql`, `sqldb`, `sigr`, `sbns`, `asp`, `func`, `st`, `logic`, `oai`, `stapp`). `naming.bicep` exports one function, `resourceNames(workload, suffix, sqlSuffix)`; globally unique names carry a six-character suffix from `uniqueString(resourceGroup().id)`, so names are stable across redeploys. The SQL server suffix also takes `sqlLocation`, because a server name stays reserved in its original region and moving the server to another region needs a new name. Names fixed by the shared contract (`ca-incident-ops-api`, `ca-incident-ops-insights`, `func-incident-ops`, Service Bus entities) are not suffixed.
 
 Every resource carries `project`, `owner`, `costCenter`, `environment` and `managedBy` tags.
 

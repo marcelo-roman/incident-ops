@@ -101,7 +101,7 @@ param budgetStartDate string
 @minLength(1)
 param budgetContactEmails array
 
-var names = resourceNames(workload, take(uniqueString(resourceGroup().id), 6))
+var names = resourceNames(workload, take(uniqueString(resourceGroup().id), 6), take(uniqueString(resourceGroup().id, sqlLocation), 6))
 var tags = {
   project: workload
   owner: owner
