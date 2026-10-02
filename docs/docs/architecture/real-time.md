@@ -11,6 +11,8 @@ Path `/hubs/incidents`. Server-to-client only; all writes go through REST so val
 | `IncidentChanged` | `Incident` | any field changes: create, transition, escalation, assignee |
 | `TimelineAppended` | `TimelineEntry` | a timeline entry is written: transitions, notes, alerts |
 
+Negotiation requires the console's access token. Browsers cannot set headers on WebSocket requests, so the client passes it as the `access_token` query parameter (`accessTokenFactory`), which the API reads on this path only ([Security](security.md)). With Azure SignalR Service the API includes the caller's claims in the service token it returns, so the service connection stays authenticated.
+
 Production runs Azure SignalR Service in default mode; locally the hub is in-process. The API code is the same: `AddAzureSignalR()` is applied only when the connection setting exists.
 
 ## Connection and broadcast
@@ -23,7 +25,7 @@ sequenceDiagram
     participant S as Azure SignalR Service
     participant B2 as Other operator
 
-    B->>API: POST /hubs/incidents/negotiate
+    B->>API: POST /hubs/incidents/negotiate?access_token=<JWT>
     API-->>B: { url: SignalR endpoint, accessToken }
     B->>S: WebSocket connect with token
     B2->>API: POST /api/incidents/{id}/acknowledge

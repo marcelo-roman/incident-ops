@@ -7,14 +7,15 @@ Operations console for the Incident Ops platform: live SLA clocks, the on-call e
 1. [What it is](#what-it-is)
 2. [Screenshots](#screenshots)
 3. [Architecture](#architecture)
-4. [Running locally](#running-locally)
-5. [Configuration](#configuration)
-6. [Scripts](#scripts)
-7. [Testing](#testing)
-8. [Container image](#container-image)
-9. [Deployment](#deployment)
-10. [Contract notes](#contract-notes)
-11. [License](#license)
+4. [Authentication](#authentication)
+5. [Running locally](#running-locally)
+6. [Configuration](#configuration)
+7. [Scripts](#scripts)
+8. [Testing](#testing)
+9. [Container image](#container-image)
+10. [Deployment](#deployment)
+11. [Contract notes](#contract-notes)
+12. [License](#license)
 
 ## What it is
 
@@ -28,7 +29,9 @@ A React single-page application and the Operations Console bounded context: it i
 | Declare incident | Validated form; each severity option shows its SLA targets. Opens the new incident on success.                                                                                                                                                                                           |
 | Insights         | KPI tiles, weekly trend chart (incidents, time to acknowledge, time to resolve, SLA compliance) with a table view, KPIs by service, the ten largest recurring incident clusters (expandable to all), volume anomalies and RCA drafts for recently resolved incidents.                    |
 
-The console probes `GET /health/ready` on load and every five minutes. A network error, a timeout or a 502, 503 or 504 replaces the page with a full-width notice that the demo environment is paused and started on request for evaluations; while paused it probes every 30 seconds and shows the page again once the API answers.
+Every page except the login page requires a signed-in user; see [Authentication](#authentication).
+
+The console probes `GET /health/ready` on load and every five minutes. A network error, a timeout or a 502, 503 or 504 replaces the page with a full-width notice that the demo environment is paused and started on request for evaluations; while paused it probes every 30 seconds and shows the page again once the API answers. The probe is anonymous, so the notice also replaces the login form.
 
 Live updates arrive over SignalR (`/hubs/incidents`). `IncidentChanged` patches the cached incident in place and marks lists and metrics stale; `TimelineAppended` appends to the cached timeline without duplicates. The connection reconnects with capped exponential backoff and jitter, and the header shows its state. Dark and light themes follow the system preference unless the operator picks one.
 
@@ -48,6 +51,7 @@ The screenshots were captured in mock mode (`pnpm dev:mock`).
 src/
   app/                    composition root: providers, router, layout shell, theme, global styles
   features/
+    auth/                 login page, session rules, session store, route guard, signed-in user
     incidents/            incidents, services, SLA clocks, status transitions, response actions
       api/                typed client, query keys, cache operations, query and mutation hooks
       domain/             pure modules: types, SLA policy and clocks, transitions, schemas, labels
@@ -65,7 +69,7 @@ src/
     realtime/             SignalR connection, supervision, status, cache wiring
   shared/
     config/               build-time defaults and runtime config.json loading
-    http/                 fetch client and RFC 7807 problem handling
+    http/                 fetch client, injectable bearer token provider and RFC 7807 problem handling
     ui/                   primitives: panel, button, fields, KPI strip, async states
     format/ time/ lib/    formatting, shared clock, small utilities
     operator/             the operator name used as the actor on actions
@@ -88,6 +92,20 @@ Inside a feature the layers have one job each:
 
 Server state lives in TanStack Query. Metrics keys sit under the incidents key namespace, so any incident change invalidates the numbers derived from it. The SLA countdowns tick from a single shared clock (`useSyncExternalStore`), so a hundred timers on screen cost one interval.
 
+## Authentication
+
+The console signs in against `POST /api/auth/token` of the Incidents API with `{ username, password }` and receives `{ accessToken, tokenType: "Bearer", expiresAt }` (see the [contract](../../contracts/contracts.md)).
+
+| Concern          | Behaviour                                                                                                                                                                                                                                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login page       | `/login`: username and password with labels, field validation, and one message for rejected credentials that does not say which field was wrong (`401`); a separate message after too many attempts (`429`). Errors are announced through an `aria-live` region.                                                              |
+| Session          | Kept in memory and in `sessionStorage` under `incident-ops.session` until `expiresAt`. A restored session that has expired is discarded; a timer signs out at expiry. Closing the tab ends the session.                                                                                                                       |
+| Requests         | The shared HTTP client takes a token provider (`shared/http/authentication.ts`). `app/connectSessionToHttp.ts` registers the auth feature's provider at start-up, so `shared` never imports a feature. Every API and Insights request carries `Authorization: Bearer <token>`; the health probe and the token request do not. |
+| Real time        | The SignalR connection starts only with a session and passes the token through `accessTokenFactory` (sent as `access_token` on the hub URL).                                                                                                                                                                                  |
+| Expiry and `401` | Any `401` from the API or Insights clears the session. The route guard then redirects to `/login?returnTo=<path>`, and a successful sign-in returns to that path. Return paths outside the console fall back to the dashboard.                                                                                                |
+| Header           | Shows the signed-in user and a sign-out button; signing out also clears the query cache.                                                                                                                                                                                                                                      |
+| Operator         | "On shift as" starts with the signed-in username when no operator name is stored, and can still be changed.                                                                                                                                                                                                                   |
+
 ## Running locally
 
 Requirements: Node 22 and pnpm 11 (`corepack enable` picks the version pinned in `package.json`).
@@ -97,7 +115,7 @@ pnpm install
 pnpm dev:mock
 ```
 
-`dev:mock` sets `VITE_USE_MOCKS=true`: Mock Service Worker answers every API and Insights call from an in-memory store seeded with incidents in every status and SLA state, applies the same transition rules as the API (invalid transitions return `409` problem details) and drafts RCAs: even-numbered incidents come back as Azure OpenAI drafts and odd-numbered ones as rule-based fallback drafts, so both labels can be seen. Live updates are off in this mode and the header says so.
+`dev:mock` sets `VITE_USE_MOCKS=true`: Mock Service Worker answers every API and Insights call from an in-memory store seeded with incidents in every status and SLA state, issues a mock token for `demo` / `local-demo-password` at `POST /api/auth/token`, answers `401` to every API and Insights call without that bearer token, applies the same transition rules as the API (invalid transitions return `409` problem details) and drafts RCAs: even-numbered incidents come back as Azure OpenAI drafts and odd-numbered ones as rule-based fallback drafts, so both labels can be seen. Live updates are off in this mode and the header says so.
 
 To run against a backend, point the build-time defaults at it and start the dev server:
 
@@ -140,9 +158,11 @@ The build emits a `config.json` carrying its `VITE_*` values, and the dev server
 ## Testing
 
 - Unit tests for every domain module: SLA clocks and their edge cases (exactly 25% remaining, escalated acknowledge windows, resolve deadline passing while the acknowledge window is fresh), transitions, schemas, formatting, runtime config, reconnect backoff and the connection supervisor.
-- Component tests per feature with Testing Library against MSW: dashboard, incident list filters, incident actions (validation, success, `409` conflict), declaration, insights, on-call, RCA drafts, realtime cache wiring and the app shell (navigation, keyboard theme switching).
+- Unit tests for the auth domain (token to session, expiry, stored session restore, return path sanitising, login validation and error messages) and the session store (storage, expiry timer, sign-out on `401`).
+- Component tests per feature with Testing Library against MSW: login (validation, success with return path, wrong credentials, `429`, unusable token), route guard and sign-out, protected routing end to end (sign in, bearer token on requests, `401` back to login, paused notice on the login page), dashboard, incident list filters, incident actions (validation, success, `409` conflict), declaration, insights, on-call, RCA drafts, realtime cache wiring and the app shell (navigation, keyboard theme switching).
 - Coverage thresholds in `vite.config.ts`: 70% overall, 95% lines on `features/*/domain`, 90% on shared config, HTTP and formatting. CI runs `pnpm test:coverage`.
-- `e2e/smoke.spec.ts` declares and acknowledges an incident in a real browser against the mock server. It is not part of CI; run it with `pnpm exec playwright install chromium` followed by `pnpm test:e2e`.
+- The test setup gives the shared HTTP client the mock token, so page tests run as a signed-in user.
+- `e2e/smoke.spec.ts` signs in, declares and acknowledges an incident in a real browser against the mock server. It is not part of CI; run it with `pnpm exec playwright install chromium` followed by `pnpm test:e2e`.
 
 ## Container image
 

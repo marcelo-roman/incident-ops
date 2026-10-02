@@ -25,14 +25,13 @@ internal static class ApiRegistration
             .Bind(configuration.GetSection(SlaOptions.SectionName))
             .Validate(options => options.TimeScale > 0, "Sla:TimeScale must be greater than zero.")
             .ValidateOnStart();
-        services.Configure<ApiKeyOptions>(configuration.GetSection(ApiKeyOptions.SectionName));
+        services.AddIncidentOpsSecurity(configuration);
         services.ConfigureHttpJsonOptions(options => ContractJson.Configure(options.SerializerOptions));
         services.Configure<ForwardedHeadersOptions>(ConfigureForwardedHeaders);
         services.AddProblemDetails();
         services.AddSingleton<ProblemEndpointFilter>();
-        services.AddSingleton<ApiKeyEndpointFilter>();
         services.AddRealTime(configuration);
-        services.AddWriteRateLimiting(configuration);
+        services.AddClientRateLimiting(configuration);
         services.AddConsoleCors(configuration);
         services.AddIncidentOpsHealthChecks();
         services.AddIncidentOpsOpenApi();

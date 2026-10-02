@@ -11,6 +11,7 @@ from incident_insights.infrastructure.composition import build_use_cases
 from incident_insights.infrastructure.settings import DataSourceKind, Settings
 from incident_insights.interface.api.app import create_app
 from incident_insights.interface.cli.app import app as cli
+from tests.tokens import authorized, signing_key
 
 SNAPSHOTS = Path(__file__).resolve().parents[1] / "snapshots"
 SAMPLE_END = datetime(2026, 9, 28, tzinfo=UTC)
@@ -25,8 +26,13 @@ REQUESTS = {
 
 @pytest.fixture
 def client(sample_csv: Path) -> TestClient:
-    settings = Settings(insights_data_source=DataSourceKind.CSV, insights_csv_path=sample_csv)
-    return TestClient(create_app(settings, build_use_cases(settings, fixed_clock(SAMPLE_END))))
+    settings = Settings(
+        insights_data_source=DataSourceKind.CSV,
+        insights_csv_path=sample_csv,
+        auth_signing_key=signing_key(),
+    )
+    app = create_app(settings, build_use_cases(settings, fixed_clock(SAMPLE_END)))
+    return authorized(TestClient(app))
 
 
 def _snapshot(name: str) -> object:

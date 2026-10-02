@@ -14,6 +14,7 @@ Format: [MADR](https://adr.github.io/madr/). One record per decision that is exp
 | [0008](0008-tactical-ddd-rich-aggregates-and-value-objects.md) | Tactical DDD with rich aggregates and value objects | Accepted |
 | [0009](0009-transactional-outbox-for-integration-events.md) | Transactional outbox for integration events | Accepted |
 | [0010](0010-monorepo-with-path-filtered-pipelines-and-codeowners.md) | Monorepo with path-filtered pipelines and CODEOWNERS | Accepted |
+| [0011](0011-demo-authentication-with-signed-jwt-and-service-api-keys.md) | Demo authentication with a signed JWT and service API keys | Accepted |
 
 ## When to write one
 

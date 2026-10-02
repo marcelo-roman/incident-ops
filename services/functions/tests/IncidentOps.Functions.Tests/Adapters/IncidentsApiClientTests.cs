@@ -16,7 +16,7 @@ public sealed class IncidentsApiClientTests
         """;
 
     [Fact]
-    public async Task ReadsTheIncidentStateThroughTheAntiCorruptionLayer()
+    public async Task ReadsTheIncidentStateWithApiKeyThroughTheAntiCorruptionLayer()
     {
         var handler = new RecordingHttpHandler(HttpStatusCode.OK, IncidentJson("Acknowledged", 2));
         using var provider = ServiceProviders.WithHttpHandler(handler);
@@ -24,7 +24,9 @@ public sealed class IncidentsApiClientTests
         var state = await provider.GetRequiredService<IIncidentReader>().FindAsync(Sample.IncidentId, CancellationToken.None);
 
         Assert.Equal(new IncidentState(Sample.IncidentId, EscalationLevel.Secondary, AcknowledgementState.Acknowledged), state);
-        Assert.Equal(new Uri($"https://incidents-api.example.com/api/incidents/{Sample.IncidentGuid}"), Assert.Single(handler.Requests).Uri);
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal(new Uri($"https://incidents-api.example.com/api/incidents/{Sample.IncidentGuid}"), request.Uri);
+        Assert.Equal("test-key", request.Headers["X-Api-Key"]);
     }
 
     [Fact]
@@ -87,7 +89,7 @@ public sealed class IncidentsApiClientTests
     }
 
     [Fact]
-    public async Task ReadsTheRotationWithoutTheApiKey()
+    public async Task ReadsTheRotationWithApiKey()
     {
         var handler = new RecordingHttpHandler(HttpStatusCode.OK, """
             {"weekStart":"2026-09-28T14:30:00Z","primary":"ana.silva","secondary":"bruno.costa","lead":"carla.mendes"}
@@ -97,6 +99,6 @@ public sealed class IncidentsApiClientTests
         var rotation = await provider.GetRequiredService<IOnCallDirectory>().GetCurrentAsync(CancellationToken.None);
 
         Assert.Equal(Sample.Rotation(), rotation);
-        Assert.False(Assert.Single(handler.Requests).Headers.ContainsKey("X-Api-Key"));
+        Assert.Equal("test-key", Assert.Single(handler.Requests).Headers["X-Api-Key"]);
     }
 }

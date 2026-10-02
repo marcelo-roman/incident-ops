@@ -62,6 +62,20 @@ param sqlEntraAdminObjectId string
 @minLength(32)
 param escalationApiKey string
 
+@description('HMAC key that signs and validates console access tokens in the API and the insights service.')
+@secure()
+@minLength(32)
+param authSigningKey string
+
+@description('Username of the shared demo account that signs in to the console.')
+@minLength(1)
+param demoUsername string = 'demo'
+
+@description('Password of the shared demo account that signs in to the console.')
+@secure()
+@minLength(12)
+param demoPassword string
+
 @description('Incoming webhook that receives on-call notifications; empty disables posting.')
 @secure()
 param notificationWebhookUrl string = ''
@@ -119,6 +133,8 @@ var webOrigins = [
 var apiBaseUrl = customDomainsServed ? 'https://${hostNames.api}' : 'https://${api.outputs.fqdn}'
 var webBaseUrl = customDomainsServed ? 'https://${hostNames.web}' : 'https://${staticWebApp.outputs.defaultHostName}'
 var apiSecretName = 'escalation-api-key'
+var signingKeySecretName = 'auth-signing-key'
+var demoPasswordSecretName = 'demo-password'
 
 module monitoring 'modules/monitoring.bicep' = {
   name: 'monitoring'
@@ -218,17 +234,31 @@ module api 'modules/containerapp.bicep' = {
     customDomainBinding: customDomainBinding
     secrets: {
       '${apiSecretName}': escalationApiKey
+      '${signingKeySecretName}': authSigningKey
+      '${demoPasswordSecretName}': demoPassword
     }
     secretEnvironmentVariables: [
       {
         name: 'Security__EscalationApiKey'
         secretRef: apiSecretName
       }
+      {
+        name: 'Auth__SigningKey'
+        secretRef: signingKeySecretName
+      }
+      {
+        name: 'Auth__DemoPassword'
+        secretRef: demoPasswordSecretName
+      }
     ]
     environmentVariables: [
       {
         name: 'ASPNETCORE_ENVIRONMENT'
         value: 'Production'
+      }
+      {
+        name: 'Auth__DemoUsername'
+        value: demoUsername
       }
       {
         name: 'OTEL_SERVICE_NAME'
@@ -292,6 +322,20 @@ module insights 'modules/containerapp.bicep' = {
     memory: '1Gi'
     customDomainName: hostNames.insights
     customDomainBinding: customDomainBinding
+    secrets: {
+      '${apiSecretName}': escalationApiKey
+      '${signingKeySecretName}': authSigningKey
+    }
+    secretEnvironmentVariables: [
+      {
+        name: 'INCIDENTS_API_KEY'
+        secretRef: apiSecretName
+      }
+      {
+        name: 'AUTH_SIGNING_KEY'
+        secretRef: signingKeySecretName
+      }
+    ]
     environmentVariables: [
       {
         name: 'OTEL_SERVICE_NAME'

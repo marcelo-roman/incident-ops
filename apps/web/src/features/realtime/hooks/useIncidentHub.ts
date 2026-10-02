@@ -11,7 +11,11 @@ import type { ConnectionStatus } from '../connection/connectionStatus';
 import { ConnectionSupervisor } from '../connection/connectionSupervisor';
 import { createIncidentHub, hubMethods } from '../connection/incidentHub';
 
-export function useIncidentHub(apiBaseUrl: string, enabled: boolean): ConnectionStatus {
+export function useIncidentHub(
+  apiBaseUrl: string,
+  enabled: boolean,
+  accessTokenFactory: () => string,
+): ConnectionStatus {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
 
@@ -19,7 +23,7 @@ export function useIncidentHub(apiBaseUrl: string, enabled: boolean): Connection
     if (!enabled) {
       return undefined;
     }
-    const connection = createIncidentHub(apiBaseUrl);
+    const connection = createIncidentHub(apiBaseUrl, accessTokenFactory);
     connection.on(hubMethods.incidentChanged, (incident: Incident) => {
       applyIncidentChanged(queryClient, incident);
     });
@@ -36,7 +40,7 @@ export function useIncidentHub(apiBaseUrl: string, enabled: boolean): Connection
     return () => {
       void supervisor.stop();
     };
-  }, [apiBaseUrl, enabled, queryClient]);
+  }, [apiBaseUrl, enabled, accessTokenFactory, queryClient]);
 
   if (!enabled) {
     return 'disabled';

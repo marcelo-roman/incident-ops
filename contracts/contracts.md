@@ -8,14 +8,15 @@ Shared contract between the Incident Ops modules. Every module implements agains
 2. [Domain](#domain)
 3. [SLA policy](#sla-policy)
 4. [On-call and escalation](#on-call-and-escalation)
-5. [HTTP API](#http-api)
-6. [Real-time hub](#real-time-hub)
-7. [Events](#events)
-8. [Alert ingestion](#alert-ingestion)
-9. [Insights API](#insights-api)
-10. [Azure topology](#azure-topology)
-11. [Delivery](#delivery)
-12. [Conventions](#conventions)
+5. [Authentication](#authentication)
+6. [HTTP API](#http-api)
+7. [Real-time hub](#real-time-hub)
+8. [Events](#events)
+9. [Alert ingestion](#alert-ingestion)
+10. [Insights API](#insights-api)
+11. [Azure topology](#azure-topology)
+12. [Delivery](#delivery)
+13. [Conventions](#conventions)
 
 ## Modules
 
@@ -105,31 +106,60 @@ Weekly rotation of six engineers, primary and secondary, one week on call every 
 
 An incident not acknowledged by `ackDueAt` escalates one level. Escalation stops at level 3.
 
+## Authentication
+
+Nothing is anonymous except health checks, the token endpoint and the OpenAPI documents. Two schemes:
+
+| Scheme | Caller | Credential |
+| --- | --- | --- |
+| `Bearer` | people, through the console or Swagger | JWT issued by `POST /api/auth/token` |
+| `ApiKey` | services: Functions, Insights, Alertmanager, Azure Monitor, Prometheus, scripts | the API key (`Security__EscalationApiKey`) |
+
+`POST /api/auth/token` with `{ username, password }` returns `{ accessToken, tokenType: "Bearer", expiresAt }`. There is one demo account, configured with `Auth__DemoUsername` and `Auth__DemoPassword`; the comparison is constant-time. A failed login answers `401` problem details that do not say which field was wrong. The endpoint has its own rate limit per client IP (5 attempts per minute by default, `429` beyond it).
+
+Token format: JWT signed with HS256 using `Auth__SigningKey` (at least 32 bytes; the API refuses to start otherwise). Claims: `iss` `incident-ops-api`, `aud` `incident-ops`, `sub` and `name` the username, `iat`, `nbf`, `exp` (8 hours by default, `Auth__TokenLifetime`), `jti`. Validators allow 30 seconds of clock skew. The Insights service validates the same tokens with the same key (`AUTH_SIGNING_KEY`).
+
+The API key travels as `X-Api-Key: <key>`. Endpoints that serve tools unable to send custom headers also accept it as `Authorization: Bearer <key>` (alert ingestion, `/metrics`) or `?code=<key>` (alert ingestion, for Azure Monitor). On every other endpoint `Authorization: Bearer` carries a JWT.
+
+| Endpoints | Accepts |
+| --- | --- |
+| `GET /health/live`, `GET /health/ready`, `POST /api/auth/token`, `/swagger` | anonymous |
+| every other `/api/*` endpoint, `/hubs/incidents` | `Bearer` JWT or `X-Api-Key` |
+| `POST /api/incidents/{id}/escalate`, `/api/chaos/*` | `X-Api-Key` only |
+| `POST /api/alerts/*` | `X-Api-Key`, `Authorization: Bearer <key>` or `?code=<key>` |
+| `GET /metrics` | `X-Api-Key` or `Authorization: Bearer <key>` |
+| Insights `GET /health`, `/docs`, `/openapi.json` | anonymous |
+| Insights `/api/*` | `Bearer` JWT |
+
+Browsers cannot set headers on WebSocket and Server-Sent Events requests, so `/hubs/incidents` also reads the JWT from the `access_token` query parameter; no other path does. Missing or invalid credentials answer `401` with `WWW-Authenticate` and problem details; the console clears its session and returns to the login page.
+
 ## HTTP API
 
 Base URL: `https://incidents-api.marceloroman.com.br`. JSON, camelCase, enums as strings, timestamps ISO-8601 UTC. Errors as RFC 7807 `application/problem+json`.
 
 | Method | Path | Body | Result |
 | --- | --- | --- | --- |
+| POST | `/api/auth/token` | `{ username, password }` | `{ accessToken, tokenType, expiresAt }`; anonymous, rate limited |
 | GET | `/api/services` | | `Service[]` |
 | GET | `/api/incidents?status=&severity=&serviceId=&open=true` | | `Incident[]` newest first |
 | GET | `/api/incidents/{id}` | | `Incident` with `timeline: TimelineEntry[]` |
 | POST | `/api/incidents` | `{ title, description, serviceId, severity }` | `201 Incident` |
 | POST | `/api/incidents/{id}/acknowledge` | `{ actor }` | `Incident` |
-| POST | `/api/incidents/{id}/escalate` | `{ reason }` | `Incident`; requires `X-Api-Key` |
+| POST | `/api/incidents/{id}/escalate` | `{ reason }` | `Incident`; `X-Api-Key` only |
 | POST | `/api/incidents/{id}/mitigate` | `{ actor, note }` | `Incident` |
 | POST | `/api/incidents/{id}/resolve` | `{ actor, rootCause }` | `Incident` |
 | POST | `/api/incidents/{id}/notes` | `{ actor, message }` | `TimelineEntry` |
 | GET | `/api/oncall/current` | | `{ weekStart, primary, secondary, lead }` |
 | GET | `/api/metrics/summary` | | `{ openBySeverity, slaCompliance30d, mtta30dMinutes, mttr30dMinutes, breachedOpen }` |
 | GET | `/api/incidents/export?from=&to=` | | flat `Incident[]` without timeline, for analytics |
-| GET | `/health/live`, `/health/ready` | | health checks |
+| GET | `/health/live`, `/health/ready` | | health checks; anonymous |
+| GET | `/metrics` | | Prometheus exposition; API key only |
 
-Write endpoints are rate limited per IP. The database is seeded with the seven services, the rotation and six months of historical incidents generated deterministically so analytics have data.
+Every endpoint except the anonymous ones in [Authentication](#authentication) requires a JWT or the API key. Write endpoints are rate limited per IP. The database is seeded with the seven services, the rotation and six months of historical incidents generated deterministically so analytics have data.
 
 ## Real-time hub
 
-Path `/hubs/incidents` (Azure SignalR Service in production, in-process locally). Server to client:
+Path `/hubs/incidents` (Azure SignalR Service in production, in-process locally). Negotiation requires a JWT (`access_token` query parameter or `Authorization: Bearer`) or the API key. Server to client:
 
 | Method | Arguments |
 | --- | --- |
@@ -162,7 +192,7 @@ Types: `incident.triggered`, `incident.acknowledged`, `incident.escalated`, `inc
 | `incident-events/notifier` | subscription, filter `eventType IN ('incident.triggered','incident.escalated')` and `Sev1/Sev2` via property `severity` | Functions `NotifyOnCall` |
 | `sla-checks` | queue, messages scheduled at `ackDueAt` | Functions `CheckAcknowledgementSla` |
 
-`sla-checks` message body: `{ "incidentId": "uuid", "escalationLevel": 1 }`. When it fires and the incident is still `Triggered` at the same level, the function calls `POST /api/incidents/{id}/escalate`. The API then emits `incident.escalated` with a new `ackDueAt` (now + ack window), and the cycle repeats until level 3.
+`sla-checks` message body: `{ "incidentId": "uuid", "escalationLevel": 1 }`. When it fires and the incident is still `Triggered` at the same level, the function reads the incident and calls `POST /api/incidents/{id}/escalate`, both with `X-Api-Key`. The API then emits `incident.escalated` with a new `ackDueAt` (now + ack window), and the cycle repeats until level 3.
 
 `NotifyOnCall` posts `{ incidentNumber, title, severity, serviceId, escalationLevel, target, url }` to the Logic App HTTP trigger, which fans out to the configured channel (Teams/Slack incoming webhook, email).
 
@@ -191,15 +221,15 @@ Rules, implemented in the domain:
 | `warning` | `Sev3` | `Sev3` |
 | `info`, missing | `Sev4` | `Sev4` |
 
-The API exposes Prometheus metrics at `/metrics` (OpenTelemetry Prometheus exporter): HTTP request rate, error rate and latency histograms, open incidents by severity, SLA breaches. With `Chaos:Enabled=true` (local only) `POST /api/chaos/faults { errorRate, latencyMs, durationSeconds }` injects failures so alerts fire.
+The API exposes Prometheus metrics at `/metrics` (OpenTelemetry Prometheus exporter, API key required): HTTP request rate, error rate and latency histograms, open incidents by severity, SLA breaches. With `Chaos:Enabled=true` (local only) `POST /api/chaos/faults { errorRate, latencyMs, durationSeconds }` injects failures so alerts fire.
 
-Local alerting: Prometheus scrapes the API, evaluates rules (`ApiHighErrorRate`, `ApiHighLatencyP95`, `ApiDown`, `SlaBreachesOpen`) and sends to Alertmanager, which posts to `/api/alerts/alertmanager` with grouping, inhibition (`ApiDown` inhibits the other API alerts) and repeat interval.
+Local alerting: Prometheus scrapes the API with the API key as bearer credentials, evaluates rules (`ApiHighErrorRate`, `ApiHighLatencyP95`, `ApiDown`, `SlaBreachesOpen`) and sends to Alertmanager, which posts to `/api/alerts/alertmanager` with grouping, inhibition (`ApiDown` inhibits the other API alerts) and repeat interval.
 
 Azure alerting: Application Insights standard availability test on `/health/live`, alert rules on failed request rate, server response time, availability, Service Bus dead-lettered messages and Function failures, all routed to an Action Group whose webhook targets `/api/alerts/azure-monitor?code=<key>` with the common alert schema enabled.
 
 ## Insights API
 
-Base URL: `https://incidents-insights.marceloroman.com.br`. Reads from `GET /api/incidents/export`.
+Base URL: `https://incidents-insights.marceloroman.com.br`. Reads from `GET /api/incidents/export` with `X-Api-Key`. Every `/api/*` endpoint requires a `Bearer` JWT issued by the Incidents API.
 
 | Method | Path | Result |
 | --- | --- | --- |
@@ -207,7 +237,7 @@ Base URL: `https://incidents-insights.marceloroman.com.br`. Reads from `GET /api
 | GET | `/api/recurring?days=180` | clusters of similar incidents (TF-IDF + clustering) with count, services, sample titles |
 | GET | `/api/anomalies?days=180` | weeks with anomalous incident volume per service |
 | POST | `/api/rca/draft` `{ incidentId }` | AI-drafted RCA (summary, timeline, contributing factors, action items) from Azure OpenAI |
-| GET | `/health` | health check |
+| GET | `/health` | health check; anonymous |
 
 ## Azure topology
 
@@ -244,10 +274,15 @@ Environment variable names injected by the infrastructure. Every module reads ex
 | API | `ServiceBus__FullyQualifiedNamespace`, `ServiceBus__TopicName` | namespace host, `incident-events` |
 | API | `ServiceBus__ConnectionString` | local emulator only |
 | API | `Azure__SignalR__ConnectionString` | `Endpoint=https://<signalr>;AuthType=azure.msi;Version=1.0;` |
-| API | `Security__EscalationApiKey` | the API key for escalate and alert ingestion |
+| API | `Security__EscalationApiKey` | the API key for service callers: escalate, alert ingestion, `/metrics`, reads from Functions and Insights |
+| API | `Auth__SigningKey` | HS256 key for access tokens, at least 32 bytes; Container Apps secret |
+| API | `Auth__DemoUsername`, `Auth__DemoPassword` | the shared demo account; the password is a Container Apps secret |
+| API | `Auth__TokenLifetime` | access token lifetime, default `08:00:00` |
 | API | `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1` | web origins |
 | API, insights | `APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_SERVICE_NAME` | shared component, `incident-ops-api` / `incident-ops-insights` |
 | Insights | `INCIDENTS_API_BASE_URL` | API base URL |
+| Insights | `INCIDENTS_API_KEY` | the API key, sent as `X-Api-Key` |
+| Insights | `AUTH_SIGNING_KEY` | same value as `Auth__SigningKey`, validates access tokens |
 | Insights | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` | account endpoint, `rca-drafts` (GPT-5 family: `max_completion_tokens`, no `temperature`) |
 | Insights | `CORS_ALLOWED_ORIGINS` | comma-separated web origins |
 | Functions | `AzureWebJobsStorage__accountName` | identity-based host storage |

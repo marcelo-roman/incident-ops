@@ -9,10 +9,14 @@ from incident_insights.application.ports import IncidentSourceError
 from incident_insights.domain.incidents.timeline import TimelineKind
 from incident_insights.domain.shared.reporting_window import ReportingWindow
 from incident_insights.infrastructure.incidents.acl import IncidentTranslator
-from incident_insights.infrastructure.incidents.api_source import ApiIncidentSource
+from incident_insights.infrastructure.incidents.api_source import (
+    API_KEY_HEADER,
+    ApiIncidentSource,
+    create_api_client,
+)
 from incident_insights.infrastructure.incidents.cache import CachedIncidentSource
 from incident_insights.infrastructure.incidents.csv_source import CsvIncidentSource
-from incident_insights.infrastructure.incidents.factory import build_source
+from incident_insights.infrastructure.incidents.factory import build_api_client, build_source
 from incident_insights.infrastructure.incidents.retry import RetryingGetter, RetryPolicy
 from incident_insights.infrastructure.settings import DataSourceKind, Settings
 from tests.builders import AS_OF, make_record, payload_json, window_of
@@ -172,3 +176,28 @@ def test_factory_builds_csv_or_cached_api_source(sample_csv: Path) -> None:
 
     assert isinstance(build_source(csv_settings), CsvIncidentSource)
     assert isinstance(build_source(Settings()), CachedIncidentSource)
+
+
+def test_api_client_sends_the_api_key_on_every_request() -> None:
+    client = create_api_client("https://incidents.test", 5.0, "service-key")
+
+    request = client.build_request("GET", "/api/incidents/export")
+
+    assert request.headers[API_KEY_HEADER] == "service-key"
+    assert request.headers["Accept"] == "application/json"
+
+
+def test_api_client_omits_the_api_key_when_not_configured() -> None:
+    client = create_api_client("https://incidents.test", 5.0, "")
+
+    assert API_KEY_HEADER not in client.headers
+
+
+def test_factory_client_reads_the_api_key_from_settings() -> None:
+    configured = build_api_client(
+        Settings(incidents_api_base_url="https://api.test", incidents_api_key="service-key")
+    )
+
+    assert configured.headers[API_KEY_HEADER] == "service-key"
+    assert str(configured.base_url) == "https://api.test"
+    assert API_KEY_HEADER not in build_api_client(Settings()).headers

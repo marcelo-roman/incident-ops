@@ -34,7 +34,7 @@ function renderProvider(enabled: boolean) {
   const queryClient = createTestQueryClient();
   render(
     <QueryClientProvider client={queryClient}>
-      <RealtimeProvider apiBaseUrl="https://api.test" enabled={enabled}>
+      <RealtimeProvider apiBaseUrl="https://api.test" enabled={enabled} accessTokenFactory={() => 'jwt'}>
         <StatusProbe />
       </RealtimeProvider>
     </QueryClientProvider>,

@@ -26,6 +26,7 @@ from incident_insights.infrastructure.settings import DataSourceKind, Settings
 from incident_insights.interface.api.app import create_app
 from tests.builders import AS_OF, make_record
 from tests.fakes import FailingRcaDrafter, InMemoryIncidentSource, UnavailableIncidentSource
+from tests.tokens import authorized, signing_key
 
 ORIGIN = "https://incidents.marceloroman.com.br"
 
@@ -46,7 +47,7 @@ def _use_cases(source: IncidentSource, drafter: RcaDrafter) -> UseCases:
 
 def _client(source: IncidentSource, drafter: RcaDrafter | None = None) -> TestClient:
     use_cases = _use_cases(source, drafter or DeterministicRcaDrafter(RcaDraftComposer()))
-    return TestClient(create_app(Settings(), use_cases))
+    return authorized(TestClient(create_app(Settings(auth_signing_key=signing_key()), use_cases)))
 
 
 def _incidents() -> list[IncidentRecord]:
@@ -150,6 +151,20 @@ def test_cors_allows_console_origin(client: TestClient) -> None:
     assert response.headers["access-control-allow-origin"] == ORIGIN
 
 
+def test_cors_allows_authorization_header(client: TestClient) -> None:
+    response = client.options(
+        "/api/kpis",
+        headers={
+            "Origin": ORIGIN,
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "authorization" in response.headers["access-control-allow-headers"].lower()
+
+
 def test_cors_rejects_unknown_origin(client: TestClient) -> None:
     response = client.get("/health", headers={"Origin": "https://evil.example"})
 
@@ -164,17 +179,23 @@ def test_correlation_id_is_echoed_or_generated(client: TestClient) -> None:
     assert len(generated.headers["x-correlation-id"]) == 32
 
 
+def _csv_settings(sample_csv: Path) -> Settings:
+    return Settings(
+        insights_data_source=DataSourceKind.CSV,
+        insights_csv_path=sample_csv,
+        auth_signing_key=signing_key(),
+    )
+
+
 def test_default_container_reads_sample_csv(sample_csv: Path) -> None:
-    settings = Settings(insights_data_source=DataSourceKind.CSV, insights_csv_path=sample_csv)
+    settings = _csv_settings(sample_csv)
     use_cases = build_use_cases(settings, fixed_clock(datetime(2026, 9, 28, tzinfo=UTC)))
-    client = TestClient(create_app(settings, use_cases))
+    client = authorized(TestClient(create_app(settings, use_cases)))
 
     assert client.get("/api/kpis", params={"days": 30}).json()["overall"]["incidents"] > 0
 
 
 def test_create_app_builds_container_from_settings(sample_csv: Path) -> None:
-    settings = Settings(insights_data_source=DataSourceKind.CSV, insights_csv_path=sample_csv)
-
-    client = TestClient(create_app(settings))
+    client = TestClient(create_app(_csv_settings(sample_csv)))
 
     assert client.get("/health").status_code == 200

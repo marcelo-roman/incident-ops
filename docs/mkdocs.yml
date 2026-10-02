@@ -88,6 +88,7 @@ nav:
       - SLA timers and escalation: architecture/sla-escalation.md
       - Real-time updates: architecture/real-time.md
       - Deployment: architecture/deployment.md
+      - Security: architecture/security.md
       - Observability: architecture/observability.md
       - Code structure: architecture/code-structure.md
   - Operations:
@@ -134,3 +135,4 @@ nav:
       - 0008 Tactical DDD: adr/0008-tactical-ddd-rich-aggregates-and-value-objects.md
       - 0009 Transactional outbox: adr/0009-transactional-outbox-for-integration-events.md
       - 0010 Monorepo with path filters: adr/0010-monorepo-with-path-filtered-pipelines-and-codeowners.md
+      - 0011 Demo authentication: adr/0011-demo-authentication-with-signed-jwt-and-service-api-keys.md

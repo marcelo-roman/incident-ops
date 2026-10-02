@@ -1,3 +1,4 @@
+import { anonymousAuthentication, type HttpAuthentication } from './authentication';
 import { ApiError, type ProblemDetails } from './problem';
 
 export type QueryValue = string | number | boolean | undefined;
@@ -45,24 +46,42 @@ async function readBody<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+type Headers = Readonly<Record<string, string>>;
+
+const jsonAccept: Headers = { accept: 'application/json' };
+
+function withAuthorization(headers: Headers, accessToken: string | null): Headers {
+  if (accessToken === null || accessToken === '') {
+    return headers;
+  }
+  return { ...headers, authorization: `Bearer ${accessToken}` };
+}
+
 export function createHttpClient(
   baseUrl: () => string,
+  authentication: () => HttpAuthentication = () => anonymousAuthentication,
   fetchImpl: typeof fetch = (...args) => fetch(...args),
 ): HttpClient {
+  async function send<T>(path: string, init: RequestInit & { headers: Headers }): Promise<T> {
+    const { accessToken, onUnauthorized } = authentication();
+    const response = await fetchImpl(`${baseUrl()}${path}`, {
+      ...init,
+      headers: withAuthorization(init.headers, accessToken()),
+    });
+    if (response.status === 401) {
+      onUnauthorized();
+    }
+    return readBody<T>(response);
+  }
+
   return {
-    async get<T>(path: string, query?: QueryParams): Promise<T> {
-      const response = await fetchImpl(`${baseUrl()}${path}${buildQueryString(query)}`, {
-        headers: { accept: 'application/json' },
-      });
-      return readBody<T>(response);
-    },
-    async post<T>(path: string, body?: unknown, headers: Readonly<Record<string, string>> = {}): Promise<T> {
-      const response = await fetchImpl(`${baseUrl()}${path}`, {
+    get: <T>(path: string, query?: QueryParams) =>
+      send<T>(`${path}${buildQueryString(query)}`, { headers: jsonAccept }),
+    post: <T>(path: string, body?: unknown, headers: Headers = {}) =>
+      send<T>(path, {
         method: 'POST',
-        headers: { accept: 'application/json', 'content-type': 'application/json', ...headers },
+        headers: { ...jsonAccept, 'content-type': 'application/json', ...headers },
         body: JSON.stringify(body ?? {}),
-      });
-      return readBody<T>(response);
-    },
+      }),
   };
 }

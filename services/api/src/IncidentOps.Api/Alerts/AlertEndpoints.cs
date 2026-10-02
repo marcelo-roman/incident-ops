@@ -14,7 +14,7 @@ internal static class AlertEndpoints
     {
         var alerts = api.MapGroup("/alerts")
             .WithTags("Alerts")
-            .RequireApiKey()
+            .RequireApiKey(ApiKeySources.Header | ApiKeySources.AuthorizationHeader | ApiKeySources.Query)
             .RequireRateLimiting(RateLimitingRegistration.WritesPolicy);
 
         alerts.MapPost("/alertmanager", IngestAlertmanager).WithName("IngestAlertmanagerAlerts").WithAlertProblems();

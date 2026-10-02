@@ -53,6 +53,7 @@ public class LayerDependencyTests
     [InlineData("IncidentOps.Api.Metrics")]
     [InlineData("IncidentOps.Api.RealTime")]
     [InlineData("IncidentOps.Api.Chaos")]
+    [InlineData("IncidentOps.Api.Authentication")]
     public void Api_features_depend_on_the_application_layer_only(string feature)
     {
         var result = Types.InAssembly(Layers.ApiAssembly)

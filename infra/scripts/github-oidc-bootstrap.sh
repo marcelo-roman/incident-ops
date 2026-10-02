@@ -177,6 +177,9 @@ print_github_commands() {
   echo "gh variable set CUSTOM_DOMAIN_BINDING --repo ${REPOSITORY} --body None"
   echo "gh variable set DEPLOY_ENABLED --repo ${REPOSITORY} --body true"
   echo "openssl rand -hex 32 | gh secret set ESCALATION_API_KEY --repo ${REPOSITORY}"
+  echo "openssl rand -hex 32 | gh secret set AUTH_SIGNING_KEY --repo ${REPOSITORY}"
+  echo "gh secret set DEMO_PASSWORD --repo ${REPOSITORY}"
+  echo "gh variable set DEMO_USERNAME --repo ${REPOSITORY} --body demo"
   echo "gh secret set NOTIFICATION_WEBHOOK_URL --repo ${REPOSITORY}"
   echo "gh secret set CLOUDFLARE_API_TOKEN --repo ${REPOSITORY}"
   echo

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { server } from '../../mocks/node';
+import { anonymousAuthentication, type HttpAuthentication } from './authentication';
 import { buildQueryString, createHttpClient } from './httpClient';
 import { ApiError, describeError } from './problem';
 
@@ -57,5 +58,58 @@ describe('createHttpClient', () => {
 
   it('describes network failures', () => {
     expect(describeError(new TypeError('Failed to fetch'))).toMatch(/could not be reached/);
+  });
+});
+
+describe('createHttpClient with authentication', () => {
+  function authenticated(accessToken: string | null): HttpAuthentication & { onUnauthorized: () => void } {
+    return { accessToken: () => accessToken, onUnauthorized: vi.fn() };
+  }
+
+  it('sends the access token as a bearer credential', async () => {
+    server.use(
+      http.get(`${baseUrl}/api/whoami`, ({ request }) =>
+        HttpResponse.json({ authorization: request.headers.get('authorization') }),
+      ),
+    );
+    const client = createHttpClient(
+      () => baseUrl,
+      () => authenticated('token-1'),
+    );
+
+    await expect(client.get('/api/whoami')).resolves.toEqual({ authorization: 'Bearer token-1' });
+  });
+
+  it('sends no authorization header without a token', async () => {
+    server.use(
+      http.post(`${baseUrl}/api/whoami`, ({ request }) =>
+        HttpResponse.json({ authorization: request.headers.get('authorization') }),
+      ),
+    );
+    const client = createHttpClient(
+      () => baseUrl,
+      () => authenticated(null),
+    );
+
+    await expect(client.post('/api/whoami')).resolves.toEqual({ authorization: null });
+  });
+
+  it('reports an unauthorized response before rejecting', async () => {
+    server.use(http.get(`${baseUrl}/api/private`, () => new HttpResponse(null, { status: 401 })));
+    const authentication = authenticated('expired');
+    const client = createHttpClient(
+      () => baseUrl,
+      () => authentication,
+    );
+
+    await expect(client.get('/api/private')).rejects.toMatchObject({ status: 401 });
+    expect(authentication.onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  it('is anonymous by default', () => {
+    expect(anonymousAuthentication.accessToken()).toBeNull();
+    expect(() => {
+      anonymousAuthentication.onUnauthorized();
+    }).not.toThrow();
   });
 });

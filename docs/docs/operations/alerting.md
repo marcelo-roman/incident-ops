@@ -217,7 +217,8 @@ Noise review in the weekly ops review ([KTLO metrics](ktlo-metrics.md#review-cad
 Alert-created incidents in the last 7 days that were never acknowledged and were mitigated by the alert resolving, grouped by title: candidates for tuning.
 
 ```bash
-curl -s "https://incidents-api.marceloroman.com.br/api/incidents/export?from=$(date -u -d '-7 days' +%F)&to=$(date -u +%F)" \
+curl -s -H "X-Api-Key: $ESCALATION_API_KEY" \
+  "https://incidents-api.marceloroman.com.br/api/incidents/export?from=$(date -u -d '-7 days' +%F)&to=$(date -u +%F)" \
   | jq '[.[] | select(.source != "Manual" and .acknowledgedAt == null and .mitigatedAt != null)]
         | group_by(.title) | map({title: .[0].title, count: length}) | sort_by(-.count)'
 ```

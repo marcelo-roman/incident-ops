@@ -45,7 +45,7 @@ with_retries() {
   fail "request kept failing after ${attempt} attempts: $*"
 }
 
-get() { with_retries curl -fsS "$@"; }
+get() { with_retries curl -fsS -H "X-Api-Key: ${API_KEY}" "$@"; }
 
 alert_firing() {
   curl -fsS "${ALERTMANAGER}/api/v2/alerts?active=true&filter=alertname%3D%22ApiHighErrorRate%22" \
@@ -67,8 +67,8 @@ incident_mitigated() { [[ "$(incident_status)" == "Mitigated" ]]; }
 generate_traffic() {
   local until_epoch=$(( $(date +%s) + FAULT_SECONDS ))
   while (( $(date +%s) < until_epoch )); do
-    curl -s -o /dev/null "${API}/api/incidents?open=true" || true
-    curl -s -o /dev/null "${API}/api/services" || true
+    curl -s -o /dev/null -H "X-Api-Key: ${API_KEY}" "${API}/api/incidents?open=true" || true
+    curl -s -o /dev/null -H "X-Api-Key: ${API_KEY}" "${API}/api/services" || true
     sleep 0.2
   done
 }
@@ -117,7 +117,7 @@ if [[ "${WAIT_FOR_AUTO_MITIGATION}" == "true" ]]; then
 fi
 
 step "Resolving with a root cause"
-post "${API}/api/incidents/${incident_id}/resolve" \
+post -H "X-Api-Key: ${API_KEY}" "${API}/api/incidents/${incident_id}/resolve" \
   -d '{"actor": "demo", "rootCause": "Injected fault: 50% of requests returned 500 via /api/chaos/faults."}' \
   | jq '{number, status, slaState, resolvedAt}'
 

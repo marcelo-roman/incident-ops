@@ -6,5 +6,7 @@ public sealed class RateLimitingOptions
 
     public int WritePermitLimit { get; set; } = 30;
 
+    public int TokenPermitLimit { get; set; } = 5;
+
     public int WindowSeconds { get; set; } = 60;
 }

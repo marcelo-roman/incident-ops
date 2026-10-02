@@ -17,7 +17,7 @@ Each arrow can break. Triage walks the chain in order.
 **1. Which incidents are overdue (L1/L2).**
 
 ```bash
-curl -s "https://incidents-api.marceloroman.com.br/api/incidents?status=Triggered&open=true" \
+curl -s -H "X-Api-Key: $ESCALATION_API_KEY" "https://incidents-api.marceloroman.com.br/api/incidents?status=Triggered&open=true" \
   | jq --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     '[.[] | select(.ackDueAt < $now and .escalationLevel < 3) | {number, severity, escalationLevel, ackDueAt}]'
 ```

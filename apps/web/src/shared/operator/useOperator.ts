@@ -7,3 +7,10 @@ export function useOperator() {
   const operator = useSyncExternalStore(operatorStore.subscribe, operatorStore.read);
   return { operator, setOperator: operatorStore.write };
 }
+
+export function adoptOperator(name: string): void {
+  if (operatorStore.read().trim() !== '') {
+    return;
+  }
+  operatorStore.write(name);
+}
