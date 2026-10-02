@@ -122,7 +122,8 @@ jobs:
       - name: Resolve running images
         run: |
           echo "API_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)" >> "$GITHUB_ENV"
-          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
+          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights \
+            ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
 
       - name: Validate deployment
         run: |
@@ -199,7 +200,8 @@ jobs:
       - name: Resolve running images
         run: |
           echo "API_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)" >> "$GITHUB_ENV"
-          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
+          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights \
+            ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
 
       - name: Deploy
         run: |

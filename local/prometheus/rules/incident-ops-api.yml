@@ -15,7 +15,9 @@ groups:
       - alert: ApiHighErrorRate
         expr: |
           (
-            sum(rate(http_server_request_duration_seconds_count{job="incident-ops-api", http_response_status_code=~"5..", http_route!~"/metrics|/health.*"}[5m]))
+            sum(rate(http_server_request_duration_seconds_count{
+              job="incident-ops-api", http_response_status_code=~"5..", http_route!~"/metrics|/health.*"
+            }[5m]))
             /
             sum(rate(http_server_request_duration_seconds_count{job="incident-ops-api", http_route!~"/metrics|/health.*"}[5m]))
           ) > 0.05

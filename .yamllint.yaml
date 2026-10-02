@@ -1,0 +1,22 @@
+extends: default
+
+ignore: |
+  **/node_modules/
+  **/.venv/
+  **/pnpm-lock.yaml
+  /site/
+  /docs/site/
+  /tmp/
+  /scratch/
+  /.playwright-mcp/
+
+rules:
+  document-start:
+    present: false
+  line-length:
+    max: 160
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false

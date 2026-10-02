@@ -74,8 +74,11 @@ stages:
               workingDirectory: $(workingDirectory)
               inlineScript: |
                 set -euo pipefail
-                echo "##vso[task.setvariable variable=API_IMAGE]$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)"
-                echo "##vso[task.setvariable variable=INSIGHTS_IMAGE]$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)"
+                api_image=$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)
+                insights_image=$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-insights \
+                  ghcr.io/marcelo-roman/incident-ops-insights:latest)
+                echo "##vso[task.setvariable variable=API_IMAGE]${api_image}"
+                echo "##vso[task.setvariable variable=INSIGHTS_IMAGE]${insights_image}"
           - template: templates/bicep-what-if.yml
             parameters:
               azureSubscription: $(azureSubscription)
