@@ -31,7 +31,7 @@ flowchart LR
     gh[[GitHub Actions<br/>OIDC to Entra ID]]
     ghcr[(GHCR public images)]
 
-    subgraph rg[rg-incident-ops · eastus2]
+    subgraph rg[rg-incident-ops · eastus2, Azure SQL in centralus]
         swa[Static Web App Free<br/>apps/web]
         subgraph cae[Container Apps environment · Consumption]
             api[ca-incident-ops-api<br/>.NET 8]
@@ -521,6 +521,7 @@ shellcheck --severity=style scripts/*.sh
 
 ## Design decisions
 
+- **Azure SQL region.** `sqlLocation` (default `centralus`) places the SQL server apart from the other resources: Azure SQL provisioning is restricted per region and subscription, and `eastus2` refuses new servers for this subscription. `centralus` adds roughly 25 ms between the API and the database.
 - **Resource group scope.** The contract fixes one resource group in one region, and the deployment principal is scoped to that group. A subscription-scope template would need subscription-level rights just to create the group; `scripts/github-oidc-bootstrap.sh` creates it once instead, and the budget is a resource-group budget. `az deployment group validate` and `what-if` then work with the same least-privilege principal.
 - **Model.** The template defaults to `gpt-5.4-mini` `2026-03-17` under a model-neutral deployment name, `rca-drafts`, so the insights service never changes when the model does. The deployment type defaults to `DataZoneStandard`, which keeps processing within the US data zone and is where the subscription has `gpt-5.4-mini` quota in `eastus2`; `openAiDeploymentSku` selects `GlobalStandard` or `Standard` instead. `openAiModelName` and `openAiModelVersion` override the model, and `versionUpgradeOption: OnceCurrentVersionExpired` avoids silent upgrades. Models in the Deprecated lifecycle stage, such as `gpt-4o-mini` `2024-07-18`, cannot be deployed by subscriptions that never used them.
 - **Role assignment names** derive from the scope, the role and the identity's resource name, not from the principal id, so what-if can predict them. Recreating an app gives it a new principal; delete its old assignment first.
