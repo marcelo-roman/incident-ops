@@ -21,15 +21,15 @@ RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 
 WORKDIR /app
-COPY --from=build --chown=app:app /app/.venv /app/.venv
-COPY --chown=app:app data ./data
+COPY --from=build --chown=10001:10001 /app/.venv /app/.venv
+COPY --chown=10001:10001 data ./data
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     INSIGHTS_CSV_PATH=/app/data/sample_incidents.csv
 
-USER app
+USER 10001
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

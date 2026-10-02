@@ -12,7 +12,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
 RUN pnpm build
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
-USER root
+USER 0
 RUN mkdir -p /usr/share/nginx/runtime && chown 101:101 /usr/share/nginx/runtime
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=0755 docker/40-render-runtime-config.sh /docker-entrypoint.d/40-render-runtime-config.sh
@@ -22,4 +22,4 @@ ENV API_BASE_URL=https://incidents-api.marceloroman.com.br \
     INSIGHTS_BASE_URL=https://incidents-insights.marceloroman.com.br
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
+  CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
