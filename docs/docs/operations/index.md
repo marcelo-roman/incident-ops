@@ -3,7 +3,7 @@
 How production is supported: who responds, how fast, how incidents are run, how alerts become incidents, and what is measured.
 
 | Page | Covers |
-|---|---|
+| --- | --- |
 | [Support model](support-model.md) | L1/L2/L3, hours 10:30–18:30 ET, on-call 1 week in 6, handoffs, on-call health |
 | [Severity and SLA](severity-and-sla.md) | severity definitions with examples, ack/resolve targets, `slaState` |
 | [Alerting](alerting.md) | Prometheus rules, Alertmanager routing, Azure Monitor, dedupe, severity mapping, alert hygiene |

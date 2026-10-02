@@ -7,7 +7,7 @@ This site documents how it is built and how it is operated. The interface contra
 ## Live
 
 | What | URL |
-|---|---|
+| --- | --- |
 | Operations console | <https://incidents.marceloroman.com.br> |
 | Incidents API (Swagger) | <https://incidents-api.marceloroman.com.br/swagger> |
 | Insights API (OpenAPI) | <https://incidents-insights.marceloroman.com.br/docs> |
@@ -34,7 +34,7 @@ flowchart LR
 ## Sections
 
 | Section | Start with |
-|---|---|
+| --- | --- |
 | Architecture | [overview and C4 diagrams](architecture/index.md), [SLA timers and escalation](architecture/sla-escalation.md), [deployment and delivery](architecture/deployment.md) |
 | Operations | [support model](operations/support-model.md), [alerting](operations/alerting.md), [incident response](operations/incident-response.md), [runbooks](operations/runbooks/index.md) |
 | Engineering | [quality gates](engineering/quality-gates.md), [definition of done](engineering/definition-of-done.md) |
@@ -46,7 +46,7 @@ flowchart LR
 All modules live in one repository, [marcelo-roman/incident-ops](https://github.com/marcelo-roman/incident-ops). Each bounded context is one module ([context map](architecture/context-map.md)).
 
 | Module | Bounded context | Role |
-|---|---|---|
+| --- | --- | --- |
 | [`services/api`](https://github.com/marcelo-roman/incident-ops/tree/main/services/api) | Incident Management | system of record, SLA clock, alert ingestion, real-time hub |
 | [`services/functions`](https://github.com/marcelo-roman/incident-ops/tree/main/services/functions) | Escalation | SLA timers, escalation, notifications |
 | [`services/insights`](https://github.com/marcelo-roman/incident-ops/tree/main/services/insights) | Operational Analytics | KTLO analytics and RCA drafts |

@@ -21,7 +21,7 @@ stateDiagram-v2
 Any other transition returns `409 Conflict` with problem details. The rules live in the domain's `Incident` aggregate; endpoints only bind input and map results.
 
 | Transition | Who | Writes | Event | Timeline kind |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | create | operator, Alertmanager, Azure Monitor | incident, `ackDueAt`, `resolveDueAt`, level 1 | `incident.triggered` | `Triggered` |
 | escalate | `CheckAcknowledgementSla` (API key) | level + 1, new `ackDueAt` | `incident.escalated` | `Escalated` |
 | acknowledge | operator | `acknowledgedAt`, `assignee` | `incident.acknowledged` | `Acknowledged` |

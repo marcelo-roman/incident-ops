@@ -2,11 +2,10 @@
 
 A work item is Ready when the team can start it on day one of the sprint and finish it within the sprint without discovering what it is. Ready is checked in backlog refinement, not in sprint planning.
 
-
 ## Story or bug
 
 | # | Criterion | Check |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Title states the outcome, not the task | "Operator sees escalation level on incident list", not "Add column" |
 | 2 | User/business value in one sentence | `As <role>, I need <capability>, so that <outcome>` or the bug's impact |
 | 3 | Acceptance criteria are testable | Given/When/Then, each one maps to at least one test |

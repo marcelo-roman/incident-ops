@@ -2,7 +2,6 @@
 
 Done means running in production, observable, and nothing left for someone else to finish. A work item that misses any line below is not Done and does not count toward velocity or say/do.
 
-
 ## Code
 
 - [ ] Merged to `main` through a pull request with one approval ([code review guidelines](code-review-guidelines.md)).

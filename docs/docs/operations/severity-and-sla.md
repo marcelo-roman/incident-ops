@@ -2,13 +2,12 @@
 
 Severity describes impact, not effort or urgency of a fix. When in doubt, pick the higher severity; it can be lowered.
 
-
 ## SLA policy
 
 Source of truth: [contracts.md](https://github.com/marcelo-roman/incident-ops/blob/main/contracts/contracts.md#sla-policy). The API computes deadlines from this table.
 
 | Severity | Acknowledge within | Resolve within | Pages | Escalation |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `Sev1` | 15 minutes | 4 hours | yes, 24×7 | primary → secondary → lead, every 15 min unacknowledged |
 | `Sev2` | 30 minutes | 8 hours | yes, 24×7 | every 30 min unacknowledged |
 | `Sev3` | 4 hours | 3 days | no | every 4 h unacknowledged |
@@ -19,7 +18,7 @@ Source of truth: [contracts.md](https://github.com/marcelo-roman/incident-ops/bl
 ## Severity definitions
 
 | Severity | Impact | Typical scope |
-|---|---|---|
+| --- | --- | --- |
 | `Sev1` | Critical business function unavailable or data at risk; no workaround | Tier1 service down or failing for > 25% of requests; data loss or exposure; security breach |
 | `Sev2` | Major function degraded or unavailable for a subset of users; workaround painful | Tier1 service degraded; Tier2 service down; SLO burn rate > 10× |
 | `Sev3` | Minor function impaired; workaround exists | Tier2 degraded; Tier3 down; single customer affected |
@@ -30,7 +29,7 @@ Source of truth: [contracts.md](https://github.com/marcelo-roman/incident-ops/bl
 Using the seeded services.
 
 | Severity | Example |
-|---|---|
+| --- | --- |
 | `Sev1` | `payments-gateway` timing out on 40% of authorizations; checkout cannot complete orders |
 | `Sev1` | `identity` token endpoint returning 500; nobody can sign in |
 | `Sev1` | Personal data visible to the wrong customer in `reporting` exports |
@@ -48,7 +47,7 @@ Using the seeded services.
 As defined in the contract and shown on every incident:
 
 | `slaState` | Condition |
-|---|---|
+| --- | --- |
 | `OnTrack` | open deadline with ≥ 25% of the active window remaining |
 | `AtRisk` | < 25% of the active window remaining |
 | `Breached` | an open deadline passed (ack while `Triggered`, resolve while not `Resolved`) |
@@ -61,7 +60,7 @@ The active window is the acknowledgement window while `Triggered` and the resolv
 Seeded services and owning teams come from `GET /api/services`. `platform` is the Incident Ops platform itself and the fallback for alerts without a known service.
 
 | Tier | Services | Default severity floor for a full outage |
-|---|---|---|
+| --- | --- | --- |
 | `Tier1` | `checkout`, `payments-gateway`, `identity`, `platform` | `Sev1` |
 | `Tier2` | `notifications`, `search` | `Sev2` |
 | `Tier3` | `reporting` | `Sev3` |

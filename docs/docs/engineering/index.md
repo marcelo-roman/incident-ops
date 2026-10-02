@@ -3,7 +3,7 @@
 How work enters a sprint, what done means, how code is reviewed, merged, gated and released. The same rules apply to every module; per-workflow specifics are in [quality gates](quality-gates.md).
 
 | Standard | Rule of thumb |
-|---|---|
+| --- | --- |
 | [Definition of Ready](definition-of-ready.md) | no story enters a sprint without testable acceptance criteria, an estimate and named dependencies |
 | [Definition of Done](definition-of-done.md) | merged, deployed, observable, documented, accepted |
 | [Branching and git workflow](branching-and-git-workflow.md) | trunk-based, branches under 2 days, squash merge, `feature/` `hotfix/` `chore/` |

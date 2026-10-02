@@ -1,16 +1,15 @@
 # Runbook: Service Bus dead letters
 
 | | |
-|---|---|
+| --- | --- |
 | Alert | `DeadletteredMessages` > 0 on `sla-checks`, `incident-events/sla-scheduler` or `incident-events/notifier` |
 | Default severity | Sev2 for `sla-checks` and `sla-scheduler` (escalations at risk); Sev3 for `notifier` |
 | Tier | L2 |
 
-
 ## Why it matters
 
 | Entity | A dead letter means |
-|---|---|
+| --- | --- |
 | `incident-events/sla-scheduler` | an incident has no SLA timer; it will not escalate |
 | `sla-checks` | a timer fired but the check failed; the incident did not escalate |
 | `incident-events/notifier` | someone was not paged |
@@ -69,7 +68,7 @@ dependencies
 ```
 
 | Result code | Meaning | Action |
-|---|---|---|
+| --- | --- | --- |
 | `401` | `X-Api-Key` mismatch (key rotated on one side only) | Mitigation A |
 | `409` | transition rejected; incident moved on | Mitigation B |
 | `404` | incident does not exist (seed reset, wrong environment) | dead letter can be discarded after confirming |

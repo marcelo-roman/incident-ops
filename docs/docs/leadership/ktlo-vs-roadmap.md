@@ -5,7 +5,7 @@ How capacity is split between keeping the lights on, roadmap features and techni
 ## Definitions
 
 | Bucket | Includes | Tag |
-|---|---|---|
+| --- | --- | --- |
 | Features | roadmap work agreed with Product | none |
 | KTLO | incident follow-ups, bugs in production, dependency and runtime upgrades, certificate and secret rotation, alert tuning, support requests, compliance tasks | `ktlo` |
 | Tech debt | deliberate improvement with a stated payoff: refactors, test gaps, architecture changes, automation of toil | `tech-debt` |
@@ -16,7 +16,7 @@ How capacity is split between keeping the lights on, roadmap features and techni
 Default split per sprint, applied to planned capacity ([capacity planning](../engineering/ado-hygiene.md#capacity-planning)):
 
 | Bucket | Default | Floor | Ceiling |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Features | 60% | 40% | 75% |
 | KTLO | 25% | 15% | 45% |
 | Tech debt | 15% | 10% | 25% |
@@ -40,7 +40,7 @@ flowchart TD
 ## Signals that move the split
 
 | Signal | Source | Moves |
-|---|---|---|
+| --- | --- | --- |
 | SLA compliance below target for 2 months | [KTLO metrics](../operations/ktlo-metrics.md) | KTLO ↑ for the affected service |
 | Recurring cluster ≥ 5 incidents in 90 days | Insights `/api/recurring` | tech debt ↑ (fix the class, not the instance) |
 | Toil > 20% two sprints running | Boards tag `toil` | tech debt ↑ (automation) |
@@ -56,7 +56,7 @@ The conversation is about trade-offs with numbers, not about engineering wanting
 2. **Offer options, not a demand.** Three options with impact on the roadmap date, for example:
 
     | Option | Feature date impact | Expected effect |
-    |---|---|---|
+    | --- | --- | --- |
     | A. Stay at 25% KTLO | none | incident load stays at ~8 Sev2+/month |
     | B. 35% KTLO for 2 sprints, then back to 25% | Feature X +1 week | recurring cluster closed; projected −3 Sev2/month |
     | C. Dedicated sprint on reliability | Feature X +2 weeks | B plus alert noise cleanup |

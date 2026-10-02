@@ -2,11 +2,10 @@
 
 Who handles what, when, and how work moves between tiers.
 
-
 ## Tiers
 
 | Tier | Who | Handles | Escalates to L(n+1) when |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | L1 | Service desk / operations analysts | Intake, validation, known-issue matching, runbook steps marked L1, customer comms | not resolved by a runbook within 30 min, or Sev1/Sev2 suspected |
 | L2 | Engineer on call (primary, then secondary) | Triage, mitigation, rollbacks, config changes, runbooks marked L2, opening incidents | root cause needs code change or design knowledge; mitigation not effective within 60 min (Sev1) / 2 h (Sev2) |
 | L3 | Owning team's engineers, engineering lead, platform/vendor support | Code fixes, hotfixes, architecture-level mitigation, vendor cases | — |
@@ -16,7 +15,7 @@ L1 never waits on L2 to open an incident: anyone can open one. Severity can be r
 ## Hours
 
 | Window | Coverage |
-|---|---|
+| --- | --- |
 | Business hours: Mon–Fri 10:30–18:30 America/New_York | L1 staffed; L2 primary on call responds within SLA; L3 owning team available |
 | Outside business hours, weekends, holidays | Sev1/Sev2 page L2 primary → secondary → engineering lead. Sev3/Sev4 queue for next business day |
 
@@ -27,7 +26,7 @@ The 10:30 start aligns with the rotation handover so the incoming primary starts
 Matches the [contract](https://github.com/marcelo-roman/incident-ops/blob/main/contracts/contracts.md#on-call-and-escalation) and `GET /api/oncall/current`.
 
 | Parameter | Value |
-|---|---|
+| --- | --- |
 | Rotation size | 6 engineers |
 | Shift | 1 week, Monday 10:30 to Monday 10:30 America/New_York |
 | Frequency | primary 1 week in 6; secondary the week before being primary |
@@ -62,7 +61,7 @@ The outgoing primary posts the handoff summary in the team channel.
 ## Intake channels
 
 | Channel | Use | Response |
-|---|---|---|
+| --- | --- | --- |
 | Console / API `POST /api/incidents` | any production issue | per severity SLA |
 | Azure Monitor alerts | automated detection | opens incident automatically |
 | Team channel | questions, non-urgent requests | best effort, business hours |
@@ -73,7 +72,7 @@ The outgoing primary posts the handoff summary in the team channel.
 Acknowledge and resolve targets per severity are in [severity-and-sla.md](severity-and-sla.md). Support-level targets on top of those:
 
 | Measure | Target |
-|---|---|
+| --- | --- |
 | L1 → L2 handoff completeness (repro, scope, timeline in the incident) | 95% of escalated incidents |
 | First stakeholder update after Sev1 declared | 15 minutes |
 | Postmortem published for Sev1/Sev2 | 5 business days |
@@ -84,7 +83,7 @@ Acknowledge and resolve targets per severity are in [severity-and-sla.md](severi
 Reviewed monthly; numbers come from the API and Insights ([KTLO metrics](ktlo-metrics.md)).
 
 | Signal | Threshold that triggers action |
-|---|---|
+| --- | --- |
 | Pages outside business hours per week | > 2 |
 | Pages per primary shift | > 10 |
 | Non-actionable pages (closed as noise) | > 10% |

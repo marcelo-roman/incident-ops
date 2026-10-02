@@ -75,7 +75,7 @@ flowchart LR
 The solution follows a layered, ports-and-adapters structure. Dependencies point inward and are enforced by architecture tests.
 
 | Project | Responsibility | Depends on |
-|---|---|---|
+| --- | --- | --- |
 | `IncidentOps.Domain` | Aggregates, entities, value objects, domain events, SLA clock, state machine, on-call rotation, alert rules, repository interfaces | nothing outside the base class library |
 | `IncidentOps.Application` | One handler per use case, query handlers over read models, domain event translation, ports (`IUnitOfWork`, `IIncidentQueries`, `ICatalogQueries`, `IEventPublisher`, `IIncidentNotifier`, `IClock`), views returned to adapters | Domain |
 | `IncidentOps.Infrastructure` | EF Core write model with value-object mappings and migrations, read-model context, repositories, unit of work, transactional outbox and dispatcher, Service Bus publisher, seeding | Application, Domain |
@@ -111,7 +111,7 @@ sequenceDiagram
 ## Domain model
 
 | Aggregate | Root | Owns | Behavior |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Incident | `Incident` (`IncidentId`) | `TimelineEntry` entities, `SlaClock` | `Trigger`, `TriggerFromAlert`, `Acknowledge`, `Escalate`, `Mitigate`, `Resolve`, `AddNote`, `RecordAlert`, `SlaStateAt`, `CompliesWithSla` |
 | Service | `Service` (`ServiceId`) | | catalog entry; incidents reference it by `ServiceId` only |
 | On-call rotation | `OnCallRotation` | `Engineer` entities | `ShiftAt(instant)` returns the primary, secondary and lead for that week |
@@ -139,7 +139,7 @@ Each behavior raises one domain event bound to the timeline entry it appended: `
 ### SLA policy
 
 | Severity | Acknowledge within | Resolve within |
-|---|---|---|
+| --- | --- | --- |
 | `Sev1` | 15 minutes | 4 hours |
 | `Sev2` | 30 minutes | 8 hours |
 | `Sev3` | 4 hours | 3 days |
@@ -150,7 +150,7 @@ Each behavior raises one domain event bound to the timeline entry it appended: `
 ### SLA state
 
 | State | When |
-|---|---|
+| --- | --- |
 | `Met` | resolved and compliant (see below) |
 | `Breached` | resolved without complying, or an open deadline has passed (`ackDueAt` while `Triggered`, `resolveDueAt` while not resolved) |
 | `AtRisk` | less than 25% of the active window remains (acknowledge window while `Triggered`, resolve window otherwise) |
@@ -177,7 +177,7 @@ stateDiagram-v2
 The rotation has six engineers. Each week starts Monday 10:30 `America/New_York` (daylight saving time included); the primary is one engineer and the secondary is next week's primary, so everyone is primary once every six weeks.
 
 | Level | Target |
-|---|---|
+| --- | --- |
 | 1 | primary on call |
 | 2 | secondary on call |
 | 3 | engineering lead |
@@ -187,15 +187,15 @@ An escalation is only valid while the incident is `Triggered`. It moves one leve
 ## Alert ingestion
 
 | Rule | Alertmanager (webhook v4) | Azure Monitor (common alert schema) |
-|---|---|---|
-| Fingerprint | `fingerprint` | `essentials.alertRule` + `|` + first `essentials.alertTargetIDs` entry |
+| --- | --- | --- |
+| Fingerprint | `fingerprint` | `essentials.alertRule` + `\|` + first `essentials.alertTargetIDs` entry |
 | Title | `annotations.summary`, else `labels.alertname` | `essentials.alertRule` |
 | Description | `annotations.description` | `essentials.description` |
 | Service | `labels.service` | `customProperties.service` |
 | Firing / resolved | `status` = `firing` / `resolved` | `monitorCondition` = `Fired` / `Resolved` |
 
 | Alertmanager `severity` | Azure Monitor `severity` | Incident |
-|---|---|---|
+| --- | --- | --- |
 | `critical` | `Sev0`, `Sev1` | `Sev1` |
 | `high`, `error` | `Sev2` | `Sev2` |
 | `warning` | `Sev3` | `Sev3` |
@@ -237,7 +237,7 @@ sequenceDiagram
 JSON in camelCase, enums as strings, timestamps ISO-8601 UTC, errors as RFC 7807 `application/problem+json`. Swagger UI is served at `/swagger`.
 
 | Method | Path | Body | Result |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | GET | `/api/services` | | `Service[]` |
 | GET | `/api/incidents?status=&severity=&serviceId=&open=&limit=` | | `Incident[]`, newest first, `limit` 1 to 500 (default 100) |
 | GET | `/api/incidents/{id}` | | `Incident` with `timeline` |
@@ -262,7 +262,7 @@ JSON in camelCase, enums as strings, timestamps ISO-8601 UTC, errors as RFC 7807
 The API key is accepted as `X-Api-Key: <key>`, `Authorization: Bearer <key>` or `?code=<key>` (Azure Monitor webhooks cannot send custom headers). Comparison is constant-time; with no key configured every protected call is rejected.
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | `400` | validation problem with `errors` per field (unknown service, empty title, unsupported webhook version) |
 | `401` | missing or wrong API key |
 | `404` | incident not found |
@@ -296,7 +296,7 @@ docker compose up --build
 The API applies migrations, seeds the database and publishes to the emulator through its connection string.
 
 | Variable | Default | Effect |
-|---|---|---|
+| --- | --- | --- |
 | `API_PORT`, `SQL_PORT`, `SERVICEBUS_PORT`, `SERVICEBUS_HEALTH_PORT` | `8080`, `1433`, `5672`, `5300` | host ports |
 | `SLA_TIME_SCALE` | `1` | divides SLA windows; `60` turns minutes into seconds |
 | `DEMO_TRAFFIC_ENABLED` | `false` | triggers and advances incidents periodically |
@@ -329,7 +329,7 @@ The `Development` environment (`appsettings.Development.json`) points at `localh
 Every setting can be supplied as an environment variable using `__` as the section separator.
 
 | Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `ConnectionStrings__IncidentOps` | required | SQL Server connection string; in Azure, `Authentication=Active Directory Managed Identity` |
 | `Database__ApplyMigrations` | `false` | apply EF Core migrations at startup |
 | `Database__Seed` | `false` | seed services, rotation and six months of history when the database is empty |
@@ -358,7 +358,7 @@ When neither Service Bus setting is present the API logs events instead of publi
 - `/metrics` exposes Prometheus metrics:
 
 | Metric | Type | Labels |
-|---|---|---|
+| --- | --- | --- |
 | `http_server_request_duration_seconds` | histogram | `http_route`, `http_request_method`, `http_response_status_code` |
 | `incidentops_incident_events_total` | counter | `kind`, `severity`, `source` |
 | `incidentops_incidents_open` | gauge | `severity` |
@@ -375,7 +375,7 @@ dotnet test
 ```
 
 | Project | Scope |
-|---|---|
+| --- | --- |
 | `IncidentOps.Domain.Tests` | value object invariants, aggregate behaviors and the events they raise, state machine, SLA clock and compliance, escalation, rotation (week boundaries, daylight saving time), alert rules |
 | `IncidentOps.Application.Tests` | every use case and query against in-memory fakes of the ports, wired through the real dependency injection registration; domain event translation, outbox message handling and retries; metrics report |
 | `IncidentOps.Api.Tests` | `WebApplicationFactory` integration tests on SQL Server 2022 started by Testcontainers: lifecycle, problem details, escalation and API key, alert ingestion with real Alertmanager and Azure Monitor payloads (`tests/IncidentOps.Api.Tests/Fixtures`), outbox retries, seeded history, SignalR broadcast, rate limiting, chaos, Prometheus output, CloudEvent format |

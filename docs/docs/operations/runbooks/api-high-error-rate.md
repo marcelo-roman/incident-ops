@@ -1,12 +1,11 @@
 # Runbook: API high error rate
 
 | | |
-|---|---|
+| --- | --- |
 | Alert | Prometheus `ApiHighErrorRate` (5xx > 5% for 2 min), `ApiDown`, `ApiHighLatencyP95`; Azure Monitor failed requests > 5% for 5 min |
 | Default severity | Sev2; Sev1 if > 25% of requests or all writes failing |
 | Tier | L2 |
 | Related SLO | [API availability 99.5%](../slo.md) |
-
 
 ## Symptoms
 
@@ -74,7 +73,7 @@ dependencies
 ```
 
 | Dependency failing | Likely cause | Go to |
-|---|---|---|
+| --- | --- | --- |
 | `SQL` with timeouts | DTU cap of the Basic database, blocking query | Mitigation A |
 | `Azure Service Bus` | namespace throttling or outage; RBAC change | Mitigation B |
 | `Azure SignalR` | Free tier quota (20 000 messages/day) exhausted | Mitigation C |

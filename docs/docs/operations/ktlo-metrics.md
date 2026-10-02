@@ -2,11 +2,10 @@
 
 What we measure about keeping the lights on, how each number is computed, where it comes from, and what it triggers.
 
-
 ## Metric catalog
 
 | Metric | Target | Source | Endpoint / query |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | MTTA | Sev1 ≤ 10 min, Sev2 ≤ 20 min | incidents | `GET /api/metrics/summary` (30 d), Insights `GET /api/kpis` |
 | MTTR | Sev1 ≤ 2 h, Sev2 ≤ 6 h | incidents | same |
 | SLA compliance | Sev1/Sev2 ≥ 95%, Sev3/Sev4 ≥ 90% | incidents | same, per service and severity |
@@ -22,7 +21,7 @@ What we measure about keeping the lights on, how each number is computed, where 
 All durations from incident timestamps in UTC, over incidents created in the period.
 
 | Metric | Formula | Notes |
-|---|---|---|
+| --- | --- | --- |
 | MTTA | mean(`acknowledgedAt − createdAt`) over acknowledged incidents | Median and p90 reported alongside; one outlier moves a mean a lot at low volume |
 | MTTR | mean(`resolvedAt − createdAt`) over resolved incidents | Time to restore is `mitigatedAt − createdAt`, reported as MTTM; resolve includes root cause |
 | SLA compliance | count(`resolvedAt ≤ resolveDueAt`) ÷ count(resolved) | Per severity; open incidents past due count as breached in the period they breach |
@@ -38,7 +37,7 @@ All durations from incident timestamps in UTC, over incidents created in the per
 Insights pulls `GET /api/incidents/export?from=&to=` (flat incidents, no timeline) and works on a Pandas DataFrame.
 
 | Endpoint | Computation |
-|---|---|
+| --- | --- |
 | `GET /api/kpis?days=90` | Parse timestamps as UTC; `tta = acknowledgedAt − createdAt`, `ttr = resolvedAt − createdAt`; `groupby([serviceId, severity])` → mean/median/p90 in minutes and compliance ratio; weekly trend via `resample("W-MON", on="createdAt")` |
 | `GET /api/recurring?days=180` | Text = `title + " " + rootCause`; scikit-learn `TfidfVectorizer` (English stop words, 1–2 grams, `min_df=2`); clustering over cosine distance; clusters of size ≥ 3 returned with count, services and sample titles |
 | `GET /api/anomalies?days=180` | Weekly counts per service; median and MAD over a trailing 12-week window; `z = 0.6745 × (x − median) ÷ MAD`; flagged when `z > 3.5` |
@@ -57,7 +56,7 @@ Toil, KTLO split and follow-up closure come from work items, not incidents. Quer
 ## Review cadence
 
 | Forum | Frequency | Metrics | Output |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Ops review | weekly, 30 min | open breached, last week's Sev1/Sev2, anomalies, on-call load | actions into the sprint |
 | Sprint review | every 2 weeks | KTLO split planned vs actual, toil %, follow-up closure | allocation for next sprint |
 | Monthly ops report | monthly | MTTA, MTTR, SLA compliance trend, recurring clusters top 5 | [stakeholder update](../leadership/stakeholder-updates.md) section |

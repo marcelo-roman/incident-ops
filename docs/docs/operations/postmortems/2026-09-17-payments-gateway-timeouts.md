@@ -3,7 +3,7 @@
 Fictional example written against the [postmortem template](../postmortem-template.md). Services and numbers are from the Incident Ops demo domain.
 
 | | |
-|---|---|
+| --- | --- |
 | Severity | Sev1 |
 | Service | `payments-gateway` (Tier1), impact on `checkout` |
 | Date | 2026-09-17 |
@@ -12,7 +12,6 @@ Fictional example written against the [postmortem template](../postmortem-templa
 | Incident commander | Ana Ribeiro |
 | Postmortem owner | Daniel Okafor |
 | Status | Published |
-
 
 ## Summary
 
@@ -28,7 +27,7 @@ A configuration change deployed at 14:05 capped outbound HTTP connections from `
 ## Timeline (UTC)
 
 | Time | Event |
-|---|---|
+| --- | --- |
 | 14:05 | PR "chore: consolidate HTTP client settings" deployed; sets `MaxConnectionsPerServer = 10` on the processor client (previously unbounded). Canary at 10% for 15 min passes at ~25 req/s total |
 | 14:20 | Revision promoted to 100% |
 | 15:40 | Traffic ramps toward peak; p95 authorization latency climbs from 0.9 s to 3.5 s. No alert (threshold 5 s) |
@@ -68,23 +67,26 @@ The 5xx alert worked as designed and fired 5 minutes after the first error. A p9
 ## Response
 
 What went well:
+
 - Acknowledged in 9 minutes; roles assigned within 4 minutes of Sev1 declaration.
 - The deployment history on the `production` environment made the suspect change visible in one click.
 - Rollback to the previous revision took 10 minutes end to end and needed no schema change.
 - Stakeholder updates went out on the 30-minute cadence without being asked.
 
 What was hard:
+
 - Two people investigated the processor's status page for 10 minutes in parallel, unaware of each other; the scribe's timeline was ahead of the bridge.
 - The runbook for high error rate did not mention recent configuration changes, only code deploys.
 
 Where we got lucky:
+
 - Idempotency keys prevented duplicate charges when `checkout` retried.
 - The peak was the regular midday peak, not a promotion day at 3× traffic.
 
 ## Action items
 
 | # | Action | Type | Owner | Due | Work item |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 1 | Size the processor connection limit from Little's law at 2× peak (≥ 50 per replica, ≤ 200 total) and make it configuration per environment | prevent | Daniel Okafor | 2026-09-24 | AB#2311 |
 | 2 | Invert timeout budget: processor client 5 s, `checkout` → `payments-gateway` 8 s, retries only on idempotent calls with jitter | prevent | Priya Nair | 2026-10-01 | AB#2312 |
 | 3 | Add connection-queue wait metric and a dashboard tile for the processor client | detect | Daniel Okafor | 2026-10-01 | AB#2313 |

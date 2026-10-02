@@ -13,7 +13,7 @@ Documentation site for Incident Ops: architecture diagrams, bounded contexts, op
 ## Structure
 
 | Folder | Content |
-|---|---|
+| --- | --- |
 | `docs/architecture` | C4 context and containers, context map, incident lifecycle, SLA timers and escalation, real-time, deployment and delivery, observability, code structure |
 | `docs/operations` | support model, severity and SLA, alerting, incident response, postmortems, runbooks with KQL, KTLO metrics, SLOs |
 | `docs/engineering` | Definition of Ready/Done, release readiness, code review, branching, quality gates, testing strategy, ADO hygiene |
@@ -32,7 +32,7 @@ python3 -m venv .venv
 .venv/bin/mkdocs serve
 ```
 
-Open http://127.0.0.1:8000. `mkdocs build --strict` is the same check CI runs.
+Open <http://127.0.0.1:8000>. `mkdocs build --strict` is the same check CI runs.
 
 ## Writing pages
 
@@ -44,7 +44,7 @@ Open http://127.0.0.1:8000. `mkdocs build --strict` is the same check CI runs.
 
 ## Publishing
 
-[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs on pull requests and pushes that change `docs/**` or the workflow itself. It builds with `--strict` on every run; on `main` it uploads the site and deploys it with `actions/deploy-pages` to GitHub Pages. The site is served at https://incidents-docs.marceloroman.com.br, a custom domain set in the repository's Pages settings and backed by a DNS-only Cloudflare CNAME to `marcelo-roman.github.io`; `site_url` in `mkdocs.yml` matches it.
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs on pull requests and pushes that change `docs/**` or the workflow itself. It builds with `--strict` on every run; on `main` it uploads the site and deploys it with `actions/deploy-pages` to GitHub Pages. The site is served at <https://incidents-docs.marceloroman.com.br>, a custom domain set in the repository's Pages settings and backed by a DNS-only Cloudflare CNAME to `marcelo-roman.github.io`; `site_url` in `mkdocs.yml` matches it.
 
 ## License
 
