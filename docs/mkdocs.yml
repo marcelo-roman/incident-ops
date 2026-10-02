@@ -1,6 +1,6 @@
 site_name: Incident Ops
 site_description: Architecture, operations model, alerting, runbooks and engineering standards for the Incident Ops platform.
-site_url: https://incidents-docs.marceloroman.com.br/
+site_url: https://marcelo-roman.github.io/incident-ops/
 repo_url: https://github.com/marcelo-roman/incident-ops
 repo_name: marcelo-roman/incident-ops
 edit_uri: edit/main/docs/docs/
@@ -115,7 +115,6 @@ nav:
       - Quality gates: engineering/quality-gates.md
       - Testing strategy: engineering/testing-strategy.md
       - ADO hygiene: engineering/ado-hygiene.md
-      - AI-assisted development: engineering/ai-assisted-development.md
   - Leadership:
       - leadership/index.md
       - Stakeholder updates: leadership/stakeholder-updates.md

@@ -18,7 +18,6 @@ on:
       - scripts/**
       - "**/*.md"
       - .github/**
-  workflow_dispatch:
 
 permissions:
   contents: read

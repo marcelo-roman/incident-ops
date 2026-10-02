@@ -37,7 +37,7 @@ flowchart LR
 |---|---|
 | Architecture | [overview and C4 diagrams](architecture/index.md), [SLA timers and escalation](architecture/sla-escalation.md), [deployment and delivery](architecture/deployment.md) |
 | Operations | [support model](operations/support-model.md), [alerting](operations/alerting.md), [incident response](operations/incident-response.md), [runbooks](operations/runbooks/index.md) |
-| Engineering | [quality gates](engineering/quality-gates.md), [definition of done](engineering/definition-of-done.md), [AI-assisted development](engineering/ai-assisted-development.md) |
+| Engineering | [quality gates](engineering/quality-gates.md), [definition of done](engineering/definition-of-done.md) |
 | Leadership | [stakeholder updates](leadership/stakeholder-updates.md), [KTLO vs roadmap](leadership/ktlo-vs-roadmap.md) |
 | Decisions | [architecture decision records](adr/index.md) |
 

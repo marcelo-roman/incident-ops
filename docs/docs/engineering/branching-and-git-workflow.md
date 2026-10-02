@@ -67,7 +67,7 @@ Configured on `main`. The repository lives on GitHub, so the enforcing mechanism
 
 | Rule | GitHub ruleset on `main` | Azure Repos branch policy |
 |---|---|---|
-| Reviews | 1 approval; dismiss stale approvals on push; last pusher cannot approve | Minimum reviewers 1; reset votes on new pushes; author cannot approve |
+| Reviews | pull request required; 0 approvals while the repository has a single maintainer (GitHub does not let authors approve their own pull requests), 1 approval with dismissal of stale approvals once a second maintainer joins | Minimum reviewers 1; reset votes on new pushes; author cannot approve |
 | Code owners | `CODEOWNERS` review required; `contracts/`, `.github/` and `infra/azure-devops/` always need their owner | Automatically included required reviewers on the same paths |
 | Status checks | path-filtered workflows, reviewed as described in [required checks per path](#required-checks-per-path); branch must be up to date with `main` | Build validation policy per path filter (one per pipeline in `infra/azure-devops/`); expires when `main` updates |
 | Conversations | all resolved before merge | Comment resolution required |
@@ -75,6 +75,18 @@ Configured on `main`. The repository lives on GitHub, so the enforcing mechanism
 | Work item link | `AB#1234` in PR description (Azure Boards app links it); PR template checkbox | Linked work items required |
 | Direct pushes, force pushes, deletion | blocked, no bypass list | Branch locked to PRs; no bypass permission granted |
 | Deployments | `production` environment with required reviewers; deploys only from `main` | Environment approvals and checks on `incident-ops-prod` |
+
+## Deploys only from `main`
+
+Deploy jobs run only on a push to `main`, and three controls make sure that editing a workflow in a pull request cannot deploy from another branch:
+
+| Layer | Control |
+|---|---|
+| Workflow | deploy jobs require `github.event_name == 'push' && github.ref == 'refs/heads/main'`; pull requests run build, lint and test only |
+| GitHub environments | `production` and `github-pages` accept deployments from `main` only (deployment branch policy) |
+| Azure | the OIDC federated credentials trust only `environment:production` and `ref:refs/heads/main`; a job from a pull request or any other branch cannot obtain a token, so validation and what-if run on `main` right before the deploy |
+
+Azure deploy jobs also require the repository variable `DEPLOY_ENABLED=true`. Until the Azure resources and the OIDC bootstrap exist, deploys report as skipped instead of failing; setting the variable enables them without a code change.
 
 ## Hotfix flow
 
