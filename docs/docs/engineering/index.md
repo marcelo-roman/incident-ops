@@ -12,7 +12,6 @@ How work enters a sprint, what done means, how code is reviewed, merged, gated a
 | [Testing strategy](testing-strategy.md) | pyramid per module, architecture tests, coverage floors |
 | [Release readiness checklist](release-readiness-checklist.md) | backward-compatible migrations, rollback verified, `production` approval |
 | [ADO hygiene](ado-hygiene.md) | work item hierarchy, tags, capacity, say/do ratio |
-| [AI-assisted development](ai-assisted-development.md) | contract first, agents implement, humans review, CI decides |
 
 ```mermaid
 flowchart LR

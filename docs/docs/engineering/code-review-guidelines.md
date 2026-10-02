@@ -53,10 +53,6 @@ Required for: new component or Azure resource, contract change, new dependency o
 2. Async comments for 2 business days.
 3. 30-minute weekly slot to resolve open points; decision recorded in the ADR.
 
-## Reviewing AI-assisted changes
-
-Same bar as any change, with extra attention to: plausible-looking APIs that do not exist, tests that assert the implementation instead of the requirement, silent scope creep beyond the work item, and unnecessary dependencies. See [ai-assisted-development.md](ai-assisted-development.md).
-
 ## Coaching through review
 
 - Explain the principle, link the standard, show one example; do not rewrite the PR in comments.

@@ -14,8 +14,7 @@ Operations console for the Incident Ops platform: live SLA clocks, the on-call e
 8. [Container image](#container-image)
 9. [Deployment](#deployment)
 10. [Contract notes](#contract-notes)
-11. [How this was built](#how-this-was-built)
-12. [License](#license)
+11. [License](#license)
 
 ## What it is
 
@@ -183,10 +182,6 @@ Where the contract names a payload without fixing its shape, the console uses th
 | `GET /api/metrics/summary`                          | `openBySeverity` as a map keyed by severity; `slaCompliance30d` as a 0 to 100 percentage.                                                                                                                                                                                                                            |
 | `GET /api/oncall/current`                           | `primary`, `secondary` and `lead` as display names.                                                                                                                                                                                                                                                                  |
 | Source filter                                       | `GET /api/incidents` has no `source` parameter, so the console filters by source on the client.                                                                                                                                                                                                                      |
-
-## How this was built
-
-Built with an AI-assisted workflow: Claude Code wrote code under the author's direction. Architecture, contract, design decisions and review are the author's; every change went through lint, type checks and tests before it was kept.
 
 ## License
 

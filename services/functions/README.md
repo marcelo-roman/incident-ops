@@ -15,8 +15,7 @@ SLA watchdog and on-call notifications for Incident Ops, built on Azure Function
 9. [Observability](#observability)
 10. [Logic App workflow](#logic-app-workflow)
 11. [Deployment](#deployment)
-12. [How this was built](#how-this-was-built)
-13. [License](#license)
+12. [License](#license)
 
 ## What it is
 
@@ -252,10 +251,6 @@ GitHub Actions is the delivery system. [`.github/workflows/functions.yml`](../..
 | `deploy` | pushes to `main`, environment `production` | `azure/login@v2` with OpenID Connect (`vars.AZURE_CLIENT_ID`, `vars.AZURE_TENANT_ID`, `vars.AZURE_SUBSCRIPTION_ID`), then `Azure/functions-action@v1` to `func-incident-ops` on Flex Consumption |
 
 [`infra/azure-devops/functions.yml`](../../infra/azure-devops/functions.yml) is an equivalent Azure DevOps sample and is not wired to any project: stages Build → Deploy, `AzureFunctionApp@2` with service connection `sc-incident-ops`, `isFlexConsumption: true` and environment `incident-ops-prod`.
-
-## How this was built
-
-Built with an AI-assisted workflow (Claude Code) under the author's design and review: the architecture, contracts and acceptance criteria were defined by the author, and every change went through build, format, tests and a local end-to-end run against the Service Bus emulator before review.
 
 ## License
 

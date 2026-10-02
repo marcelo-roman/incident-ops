@@ -14,8 +14,7 @@ This repository holds every module: three services, the console, the infrastruct
 6. [Quick start](#quick-start)
 7. [Local demo: alert to resolution](#local-demo-alert-to-resolution)
 8. [Continuous integration and delivery](#continuous-integration-and-delivery)
-9. [How this was built](#how-this-was-built)
-10. [License](#license)
+9. [License](#license)
 
 ## Live
 
@@ -103,7 +102,6 @@ Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA 
 | CI/CD in YAML: Azure DevOps | samples in [infra/azure-devops](infra/azure-devops) with templates, setup in [ado-bootstrap.md](infra/scripts/ado-bootstrap.md); [ADO hygiene](docs/docs/engineering/ado-hygiene.md) |
 | Incident management, SLAs, KTLO | lifecycle and SLA rules in [IncidentOps.Domain](services/api/src/IncidentOps.Domain), escalation loop in [services/functions](services/functions); [severity and SLA](docs/docs/operations/severity-and-sla.md), [support model](docs/docs/operations/support-model.md), [incident response](docs/docs/operations/incident-response.md), [postmortem example](docs/docs/operations/postmortems/2026-09-17-payments-gateway-timeouts.md), [KTLO metrics](docs/docs/operations/ktlo-metrics.md), [KTLO vs roadmap](docs/docs/leadership/ktlo-vs-roadmap.md) |
 | Engineering standards, DoR, DoD, quality gates | [definition of ready](docs/docs/engineering/definition-of-ready.md), [definition of done](docs/docs/engineering/definition-of-done.md), [quality gates](docs/docs/engineering/quality-gates.md), [testing strategy](docs/docs/engineering/testing-strategy.md), [code review](docs/docs/engineering/code-review-guidelines.md), [branching](docs/docs/engineering/branching-and-git-workflow.md), [CODEOWNERS](.github/CODEOWNERS), [conventions](contracts/contracts.md#conventions) |
-| AI-assisted development | [AI-assisted development](docs/docs/engineering/ai-assisted-development.md), [How this was built](#how-this-was-built) |
 
 ## Quick start
 
@@ -189,19 +187,6 @@ Trunk-based: `main` changes only through squash-merged pull requests, and pull r
 | [platform.yml](.github/workflows/platform.yml) | `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, any `*.md`, `.github/**` | `docker compose config`, `promtool check config`, `promtool test rules`, `amtool check-config`, Service Bus JSON, Markdown link check, ShellCheck, actionlint | |
 
 [CODEOWNERS](.github/CODEOWNERS) assigns an owner per top-level path, and changes to `contracts/` require that owner's review. Gates in detail: [quality gates](docs/docs/engineering/quality-gates.md); branch rules: [branching and git workflow](docs/docs/engineering/branching-and-git-workflow.md).
-
-## How this was built
-
-AI-assisted development was a deliberate part of the method, with explicit guardrails. Claude Code acted as a pair programmer:
-
-1. **Contract first, written by the author.** [contracts/contracts.md](contracts/contracts.md) (domain, SLA policy, API, events, alert ingestion, topology, runtime configuration, delivery, conventions) was designed before any code. It is the boundary between modules and between human decisions and delegated work.
-2. **Parallel implementation against the contract.** Each module was implemented by a separate agent session working only from the contract and the conventions. Agents could not change the contract; gaps went back to the author.
-3. **Author review.** Every change was reviewed by the author with the same [review guidelines](docs/docs/engineering/code-review-guidelines.md) as human code. Architecture, bounded contexts, ADRs, SLA policy and escalation semantics were decided by the author.
-4. **CI as the arbiter.** Build, lint, tests, architecture tests and coverage gates run in GitHub Actions on every pull request. Generated code that does not pass does not merge.
-5. **No secrets to the model.** Agents saw `.env.example` placeholders only. Delivery uses OIDC federation, so there are no Azure credentials to leak.
-6. **AI inside the product, with a human in the loop.** Insights drafts RCAs with Azure OpenAI from an incident and its timeline. The draft is input for the postmortem owner, never published as is.
-
-What was not delegated, and why: [AI-assisted development](docs/docs/engineering/ai-assisted-development.md).
 
 ## License
 

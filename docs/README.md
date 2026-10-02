@@ -16,7 +16,7 @@ Documentation site for Incident Ops: architecture diagrams, bounded contexts, op
 |---|---|
 | `docs/architecture` | C4 context and containers, context map, incident lifecycle, SLA timers and escalation, real-time, deployment and delivery, observability, code structure |
 | `docs/operations` | support model, severity and SLA, alerting, incident response, postmortems, runbooks with KQL, KTLO metrics, SLOs |
-| `docs/engineering` | Definition of Ready/Done, release readiness, code review, branching, quality gates, testing strategy, ADO hygiene, AI-assisted development |
+| `docs/engineering` | Definition of Ready/Done, release readiness, code review, branching, quality gates, testing strategy, ADO hygiene |
 | `docs/leadership` | stakeholder updates, KTLO vs roadmap, risk and dependency log, retrospective actions |
 | `docs/adr` | architecture decision records (MADR) |
 

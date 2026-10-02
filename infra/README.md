@@ -19,8 +19,7 @@ Infrastructure as code and delivery for Incident Ops: Bicep for every Azure reso
 13. [Teardown](#teardown)
 14. [Local validation](#local-validation)
 15. [Design decisions](#design-decisions)
-16. [How this was built](#how-this-was-built)
-17. [License](#license)
+16. [License](#license)
 
 ## Architecture
 
@@ -422,10 +421,6 @@ shellcheck --severity=style scripts/*.sh
 - **Explicit `dependsOn`** where modules receive names instead of outputs: names known at compile time keep what-if precise (`what-if-short-circuiting`).
 - **No diagnostic settings resources.** Container Apps and Functions already send logs to the workspace. The current `Microsoft.Insights/diagnosticSettings` API version is a 2021 preview, which the strict `use-recent-api-versions` rule rejects.
 - **Logic App webhook format.** The workflow posts `{ "text": ... }`, the Slack incoming-webhook format; Teams Workflows webhooks need an Adaptive Card body instead. Email needs an Office 365 API connection with interactive consent, so it is not part of the template.
-
-## How this was built
-
-The architecture, resource choices and security model are the author's design, and changes go through the author's review. Implementation was AI-assisted with Claude Code working from the shared [contract](../contracts/contracts.md), and every change is checked with the commands in [Local validation](#local-validation) and by the CI workflows.
 
 ## License
 

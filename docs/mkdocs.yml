@@ -115,7 +115,6 @@ nav:
       - Quality gates: engineering/quality-gates.md
       - Testing strategy: engineering/testing-strategy.md
       - ADO hygiene: engineering/ado-hygiene.md
-      - AI-assisted development: engineering/ai-assisted-development.md
   - Leadership:
       - leadership/index.md
       - Stakeholder updates: leadership/stakeholder-updates.md

@@ -13,8 +13,7 @@ KTLO analytics and AI-assisted root cause analysis for the Incident Ops system. 
 7. [Configuration](#configuration)
 8. [Testing and quality](#testing-and-quality)
 9. [Deployment](#deployment)
-10. [How this was built](#how-this-was-built)
-11. [License](#license)
+10. [License](#license)
 
 ## What it does
 
@@ -331,10 +330,6 @@ GitHub Actions delivers; [`.github/workflows/insights.yml`](../../.github/workfl
 The reusable workflow authenticates with OpenID Connect (`id-token: write`, repository variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`), runs under the `production` environment, updates the Container App revision, smoke tests the health URL and rolls back on failure. The Container App's managed identity needs `Cognitive Services OpenAI User` on the Azure OpenAI resource; no key is stored.
 
 [`infra/azure-devops/insights.yml`](../../infra/azure-devops/insights.yml) is an equivalent Azure DevOps sample and is not wired to any project. It runs the same checks, pushes the image through a Docker registry service connection named `ghcr-marcelo-roman`, and deploys with the step template `infra/azure-devops/templates/deploy-container-app.yml` (service connection `sc-incident-ops`).
-
-## How this was built
-
-Built with an AI-assisted workflow (Claude Code) under my design and review: I set the architecture, the contract with the other Incident Ops modules, the analytical methods and the code rules, and reviewed the generated code, tests and documentation before accepting them.
 
 ## License
 
