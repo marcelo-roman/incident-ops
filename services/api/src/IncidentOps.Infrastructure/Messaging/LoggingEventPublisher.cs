@@ -5,9 +5,9 @@ namespace IncidentOps.Infrastructure.Messaging;
 
 internal sealed partial class LoggingEventPublisher(ILogger<LoggingEventPublisher> logger) : IEventPublisher
 {
-    public Task PublishAsync(IncidentIntegrationEvent incidentEvent, CancellationToken cancellationToken)
+    public Task PublishAsync(IncidentIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
-        LogEvent(incidentEvent.Type, incidentEvent.Incident.Number, incidentEvent.Incident.Severity.ToString());
+        LogEvent(integrationEvent.Type, integrationEvent.Incident.Number, integrationEvent.Incident.Severity.ToString());
         return Task.CompletedTask;
     }
 

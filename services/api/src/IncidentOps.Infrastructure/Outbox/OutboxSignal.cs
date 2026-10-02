@@ -3,21 +3,18 @@ namespace IncidentOps.Infrastructure.Outbox;
 internal sealed class OutboxSignal : IDisposable
 {
     private readonly SemaphoreSlim _pending = new(0, 1);
+    private readonly object _gate = new();
 
     public void Notify()
     {
-        if (_pending.CurrentCount > 0)
+        lock (_gate)
         {
-            return;
-        }
+            if (_pending.CurrentCount > 0)
+            {
+                return;
+            }
 
-        try
-        {
             _pending.Release();
-        }
-        catch (SemaphoreFullException)
-        {
-            return;
         }
     }
 
