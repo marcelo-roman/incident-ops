@@ -1,0 +1,92 @@
+name: sample-web-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/web
+      - infra/azure-devops/web.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/web
+      - contracts
+      - infra/azure-devops/web.yml
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: vg-incident-ops
+  - name: workingDirectory
+    value: apps/web
+  - name: VITE_API_BASE_URL
+    value: https://incidents-api.marceloroman.com.br
+  - name: VITE_INSIGHTS_BASE_URL
+    value: https://incidents-insights.marceloroman.com.br
+
+stages:
+  - stage: Build
+    displayName: Lint, test and build
+    jobs:
+      - job: Verify
+        steps:
+          - checkout: self
+          - task: NodeTool@0
+            displayName: Use Node 22
+            inputs:
+              versionSpec: 22.x
+          - script: corepack enable
+            workingDirectory: $(workingDirectory)
+            displayName: Enable pnpm
+          - script: pnpm install --frozen-lockfile
+            workingDirectory: $(workingDirectory)
+            displayName: Install
+          - script: pnpm lint
+            workingDirectory: $(workingDirectory)
+            displayName: Lint
+          - script: pnpm format:check
+            workingDirectory: $(workingDirectory)
+            displayName: Format check
+          - script: pnpm typecheck
+            workingDirectory: $(workingDirectory)
+            displayName: Typecheck
+          - script: pnpm test:coverage
+            workingDirectory: $(workingDirectory)
+            displayName: Test
+          - script: pnpm build
+            workingDirectory: $(workingDirectory)
+            displayName: Build
+          - task: PublishPipelineArtifact@1
+            displayName: Publish dist
+            inputs:
+              targetPath: $(workingDirectory)/dist
+              artifact: web-dist
+
+  - stage: Deploy
+    displayName: Deploy to Static Web Apps
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: StaticWebApp
+        environment: incident-ops-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: web-dist
+                - task: AzureStaticWebApp@0
+                  displayName: Upload to Static Web Apps
+                  inputs:
+                    cwd: $(Pipeline.Workspace)/web-dist
+                    app_location: /
+                    skip_app_build: true
+                    skip_api_build: true
+                    azure_static_web_apps_api_token: $(SWA_DEPLOYMENT_TOKEN)

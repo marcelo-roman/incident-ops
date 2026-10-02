@@ -1,0 +1,103 @@
+name: sample-api-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/api
+      - infra/azure-devops/api.yml
+      - infra/azure-devops/templates/deploy-container-app.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/api
+      - contracts
+      - infra/azure-devops/api.yml
+      - infra/azure-devops/templates/deploy-container-app.yml
+
+variables:
+  - name: workingDirectory
+    value: services/api
+  - name: imageRepository
+    value: marcelo-roman/incident-ops-api
+  - name: image
+    value: ghcr.io/$(imageRepository):$(Build.SourceVersion)
+  - name: isMain
+    value: $[and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))]
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    displayName: Build and test
+    jobs:
+      - job: Test
+        steps:
+          - checkout: self
+          - task: UseDotNet@2
+            inputs:
+              useGlobalJson: true
+              workingDirectory: $(workingDirectory)
+          - script: |
+              set -euo pipefail
+              dotnet restore
+              dotnet tool restore
+              dotnet format --verify-no-changes --no-restore
+              dotnet build --configuration Release --no-restore
+              dotnet test --configuration Release --no-build --settings coverage.runsettings --collect "XPlat Code Coverage" --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+              dotnet reportgenerator -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" -targetdir:$(Agent.TempDirectory)/coverage -reporttypes:TextSummary
+              line=$(grep -oP 'Line coverage: \K[0-9.]+' $(Agent.TempDirectory)/coverage/Summary.txt)
+              awk -v value="$line" -v threshold=80 'BEGIN { exit !(value >= threshold) }'
+            workingDirectory: $(workingDirectory)
+            displayName: Restore, format, build, test and coverage gate
+          - task: PublishTestResults@2
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: $(Agent.TempDirectory)/TestResults/**/*.trx
+
+  - stage: Publish
+    displayName: Container image
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables.isMain, true))
+    jobs:
+      - job: Image
+        steps:
+          - checkout: self
+          - task: Docker@2
+            displayName: Build and push
+            inputs:
+              command: buildAndPush
+              containerRegistry: ghcr-marcelo-roman
+              repository: $(imageRepository)
+              Dockerfile: $(workingDirectory)/Dockerfile
+              buildContext: $(workingDirectory)
+              tags: |
+                $(Build.SourceVersion)
+                latest
+
+  - stage: Deploy
+    displayName: Deploy to Azure Container Apps
+    dependsOn: Publish
+    condition: and(succeeded(), eq(variables.isMain, true))
+    jobs:
+      - deployment: ContainerApp
+        environment: incident-ops-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/deploy-container-app.yml
+                  parameters:
+                    containerAppName: ca-incident-ops-api
+                    image: $(image)
+                    resourceGroup: rg-incident-ops
+                    azureSubscription: sc-incident-ops
+                    healthUrl: https://incidents-api.marceloroman.com.br/health/ready

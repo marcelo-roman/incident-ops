@@ -1,0 +1,44 @@
+.tiers {
+  display: flex;
+  flex-direction: column;
+}
+
+.tier {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.tier:last-child {
+  border-bottom: 0;
+}
+
+.level {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 50%;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.tier:first-child .level {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.engineer {
+  font-weight: 600;
+}
+
+.role {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

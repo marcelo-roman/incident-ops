@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/TestResults/
+coverage/
+tests/
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+*.md
+docker-compose.yml
+azure-pipelines.yml

@@ -1,0 +1,104 @@
+name: sample-insights-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/insights
+      - infra/azure-devops/insights.yml
+      - infra/azure-devops/templates/deploy-container-app.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/insights
+      - contracts
+      - infra/azure-devops/insights.yml
+      - infra/azure-devops/templates/deploy-container-app.yml
+
+variables:
+  - name: workingDirectory
+    value: services/insights
+  - name: imageRepository
+    value: marcelo-roman/incident-ops-insights
+  - name: image
+    value: ghcr.io/$(imageRepository):$(Build.SourceVersion)
+  - name: isMain
+    value: $[and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))]
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Verify
+    displayName: Lint, type check and test
+    jobs:
+      - job: Test
+        steps:
+          - checkout: self
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.12"
+          - script: pip install uv==0.12.22 && uv sync --frozen
+            workingDirectory: $(workingDirectory)
+            displayName: Install
+          - script: uv run ruff check . && uv run ruff format --check .
+            workingDirectory: $(workingDirectory)
+            displayName: Lint
+          - script: uv run mypy
+            workingDirectory: $(workingDirectory)
+            displayName: Type check
+          - script: uv run lint-imports
+            workingDirectory: $(workingDirectory)
+            displayName: Architecture contracts
+          - script: uv run pytest --junitxml=test-results.xml --cov-report=xml
+            workingDirectory: $(workingDirectory)
+            displayName: Test
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: $(workingDirectory)/test-results.xml
+
+  - stage: Publish
+    displayName: Container image
+    dependsOn: Verify
+    condition: and(succeeded(), eq(variables.isMain, true))
+    jobs:
+      - job: Image
+        steps:
+          - checkout: self
+          - task: Docker@2
+            displayName: Build and push
+            inputs:
+              command: buildAndPush
+              containerRegistry: ghcr-marcelo-roman
+              repository: $(imageRepository)
+              Dockerfile: $(workingDirectory)/Dockerfile
+              buildContext: $(workingDirectory)
+              tags: |
+                $(Build.SourceVersion)
+                latest
+
+  - stage: Deploy
+    displayName: Deploy to Azure Container Apps
+    dependsOn: Publish
+    condition: and(succeeded(), eq(variables.isMain, true))
+    jobs:
+      - deployment: ContainerApp
+        environment: incident-ops-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/deploy-container-app.yml
+                  parameters:
+                    containerAppName: ca-incident-ops-insights
+                    image: $(image)
+                    resourceGroup: rg-incident-ops
+                    azureSubscription: sc-incident-ops
+                    healthUrl: https://incidents-insights.marceloroman.com.br/health

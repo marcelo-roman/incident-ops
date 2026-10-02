@@ -1,0 +1,52 @@
+{
+ "anomalies": [
+  {
+   "baselineMean": 2.83,
+   "baselineStd": 0.9,
+   "count": 6,
+   "serviceId": "checkout",
+   "weekStart": "2026-05-11",
+   "zScore": 3.17
+  },
+  {
+   "baselineMean": 1.5,
+   "baselineStd": 0.87,
+   "count": 8,
+   "serviceId": "search",
+   "weekStart": "2026-06-08",
+   "zScore": 6.5
+  },
+  {
+   "baselineMean": 3.12,
+   "baselineStd": 1.54,
+   "count": 9,
+   "serviceId": "checkout",
+   "weekStart": "2026-06-15",
+   "zScore": 3.82
+  },
+  {
+   "baselineMean": 3.75,
+   "baselineStd": 0.97,
+   "count": 13,
+   "serviceId": "payments-gateway",
+   "weekStart": "2026-08-03",
+   "zScore": 9.25
+  },
+  {
+   "baselineMean": 0.75,
+   "baselineStd": 0.83,
+   "count": 4,
+   "serviceId": "reporting",
+   "weekStart": "2026-09-07",
+   "zScore": 3.25
+  }
+ ],
+ "baselineWeeks": 8,
+ "method": "rolling-z-score",
+ "threshold": 3.0,
+ "window": {
+  "days": 180,
+  "end": "2026-09-28T00:00:00Z",
+  "start": "2026-04-01T00:00:00Z"
+ }
+}

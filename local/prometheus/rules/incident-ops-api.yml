@@ -1,0 +1,57 @@
+groups:
+  - name: incident-ops-api
+    rules:
+      - alert: ApiDown
+        expr: up{job="incident-ops-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: platform
+        annotations:
+          summary: incident-ops-api is down
+          description: "Prometheus has not been able to scrape {{ $labels.instance }} for 1 minute."
+          runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/api-high-error-rate/
+
+      - alert: ApiHighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_request_duration_seconds_count{job="incident-ops-api", http_response_status_code=~"5..", http_route!~"/metrics|/health.*"}[5m]))
+            /
+            sum(rate(http_server_request_duration_seconds_count{job="incident-ops-api", http_route!~"/metrics|/health.*"}[5m]))
+          ) > 0.05
+          and
+          sum(rate(http_server_request_duration_seconds_count{job="incident-ops-api", http_route!~"/metrics|/health.*"}[5m])) > 0.2
+        for: 2m
+        labels:
+          severity: high
+          service: platform
+        annotations:
+          summary: incident-ops-api error rate above 5%
+          description: "{{ $value | humanizePercentage }} of API requests returned 5xx over the last 5 minutes."
+          runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/api-high-error-rate/
+
+      - alert: ApiHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket{job="incident-ops-api", http_route!~"/metrics|/health.*"}[5m]))
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: platform
+        annotations:
+          summary: incident-ops-api p95 latency above 1 s
+          description: "p95 latency is {{ $value | humanizeDuration }} over the last 5 minutes."
+          runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/api-high-error-rate/
+
+      - alert: SlaBreachesOpen
+        expr: incidentops_sla_breached_open > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: platform
+          category: process
+        annotations:
+          summary: Open incidents with breached SLA
+          description: "{{ $value }} open incidents have passed an SLA deadline."
+          runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/sla-breach-escalation-not-firing/

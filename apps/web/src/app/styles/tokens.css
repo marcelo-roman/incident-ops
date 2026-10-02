@@ -1,0 +1,101 @@
+:root {
+  --font-sans: 'Public Sans Variable', 'Segoe UI', system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  --rail-width: 13.5rem;
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+
+  --color-bg: #e8ecf0;
+  --color-surface: #f6f8f9;
+  --color-surface-raised: #ffffff;
+  --color-sunken: #dde3e9;
+  --color-line: #c9d2db;
+  --color-line-strong: #a9b6c3;
+  --color-text: #16202b;
+  --color-text-muted: #4b5b6c;
+  --color-accent: #0a6576;
+  --color-accent-contrast: #ffffff;
+
+  --color-sev1: #b8261c;
+  --color-sev2: #a65406;
+  --color-sev3: #7d6300;
+  --color-sev4: #45607d;
+
+  --color-on-track: #1b7a4f;
+  --color-at-risk: #9c5b00;
+  --color-breached: #b8261c;
+  --color-met: #52606e;
+
+  --color-chart-1: #00809c;
+  --color-chart-grid: #d3dbe2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #111922;
+    --color-surface: #17212b;
+    --color-surface-raised: #1d2834;
+    --color-sunken: #0d141b;
+    --color-line: #283645;
+    --color-line-strong: #3a4b5d;
+    --color-text: #dbe3eb;
+    --color-text-muted: #91a2b4;
+    --color-accent: #6cc4d4;
+    --color-accent-contrast: #0b2026;
+
+    --color-sev1: #f26d62;
+    --color-sev2: #ef9d4a;
+    --color-sev3: #e2c454;
+    --color-sev4: #8ea8c3;
+
+    --color-on-track: #55c48f;
+    --color-at-risk: #eaa640;
+    --color-breached: #f26d62;
+    --color-met: #8394a6;
+
+    --color-chart-1: #1aa3bd;
+    --color-chart-grid: #243140;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #111922;
+  --color-surface: #17212b;
+  --color-surface-raised: #1d2834;
+  --color-sunken: #0d141b;
+  --color-line: #283645;
+  --color-line-strong: #3a4b5d;
+  --color-text: #dbe3eb;
+  --color-text-muted: #91a2b4;
+  --color-accent: #6cc4d4;
+  --color-accent-contrast: #0b2026;
+
+  --color-sev1: #f26d62;
+  --color-sev2: #ef9d4a;
+  --color-sev3: #e2c454;
+  --color-sev4: #8ea8c3;
+
+  --color-on-track: #55c48f;
+  --color-at-risk: #eaa640;
+  --color-breached: #f26d62;
+  --color-met: #8394a6;
+
+  --color-chart-1: #1aa3bd;
+  --color-chart-grid: #243140;
+}

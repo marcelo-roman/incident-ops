@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>IncidentOps.Functions.Tests</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Label="Coverage">
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <CoverletOutput>$(MSBuildThisFileDirectory)../../TestResults/coverage/</CoverletOutput>
+    <Include>[IncidentOps.Functions]*,[IncidentOps.Escalation.*]*</Include>
+    <Exclude>[IncidentOps.Functions]Program</Exclude>
+    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <ExcludeByFile>**/obj/**/*.cs</ExcludeByFile>
+    <SkipAutoProps>true</SkipAutoProps>
+    <Threshold>80</Threshold>
+    <ThresholdType>line,branch</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="coverlet.msbuild" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\IncidentOps.Escalation.Domain\IncidentOps.Escalation.Domain.csproj" />
+    <ProjectReference Include="..\..\src\IncidentOps.Escalation.Application\IncidentOps.Escalation.Application.csproj" />
+    <ProjectReference Include="..\..\src\IncidentOps.Escalation.Infrastructure\IncidentOps.Escalation.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\IncidentOps.Functions\IncidentOps.Functions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

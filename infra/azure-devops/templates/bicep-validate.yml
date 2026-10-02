@@ -1,0 +1,44 @@
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: deploymentName
+    type: string
+  - name: templateFile
+    type: string
+    default: bicep/main.bicep
+  - name: parametersFile
+    type: string
+    default: bicep/main.bicepparam
+  - name: bicepVersion
+    type: string
+    default: v0.47.16
+  - name: workingDirectory
+    type: string
+    default: infra
+
+steps:
+  - task: AzureCLI@2
+    displayName: Bicep build, lint and validate
+    env:
+      ESCALATION_API_KEY: $(ESCALATION_API_KEY)
+      NOTIFICATION_WEBHOOK_URL: $(NOTIFICATION_WEBHOOK_URL)
+      AZURE_CORE_NO_COLOR: "true"
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      workingDirectory: ${{ parameters.workingDirectory }}
+      inlineScript: |
+        set -euo pipefail
+        az bicep install --version "${{ parameters.bicepVersion }}"
+        az bicep build --file "${{ parameters.templateFile }}" --stdout > /dev/null
+        az bicep lint --file "${{ parameters.templateFile }}"
+        az bicep build-params --file "${{ parameters.parametersFile }}" --stdout > /dev/null
+        az deployment group validate \
+          --resource-group "${{ parameters.resourceGroup }}" \
+          --name "${{ parameters.deploymentName }}" \
+          --template-file "${{ parameters.templateFile }}" \
+          --parameters "${{ parameters.parametersFile }}" \
+          --output none

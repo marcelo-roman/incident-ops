@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>IncidentOps.Escalation.Domain</RootNamespace>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,983 @@
+{
+ "byService": [
+  {
+   "incidents": 32,
+   "mtta": {
+    "medianMinutes": 30.5,
+    "p90Minutes": 252.3,
+    "samples": 32
+   },
+   "mttr": {
+    "medianMinutes": 668.8,
+    "p90Minutes": 3625.4,
+    "samples": 32
+   },
+   "serviceId": "checkout",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 87.5,
+    "breached": 8,
+    "evaluated": 32,
+    "overallPct": 75.0,
+    "resolvePct": 87.5
+   }
+  },
+  {
+   "incidents": 31,
+   "mtta": {
+    "medianMinutes": 18.9,
+    "p90Minutes": 229.0,
+    "samples": 31
+   },
+   "mttr": {
+    "medianMinutes": 337.3,
+    "p90Minutes": 3437.5,
+    "samples": 31
+   },
+   "serviceId": "identity",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 83.9,
+    "breached": 10,
+    "evaluated": 31,
+    "overallPct": 67.7,
+    "resolvePct": 80.6
+   }
+  },
+  {
+   "incidents": 26,
+   "mtta": {
+    "medianMinutes": 68.1,
+    "p90Minutes": 528.1,
+    "samples": 25
+   },
+   "mttr": {
+    "medianMinutes": 1365.8,
+    "p90Minutes": 4963.1,
+    "samples": 24
+   },
+   "serviceId": "notifications",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 84.0,
+    "breached": 5,
+    "evaluated": 24,
+    "overallPct": 79.2,
+    "resolvePct": 95.8
+   }
+  },
+  {
+   "incidents": 54,
+   "mtta": {
+    "medianMinutes": 23.3,
+    "p90Minutes": 436.5,
+    "samples": 54
+   },
+   "mttr": {
+    "medianMinutes": 645.7,
+    "p90Minutes": 5289.8,
+    "samples": 54
+   },
+   "serviceId": "payments-gateway",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 83.3,
+    "breached": 14,
+    "evaluated": 54,
+    "overallPct": 74.1,
+    "resolvePct": 87.0
+   }
+  },
+  {
+   "incidents": 12,
+   "mtta": {
+    "medianMinutes": 57.3,
+    "p90Minutes": 143.9,
+    "samples": 12
+   },
+   "mttr": {
+    "medianMinutes": 530.1,
+    "p90Minutes": 3235.7,
+    "samples": 12
+   },
+   "serviceId": "platform",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 1,
+    "evaluated": 12,
+    "overallPct": 91.7,
+    "resolvePct": 91.7
+   }
+  },
+  {
+   "incidents": 15,
+   "mtta": {
+    "medianMinutes": 207.6,
+    "p90Minutes": 1565.8,
+    "samples": 15
+   },
+   "mttr": {
+    "medianMinutes": 3337.6,
+    "p90Minutes": 8016.6,
+    "samples": 15
+   },
+   "serviceId": "reporting",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 73.3,
+    "breached": 5,
+    "evaluated": 15,
+    "overallPct": 66.7,
+    "resolvePct": 93.3
+   }
+  },
+  {
+   "incidents": 27,
+   "mtta": {
+    "medianMinutes": 77.1,
+    "p90Minutes": 607.5,
+    "samples": 27
+   },
+   "mttr": {
+    "medianMinutes": 1242.7,
+    "p90Minutes": 4914.4,
+    "samples": 25
+   },
+   "serviceId": "search",
+   "severity": null,
+   "sla": {
+    "acknowledgePct": 81.5,
+    "breached": 8,
+    "evaluated": 25,
+    "overallPct": 68.0,
+    "resolvePct": 84.0
+   }
+  }
+ ],
+ "byServiceSeverity": [
+  {
+   "incidents": 6,
+   "mtta": {
+    "medianMinutes": 4.4,
+    "p90Minutes": 11.0,
+    "samples": 6
+   },
+   "mttr": {
+    "medianMinutes": 118.3,
+    "p90Minutes": 282.6,
+    "samples": 6
+   },
+   "serviceId": "checkout",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 1,
+    "evaluated": 6,
+    "overallPct": 83.3,
+    "resolvePct": 83.3
+   }
+  },
+  {
+   "incidents": 10,
+   "mtta": {
+    "medianMinutes": 10.0,
+    "p90Minutes": 41.1,
+    "samples": 10
+   },
+   "mttr": {
+    "medianMinutes": 225.3,
+    "p90Minutes": 513.9,
+    "samples": 10
+   },
+   "serviceId": "checkout",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 80.0,
+    "breached": 4,
+    "evaluated": 10,
+    "overallPct": 60.0,
+    "resolvePct": 80.0
+   }
+  },
+  {
+   "incidents": 13,
+   "mtta": {
+    "medianMinutes": 84.0,
+    "p90Minutes": 236.1,
+    "samples": 13
+   },
+   "mttr": {
+    "medianMinutes": 2709.4,
+    "p90Minutes": 3764.4,
+    "samples": 13
+   },
+   "serviceId": "checkout",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 84.6,
+    "breached": 3,
+    "evaluated": 13,
+    "overallPct": 76.9,
+    "resolvePct": 92.3
+   }
+  },
+  {
+   "incidents": 3,
+   "mtta": {
+    "medianMinutes": 320.8,
+    "p90Minutes": 345.6,
+    "samples": 3
+   },
+   "mttr": {
+    "medianMinutes": 2912.6,
+    "p90Minutes": 5220.8,
+    "samples": 3
+   },
+   "serviceId": "checkout",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 3,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 6,
+   "mtta": {
+    "medianMinutes": 9.7,
+    "p90Minutes": 17.2,
+    "samples": 6
+   },
+   "mttr": {
+    "medianMinutes": 103.4,
+    "p90Minutes": 959.2,
+    "samples": 6
+   },
+   "serviceId": "identity",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 83.3,
+    "breached": 3,
+    "evaluated": 6,
+    "overallPct": 50.0,
+    "resolvePct": 66.7
+   }
+  },
+  {
+   "incidents": 15,
+   "mtta": {
+    "medianMinutes": 16.2,
+    "p90Minutes": 26.9,
+    "samples": 15
+   },
+   "mttr": {
+    "medianMinutes": 240.1,
+    "p90Minutes": 804.0,
+    "samples": 15
+   },
+   "serviceId": "identity",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 93.3,
+    "breached": 3,
+    "evaluated": 15,
+    "overallPct": 80.0,
+    "resolvePct": 86.7
+   }
+  },
+  {
+   "incidents": 8,
+   "mtta": {
+    "medianMinutes": 132.7,
+    "p90Minutes": 530.6,
+    "samples": 8
+   },
+   "mttr": {
+    "medianMinutes": 2167.4,
+    "p90Minutes": 4378.3,
+    "samples": 8
+   },
+   "serviceId": "identity",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 62.5,
+    "breached": 4,
+    "evaluated": 8,
+    "overallPct": 50.0,
+    "resolvePct": 75.0
+   }
+  },
+  {
+   "incidents": 2,
+   "mtta": {
+    "medianMinutes": 209.5,
+    "p90Minutes": 225.1,
+    "samples": 2
+   },
+   "mttr": {
+    "medianMinutes": 3794.0,
+    "p90Minutes": 4200.7,
+    "samples": 2
+   },
+   "serviceId": "identity",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 2,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 1,
+   "mtta": {
+    "medianMinutes": 3.8,
+    "p90Minutes": 3.8,
+    "samples": 1
+   },
+   "mttr": {
+    "medianMinutes": 78.0,
+    "p90Minutes": 78.0,
+    "samples": 1
+   },
+   "serviceId": "notifications",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 1,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 6,
+   "mtta": {
+    "medianMinutes": 8.4,
+    "p90Minutes": 56.4,
+    "samples": 6
+   },
+   "mttr": {
+    "medianMinutes": 208.6,
+    "p90Minutes": 403.2,
+    "samples": 6
+   },
+   "serviceId": "notifications",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 66.7,
+    "breached": 2,
+    "evaluated": 6,
+    "overallPct": 66.7,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 15,
+   "mtta": {
+    "medianMinutes": 95.7,
+    "p90Minutes": 175.8,
+    "samples": 14
+   },
+   "mttr": {
+    "medianMinutes": 1555.0,
+    "p90Minutes": 3118.6,
+    "samples": 13
+   },
+   "serviceId": "notifications",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 92.9,
+    "breached": 2,
+    "evaluated": 13,
+    "overallPct": 84.6,
+    "resolvePct": 92.3
+   }
+  },
+  {
+   "incidents": 4,
+   "mtta": {
+    "medianMinutes": 531.4,
+    "p90Minutes": 2667.8,
+    "samples": 4
+   },
+   "mttr": {
+    "medianMinutes": 4534.7,
+    "p90Minutes": 7828.1,
+    "samples": 4
+   },
+   "serviceId": "notifications",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 75.0,
+    "breached": 1,
+    "evaluated": 4,
+    "overallPct": 75.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 10,
+   "mtta": {
+    "medianMinutes": 5.5,
+    "p90Minutes": 52.7,
+    "samples": 10
+   },
+   "mttr": {
+    "medianMinutes": 130.8,
+    "p90Minutes": 235.2,
+    "samples": 10
+   },
+   "serviceId": "payments-gateway",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 80.0,
+    "breached": 2,
+    "evaluated": 10,
+    "overallPct": 80.0,
+    "resolvePct": 90.0
+   }
+  },
+  {
+   "incidents": 18,
+   "mtta": {
+    "medianMinutes": 12.3,
+    "p90Minutes": 26.2,
+    "samples": 18
+   },
+   "mttr": {
+    "medianMinutes": 212.9,
+    "p90Minutes": 630.6,
+    "samples": 18
+   },
+   "serviceId": "payments-gateway",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 88.9,
+    "breached": 5,
+    "evaluated": 18,
+    "overallPct": 72.2,
+    "resolvePct": 83.3
+   }
+  },
+  {
+   "incidents": 20,
+   "mtta": {
+    "medianMinutes": 67.9,
+    "p90Minutes": 290.0,
+    "samples": 20
+   },
+   "mttr": {
+    "medianMinutes": 1673.5,
+    "p90Minutes": 3728.5,
+    "samples": 20
+   },
+   "serviceId": "payments-gateway",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 80.0,
+    "breached": 6,
+    "evaluated": 20,
+    "overallPct": 70.0,
+    "resolvePct": 90.0
+   }
+  },
+  {
+   "incidents": 6,
+   "mtta": {
+    "medianMinutes": 814.6,
+    "p90Minutes": 1484.2,
+    "samples": 6
+   },
+   "mttr": {
+    "medianMinutes": 8212.7,
+    "p90Minutes": 13772.3,
+    "samples": 6
+   },
+   "serviceId": "payments-gateway",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 83.3,
+    "breached": 1,
+    "evaluated": 6,
+    "overallPct": 83.3,
+    "resolvePct": 83.3
+   }
+  },
+  {
+   "incidents": 3,
+   "mtta": {
+    "medianMinutes": 1.7,
+    "p90Minutes": 2.4,
+    "samples": 3
+   },
+   "mttr": {
+    "medianMinutes": 75.8,
+    "p90Minutes": 230.1,
+    "samples": 3
+   },
+   "serviceId": "platform",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 1,
+    "evaluated": 3,
+    "overallPct": 66.7,
+    "resolvePct": 66.7
+   }
+  },
+  {
+   "incidents": 1,
+   "mtta": {
+    "medianMinutes": 13.6,
+    "p90Minutes": 13.6,
+    "samples": 1
+   },
+   "mttr": {
+    "medianMinutes": 34.5,
+    "p90Minutes": 34.5,
+    "samples": 1
+   },
+   "serviceId": "platform",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 1,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 8,
+   "mtta": {
+    "medianMinutes": 79.5,
+    "p90Minutes": 162.0,
+    "samples": 8
+   },
+   "mttr": {
+    "medianMinutes": 1868.7,
+    "p90Minutes": 3391.7,
+    "samples": 8
+   },
+   "serviceId": "platform",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 8,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 1,
+   "mtta": {
+    "medianMinutes": 6.4,
+    "p90Minutes": 6.4,
+    "samples": 1
+   },
+   "mttr": {
+    "medianMinutes": 63.3,
+    "p90Minutes": 63.3,
+    "samples": 1
+   },
+   "serviceId": "reporting",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 1,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 8,
+   "mtta": {
+    "medianMinutes": 106.1,
+    "p90Minutes": 273.6,
+    "samples": 8
+   },
+   "mttr": {
+    "medianMinutes": 2581.5,
+    "p90Minutes": 10059.4,
+    "samples": 8
+   },
+   "serviceId": "reporting",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 75.0,
+    "breached": 3,
+    "evaluated": 8,
+    "overallPct": 62.5,
+    "resolvePct": 87.5
+   }
+  },
+  {
+   "incidents": 6,
+   "mtta": {
+    "medianMinutes": 654.1,
+    "p90Minutes": 4581.7,
+    "samples": 6
+   },
+   "mttr": {
+    "medianMinutes": 7032.0,
+    "p90Minutes": 7944.9,
+    "samples": 6
+   },
+   "serviceId": "reporting",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 66.7,
+    "breached": 2,
+    "evaluated": 6,
+    "overallPct": 66.7,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 1,
+   "mtta": {
+    "medianMinutes": 12.4,
+    "p90Minutes": 12.4,
+    "samples": 1
+   },
+   "mttr": {
+    "medianMinutes": 46.7,
+    "p90Minutes": 46.7,
+    "samples": 1
+   },
+   "serviceId": "search",
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 0,
+    "evaluated": 1,
+    "overallPct": 100.0,
+    "resolvePct": 100.0
+   }
+  },
+  {
+   "incidents": 5,
+   "mtta": {
+    "medianMinutes": 10.4,
+    "p90Minutes": 41.4,
+    "samples": 5
+   },
+   "mttr": {
+    "medianMinutes": 157.5,
+    "p90Minutes": 1391.0,
+    "samples": 5
+   },
+   "serviceId": "search",
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 80.0,
+    "breached": 1,
+    "evaluated": 5,
+    "overallPct": 80.0,
+    "resolvePct": 80.0
+   }
+  },
+  {
+   "incidents": 18,
+   "mtta": {
+    "medianMinutes": 115.5,
+    "p90Minutes": 605.8,
+    "samples": 18
+   },
+   "mttr": {
+    "medianMinutes": 1638.8,
+    "p90Minutes": 4707.7,
+    "samples": 17
+   },
+   "serviceId": "search",
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 77.8,
+    "breached": 6,
+    "evaluated": 17,
+    "overallPct": 64.7,
+    "resolvePct": 88.2
+   }
+  },
+  {
+   "incidents": 3,
+   "mtta": {
+    "medianMinutes": 188.7,
+    "p90Minutes": 592.0,
+    "samples": 3
+   },
+   "mttr": {
+    "medianMinutes": 16466.4,
+    "p90Minutes": 27605.2,
+    "samples": 2
+   },
+   "serviceId": "search",
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 100.0,
+    "breached": 1,
+    "evaluated": 2,
+    "overallPct": 50.0,
+    "resolvePct": 50.0
+   }
+  }
+ ],
+ "bySeverity": [
+  {
+   "incidents": 27,
+   "mtta": {
+    "medianMinutes": 5.5,
+    "p90Minutes": 17.3,
+    "samples": 27
+   },
+   "mttr": {
+    "medianMinutes": 91.5,
+    "p90Minutes": 315.3,
+    "samples": 27
+   },
+   "serviceId": null,
+   "severity": "Sev1",
+   "sla": {
+    "acknowledgePct": 88.9,
+    "breached": 7,
+    "evaluated": 27,
+    "overallPct": 74.1,
+    "resolvePct": 81.5
+   }
+  },
+  {
+   "incidents": 56,
+   "mtta": {
+    "medianMinutes": 12.3,
+    "p90Minutes": 43.1,
+    "samples": 56
+   },
+   "mttr": {
+    "medianMinutes": 208.6,
+    "p90Minutes": 537.1,
+    "samples": 56
+   },
+   "serviceId": null,
+   "severity": "Sev2",
+   "sla": {
+    "acknowledgePct": 85.7,
+    "breached": 15,
+    "evaluated": 56,
+    "overallPct": 73.2,
+    "resolvePct": 85.7
+   }
+  },
+  {
+   "incidents": 90,
+   "mtta": {
+    "medianMinutes": 95.4,
+    "p90Minutes": 293.2,
+    "samples": 89
+   },
+   "mttr": {
+    "medianMinutes": 1785.5,
+    "p90Minutes": 4323.4,
+    "samples": 87
+   },
+   "serviceId": null,
+   "severity": "Sev3",
+   "sla": {
+    "acknowledgePct": 82.0,
+    "breached": 24,
+    "evaluated": 87,
+    "overallPct": 72.4,
+    "resolvePct": 89.7
+   }
+  },
+  {
+   "incidents": 24,
+   "mtta": {
+    "medianMinutes": 436.0,
+    "p90Minutes": 1883.1,
+    "samples": 24
+   },
+   "mttr": {
+    "medianMinutes": 5797.9,
+    "p90Minutes": 8721.4,
+    "samples": 23
+   },
+   "serviceId": null,
+   "severity": "Sev4",
+   "sla": {
+    "acknowledgePct": 83.3,
+    "breached": 5,
+    "evaluated": 23,
+    "overallPct": 78.3,
+    "resolvePct": 91.3
+   }
+  }
+ ],
+ "detection": {
+  "alertingPct": 57.4,
+  "bySource": [
+   {
+    "incidents": 84,
+    "mtta": {
+     "medianMinutes": 84.1,
+     "p90Minutes": 596.4,
+     "samples": 83
+    },
+    "sharePct": 42.6,
+    "source": "Manual"
+   },
+   {
+    "incidents": 57,
+    "mtta": {
+     "medianMinutes": 36.0,
+     "p90Minutes": 200.6,
+     "samples": 57
+    },
+    "sharePct": 28.9,
+    "source": "Alertmanager"
+   },
+   {
+    "incidents": 56,
+    "mtta": {
+     "medianMinutes": 23.8,
+     "p90Minutes": 258.7,
+     "samples": 56
+    },
+    "sharePct": 28.4,
+    "source": "AzureMonitor"
+   }
+  ],
+  "incidents": 197
+ },
+ "overall": {
+  "incidents": 197,
+  "mtta": {
+   "medianMinutes": 43.7,
+   "p90Minutes": 419.5,
+   "samples": 196
+  },
+  "mttr": {
+   "medianMinutes": 847.6,
+   "p90Minutes": 4698.7,
+   "samples": 193
+  },
+  "sla": {
+   "acknowledgePct": 84.2,
+   "breached": 51,
+   "evaluated": 193,
+   "overallPct": 73.6,
+   "resolvePct": 87.6
+  }
+ },
+ "weekly": [
+  {
+   "incidents": 9,
+   "mttaMedianMinutes": 138.4,
+   "mttrMedianMinutes": 2507.0,
+   "slaCompliancePct": 55.6,
+   "weekStart": "2026-06-29"
+  },
+  {
+   "incidents": 20,
+   "mttaMedianMinutes": 22.3,
+   "mttrMedianMinutes": 661.8,
+   "slaCompliancePct": 80.0,
+   "weekStart": "2026-07-06"
+  },
+  {
+   "incidents": 17,
+   "mttaMedianMinutes": 63.9,
+   "mttrMedianMinutes": 511.2,
+   "slaCompliancePct": 82.4,
+   "weekStart": "2026-07-13"
+  },
+  {
+   "incidents": 14,
+   "mttaMedianMinutes": 17.6,
+   "mttrMedianMinutes": 173.5,
+   "slaCompliancePct": 85.7,
+   "weekStart": "2026-07-20"
+  },
+  {
+   "incidents": 20,
+   "mttaMedianMinutes": 25.4,
+   "mttrMedianMinutes": 498.3,
+   "slaCompliancePct": 70.0,
+   "weekStart": "2026-07-27"
+  },
+  {
+   "incidents": 19,
+   "mttaMedianMinutes": 23.4,
+   "mttrMedianMinutes": 940.6,
+   "slaCompliancePct": 73.7,
+   "weekStart": "2026-08-03"
+  },
+  {
+   "incidents": 14,
+   "mttaMedianMinutes": 108.6,
+   "mttrMedianMinutes": 1671.8,
+   "slaCompliancePct": 92.9,
+   "weekStart": "2026-08-10"
+  },
+  {
+   "incidents": 13,
+   "mttaMedianMinutes": 54.1,
+   "mttrMedianMinutes": 1406.9,
+   "slaCompliancePct": 76.9,
+   "weekStart": "2026-08-17"
+  },
+  {
+   "incidents": 12,
+   "mttaMedianMinutes": 20.2,
+   "mttrMedianMinutes": 2275.4,
+   "slaCompliancePct": 50.0,
+   "weekStart": "2026-08-24"
+  },
+  {
+   "incidents": 14,
+   "mttaMedianMinutes": 42.5,
+   "mttrMedianMinutes": 299.7,
+   "slaCompliancePct": 64.3,
+   "weekStart": "2026-08-31"
+  },
+  {
+   "incidents": 14,
+   "mttaMedianMinutes": 68.9,
+   "mttrMedianMinutes": 1065.5,
+   "slaCompliancePct": 64.3,
+   "weekStart": "2026-09-07"
+  },
+  {
+   "incidents": 13,
+   "mttaMedianMinutes": 119.9,
+   "mttrMedianMinutes": 1638.8,
+   "slaCompliancePct": 76.9,
+   "weekStart": "2026-09-14"
+  },
+  {
+   "incidents": 18,
+   "mttaMedianMinutes": 67.5,
+   "mttrMedianMinutes": 677.6,
+   "slaCompliancePct": 71.4,
+   "weekStart": "2026-09-21"
+  },
+  {
+   "incidents": 0,
+   "mttaMedianMinutes": null,
+   "mttrMedianMinutes": null,
+   "slaCompliancePct": null,
+   "weekStart": "2026-09-28"
+  }
+ ],
+ "window": {
+  "days": 90,
+  "end": "2026-09-28T00:00:00Z",
+  "start": "2026-06-30T00:00:00Z"
+ }
+}

@@ -1,0 +1,136 @@
+site_name: Incident Ops
+site_description: Architecture, operations model, alerting, runbooks and engineering standards for the Incident Ops platform.
+site_url: https://incidents-docs.marceloroman.com.br/
+repo_url: https://github.com/marcelo-roman/incident-ops
+repo_name: marcelo-roman/incident-ops
+edit_uri: edit/main/docs/docs/
+copyright: Copyright &copy; 2026 Marcelo Roman. MIT License.
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - Home: index.md
+  - Architecture:
+      - architecture/index.md
+      - Context map: architecture/context-map.md
+      - Incident lifecycle: architecture/incident-lifecycle.md
+      - SLA timers and escalation: architecture/sla-escalation.md
+      - Real-time updates: architecture/real-time.md
+      - Deployment: architecture/deployment.md
+      - Observability: architecture/observability.md
+      - Code structure: architecture/code-structure.md
+  - Operations:
+      - operations/index.md
+      - Support model: operations/support-model.md
+      - Severity and SLA: operations/severity-and-sla.md
+      - Alerting: operations/alerting.md
+      - Incident response: operations/incident-response.md
+      - Postmortems:
+          - Template: operations/postmortem-template.md
+          - INC-1187 payments-gateway timeouts: operations/postmortems/2026-09-17-payments-gateway-timeouts.md
+      - Runbooks:
+          - operations/runbooks/index.md
+          - API high error rate: operations/runbooks/api-high-error-rate.md
+          - Service Bus dead letters: operations/runbooks/service-bus-dead-letters.md
+          - Escalation not firing: operations/runbooks/sla-breach-escalation-not-firing.md
+      - KTLO metrics: operations/ktlo-metrics.md
+      - SLOs: operations/slo.md
+  - Engineering:
+      - engineering/index.md
+      - Definition of Ready: engineering/definition-of-ready.md
+      - Definition of Done: engineering/definition-of-done.md
+      - Release readiness: engineering/release-readiness-checklist.md
+      - Code review: engineering/code-review-guidelines.md
+      - Branching and git: engineering/branching-and-git-workflow.md
+      - Quality gates: engineering/quality-gates.md
+      - Testing strategy: engineering/testing-strategy.md
+      - ADO hygiene: engineering/ado-hygiene.md
+      - AI-assisted development: engineering/ai-assisted-development.md
+  - Leadership:
+      - leadership/index.md
+      - Stakeholder updates: leadership/stakeholder-updates.md
+      - KTLO vs roadmap: leadership/ktlo-vs-roadmap.md
+      - Risk and dependency log: leadership/risk-and-dependency-log.md
+      - Retrospective actions: leadership/retrospective-actions.md
+  - Decisions:
+      - adr/index.md
+      - 0001 Minimal APIs: adr/0001-minimal-apis-over-controllers.md
+      - 0002 Scheduled messages for SLA timers: adr/0002-service-bus-scheduled-messages-for-sla-timers.md
+      - 0003 Azure SignalR Service: adr/0003-azure-signalr-service.md
+      - 0004 Container Apps: adr/0004-container-apps-for-hosting.md
+      - 0005 Bicep: adr/0005-bicep-for-infrastructure.md
+      - 0006 CloudEvents: adr/0006-cloudevents-envelope.md
+      - 0007 Python for analytics: adr/0007-python-for-analytics-service.md
+      - 0008 Tactical DDD: adr/0008-tactical-ddd-rich-aggregates-and-value-objects.md
+      - 0009 Transactional outbox: adr/0009-transactional-outbox-for-integration-events.md
+      - 0010 Monorepo with path filters: adr/0010-monorepo-with-path-filtered-pipelines-and-codeowners.md

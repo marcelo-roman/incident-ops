@@ -1,0 +1,36 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: incident-ops-api
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  routes:
+    - matchers:
+        - category="process"
+      receiver: engineering-lead
+      repeat_interval: 4h
+
+inhibit_rules:
+  - source_matchers:
+      - alertname="ApiDown"
+    target_matchers:
+      - alertname=~"ApiHighErrorRate|ApiHighLatencyP95|SlaBreachesOpen"
+    equal: [service]
+
+receivers:
+  - name: incident-ops-api
+    webhook_configs:
+      - url: http://api:8080/api/alerts/alertmanager
+        send_resolved: true
+        http_config:
+          authorization:
+            type: Bearer
+            credentials_file: /alertmanager/api-key
+
+  - name: engineering-lead
+    webhook_configs:
+      - url: http://notification-sink:8080/engineering-lead
+        send_resolved: true

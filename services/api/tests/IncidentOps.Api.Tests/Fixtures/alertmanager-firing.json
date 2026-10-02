@@ -1,0 +1,55 @@
+{
+  "receiver": "incident-ops",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "ApiHighErrorRate",
+        "instance": "api:8080",
+        "job": "incident-ops-api",
+        "service": "checkout",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "API 5xx error rate above 5% for 5 minutes",
+        "description": "5xx responses are 12.4% of traffic on incident-ops-api.",
+        "runbook_url": "https://incidents-docs.marceloroman.com.br/runbooks/api-high-error-rate/"
+      },
+      "startsAt": "2026-10-02T13:55:30.123Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph?g0.expr=sum%28rate%28http_server_request_duration_seconds_count%7Bhttp_response_status_code%3D~%225..%22%7D%5B5m%5D%29%29&g0.tab=1",
+      "fingerprint": "c8a0f7d1e4b2a913"
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "SlaBreachesOpen",
+        "instance": "api:8080",
+        "job": "incident-ops-api",
+        "service": "legacy-batch",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "Open incidents with breached SLA",
+        "description": "3 open incidents have breached their SLA."
+      },
+      "startsAt": "2026-10-02T13:50:00.000Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph?g0.expr=incidentops_sla_breached_open+%3E+0&g0.tab=1",
+      "fingerprint": "5b1e9c0a7d3f2e64"
+    }
+  ],
+  "groupLabels": {
+    "job": "incident-ops-api"
+  },
+  "commonLabels": {
+    "instance": "api:8080",
+    "job": "incident-ops-api"
+  },
+  "commonAnnotations": {},
+  "externalURL": "http://alertmanager:9093",
+  "version": "4",
+  "groupKey": "{}:{job=\"incident-ops-api\"}",
+  "truncatedAlerts": 0
+}

@@ -1,0 +1,77 @@
+name: platform
+
+on:
+  pull_request:
+    paths:
+      - docker-compose.yml
+      - .env.example
+      - local/**
+      - scripts/**
+      - "**/*.md"
+      - .github/**
+  push:
+    branches: [main]
+    paths:
+      - docker-compose.yml
+      - .env.example
+      - local/**
+      - scripts/**
+      - "**/*.md"
+      - .github/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONLINT_VERSION: 1.7.12
+
+jobs:
+  compose:
+    name: Compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose
+        run: docker compose --env-file .env.example config -q
+      - name: Validate compose with the functions profile
+        run: docker compose --env-file .env.example --profile functions config -q
+
+  alerting:
+    name: Alerting rules and config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prometheus config
+        run: docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:v3.15.0 check config /etc/prometheus/prometheus.yml
+      - name: Alert rule unit tests
+        run: docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" -w /etc/prometheus/tests --entrypoint promtool prom/prometheus:v3.15.0 test rules incident-ops-api.test.yml
+      - name: Alertmanager config
+        run: docker run --rm -v "$PWD/local/alertmanager:/etc/alertmanager:ro" --entrypoint amtool prom/alertmanager:v0.34.1 check-config /etc/alertmanager/alertmanager.yml
+      - name: Service Bus emulator config is valid JSON
+        run: python3 -m json.tool local/servicebus/Config.json > /dev/null
+
+  links:
+    name: Markdown links and scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Markdown links
+        run: python3 scripts/check-links.py
+      - name: ShellCheck
+        run: shellcheck --severity=style scripts/*.sh apps/web/docker/*.sh
+
+  workflows:
+    name: Workflow lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION"
+          ./actionlint -color

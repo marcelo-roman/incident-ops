@@ -1,0 +1,18 @@
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.term {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.detail {
+  font-weight: 600;
+}
+
+.detail {
+  overflow-wrap: anywhere;
+}
