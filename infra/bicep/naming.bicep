@@ -1,12 +1,12 @@
 @export()
-@description('Resource names derived from the workload name and a deterministic suffix for globally unique resources.')
-func resourceNames(workload string, suffix string) object => {
+@description('Resource names derived from the workload name and deterministic suffixes for globally unique resources; the SQL server suffix also depends on its region.')
+func resourceNames(workload string, suffix string, sqlSuffix string) object => {
   logAnalytics: 'log-${workload}'
   appInsights: 'appi-${workload}'
   containerAppsEnvironment: 'cae-${workload}'
   apiContainerApp: 'ca-${workload}-api'
   insightsContainerApp: 'ca-${workload}-insights'
-  sqlServer: 'sql-${workload}-${suffix}'
+  sqlServer: 'sql-${workload}-${sqlSuffix}'
   sqlDatabase: 'sqldb-${workload}'
   signalR: 'sigr-${workload}-${suffix}'
   serviceBus: 'sbns-${workload}-${suffix}'
