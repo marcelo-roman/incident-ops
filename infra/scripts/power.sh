@@ -12,6 +12,7 @@ readonly API_APP="ca-incident-ops-api"
 readonly INSIGHTS_APP="ca-incident-ops-insights"
 readonly STATIC_WEB_APP="stapp-incident-ops"
 readonly SQL_DATABASE="sqldb-incident-ops"
+readonly DEFAULT_RULE="\$Default"
 readonly DOCS_URL="https://incidents-docs.marceloroman.com.br"
 readonly READY_ATTEMPTS="${READY_ATTEMPTS:-40}"
 readonly READY_INTERVAL_SECONDS="${READY_INTERVAL_SECONDS:-15}"
@@ -115,6 +116,29 @@ deploy() {
     --template-file "$TEMPLATE_FILE" \
     --parameters "$PARAMETERS_FILE" \
     --output none
+}
+
+remove_default_subscription_rules() {
+  local namespace subscription
+  namespace=$(service_bus_namespace)
+  for subscription in sla-scheduler notifier; do
+    if ! az servicebus topic subscription rule show \
+      --resource-group "$RESOURCE_GROUP" \
+      --namespace-name "$namespace" \
+      --topic-name incident-events \
+      --subscription-name "$subscription" \
+      --name "$DEFAULT_RULE" > /dev/null 2>&1; then
+      continue
+    fi
+    log "removing the catch-all ${DEFAULT_RULE} rule from ${subscription}"
+    az servicebus topic subscription rule delete \
+      --resource-group "$RESOURCE_GROUP" \
+      --namespace-name "$namespace" \
+      --topic-name incident-events \
+      --subscription-name "$subscription" \
+      --name "$DEFAULT_RULE" \
+      --output none
+  done
 }
 
 grant_api_identity() {
@@ -244,6 +268,7 @@ up() {
   ensure_containerapp_extension
   resolve_images
   deploy on
+  remove_default_subscription_rules
   grant_api_identity
   restart_api
   wait_until_ready "$(app_base_url "$API_APP")/health/ready"
