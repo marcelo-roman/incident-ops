@@ -119,7 +119,7 @@ deploy() {
 
 grant_api_identity() {
   log "granting the API identity on ${SQL_DATABASE}"
-  RESOURCE_GROUP="$RESOURCE_GROUP" DEPLOYMENT_NAME="$DEPLOYMENT_NAME" PRINCIPAL_NAME="$API_APP" \
+  env RESOURCE_GROUP="$RESOURCE_GROUP" DEPLOYMENT_NAME="$DEPLOYMENT_NAME" PRINCIPAL_NAME="$API_APP" \
     "${SCRIPT_DIR}/sql-grant-api-identity.sh"
 }
 
