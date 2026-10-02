@@ -34,7 +34,7 @@ Deploy jobs run only on pushes to `main` and target the GitHub environment `prod
 |---|---|
 | Image publish (API, Insights, Web) | pushed to `ghcr.io/marcelo-roman/incident-ops-api`, `-insights`, `-web`, tagged with the commit SHA and `latest` |
 | Production approval | `production` environment required reviewer + [release readiness](release-readiness-checklist.md) |
-| Azure login | OIDC federated credential for `repo:marcelo-roman/incident-ops:environment:production`; no stored client secret |
+| Azure login | OIDC federated credential for `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:production`; no stored client secret |
 | Container Apps | local reusable `./.github/workflows/deploy-container-app.yml`: new revision, readiness wait, smoke test on the health URL, rollback by copying the previous revision; the API skips the readiness wait and smoke test while the environment is powered off |
 | Functions, Web | `Azure/functions-action@v1` to `func-incident-ops`; `Azure/static-web-apps-deploy@v1` |
 | Infra | `what-if` in the job summary before the approval; deploy on `main` |

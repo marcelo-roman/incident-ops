@@ -326,9 +326,11 @@ Key Vault references are the next step for the Function app settings; they were 
 
 | Credential | Subject | Used by |
 |---|---|---|
-| `incident-ops-production` | `repo:marcelo-roman/incident-ops:environment:production` | every deploy job (`api.yml`, `functions.yml`, `insights.yml`, `infra.yml`, the reusable `deploy-container-app.yml`) and manual `power.yml` runs |
-| `incident-ops-main` | `repo:marcelo-roman/incident-ops:ref:refs/heads/main` | `infra.yml` what-if on `main` before the approval gate |
-| `incident-ops-power` | `repo:marcelo-roman/incident-ops:environment:power` | the scheduled `power.yml` run |
+| `incident-ops-production-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:production` | every deploy job (`api.yml`, `functions.yml`, `insights.yml`, `infra.yml`, the reusable `deploy-container-app.yml`) and manual `power.yml` runs |
+| `incident-ops-main-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:ref:refs/heads/main` | `infra.yml` what-if on `main` before the approval gate |
+| `incident-ops-power-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:power` | the scheduled `power.yml` run |
+
+GitHub issues OIDC tokens whose `sub` claim carries the immutable owner and repository ids (`repo:<owner>@<owner-id>/<repo>@<repo-id>:...`); the bootstrap reads both ids from the GitHub API, so renaming the account or the repository does not grant a new name access.
 
 One repository holds every module, so three subjects cover all workflows. There is deliberately no `pull_request` subject: a pull request, even one that edits a workflow, cannot obtain an Azure token. `GITHUB_OWNER` and `GITHUB_REPOSITORY_NAME` override the defaults.
 

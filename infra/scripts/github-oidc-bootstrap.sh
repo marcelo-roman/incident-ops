@@ -8,6 +8,7 @@ readonly SQL_ADMIN_GROUP="${SQL_ADMIN_GROUP:-sg-incident-ops-sql-admins}"
 readonly GITHUB_OWNER="${GITHUB_OWNER:-marcelo-roman}"
 readonly GITHUB_REPOSITORY_NAME="${GITHUB_REPOSITORY_NAME:-incident-ops}"
 readonly REPOSITORY="${GITHUB_OWNER}/${GITHUB_REPOSITORY_NAME}"
+readonly GITHUB_API="${GITHUB_API:-https://api.github.com}"
 readonly ISSUER="https://token.actions.githubusercontent.com"
 readonly AUDIENCE="api://AzureADTokenExchange"
 readonly WORKLOAD_ROLE_IDS=(
@@ -75,11 +76,20 @@ ensure_federated_credential() {
   )" --output none
 }
 
+subject_prefix() {
+  local owner_id repository_id
+  owner_id=$(curl --silent --show-error --fail "${GITHUB_API}/users/${GITHUB_OWNER}" | jq -r .id)
+  repository_id=$(curl --silent --show-error --fail "${GITHUB_API}/repos/${REPOSITORY}" | jq -r .id)
+  echo "repo:${GITHUB_OWNER}@${owner_id}/${GITHUB_REPOSITORY_NAME}@${repository_id}"
+}
+
 ensure_federated_credentials() {
   local app_id="$1"
-  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-production" "repo:${REPOSITORY}:environment:production"
-  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-main" "repo:${REPOSITORY}:ref:refs/heads/main"
-  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-power" "repo:${REPOSITORY}:environment:power"
+  local prefix
+  prefix=$(subject_prefix)
+  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-production-id" "${prefix}:environment:production"
+  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-main-id" "${prefix}:ref:refs/heads/main"
+  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-power-id" "${prefix}:environment:power"
 }
 
 rbac_condition() {
@@ -186,6 +196,7 @@ main() {
   readonly SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:?set AZURE_SUBSCRIPTION_ID}"
   command -v az > /dev/null 2>&1 || { echo "az CLI is required" >&2; exit 69; }
   command -v jq > /dev/null 2>&1 || { echo "jq is required" >&2; exit 69; }
+  command -v curl > /dev/null 2>&1 || { echo "curl is required" >&2; exit 69; }
 
   az account set --subscription "$SUBSCRIPTION_ID"
   local tenant_id scope app_id object_id group_id
