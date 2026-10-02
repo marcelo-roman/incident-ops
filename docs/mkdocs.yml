@@ -80,6 +80,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Demo: demo.md
   - Architecture:
       - architecture/index.md
       - Context map: architecture/context-map.md
