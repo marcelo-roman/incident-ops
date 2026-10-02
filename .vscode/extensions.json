@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "DavidAnson.vscode-markdownlint",
+    "redhat.vscode-yaml",
+    "exiasr.hadolint",
+    "SonarSource.sonarlint-vscode",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "charliermarsh.ruff",
+    "ms-dotnettools.csdevkit",
+    "ms-azuretools.vscode-bicep"
+  ]
+}

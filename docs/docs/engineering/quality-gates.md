@@ -7,8 +7,8 @@ What CI enforces, per workflow. CI is GitHub Actions: one workflow per module in
 ## Common to every module
 
 | Gate | Threshold |
-|---|---|
-| Build | zero errors; .NET builds treat warnings as errors (`TreatWarningsAsErrors`, nullable reference types, `AnalysisLevel` `latest-recommended`) |
+| --- | --- |
+| Build | zero errors; .NET builds treat warnings as errors (`TreatWarningsAsErrors`, nullable reference types, `AnalysisLevel` `latest-recommended`, `SonarAnalyzer.CSharp`) |
 | Lint and format | zero findings |
 | Tests | all pass |
 | Architecture rules | all pass (NetArchTest, import-linter, `eslint-plugin-boundaries`) |
@@ -17,21 +17,21 @@ What CI enforces, per workflow. CI is GitHub Actions: one workflow per module in
 ## Per workflow
 
 | Workflow | Runs when | Build | Lint and format | Tests and coverage | Architecture | Other |
-|---|---|---|---|---|---|---|
-| `api.yml` | `services/api/**`, `contracts/**` (PR), the workflow, `deploy-container-app.yml` | `dotnet build -c Release` | `dotnet format --verify-no-changes` | 204 tests incl. Testcontainers SQL Server; ReportGenerator merged line coverage ≥ 80% | 23 architecture tests | image build and push on `main` |
-| `functions.yml` | `services/functions/**`, `contracts/**` (PR), the workflow | `dotnet build -c Release` | `dotnet format --verify-no-changes` | 186 tests; `coverlet.msbuild` line and branch ≥ 80% | NetArchTest and reflection tests | zip package on `main` |
-| `insights.yml` | `services/insights/**`, `contracts/**` (PR), the workflow, `deploy-container-app.yml` | `uv sync --frozen` | `ruff check`, `ruff format --check` | 178 tests; coverage ≥ 85% with branches; response snapshots | `lint-imports` (7 contracts) | `mypy --strict` on `src` and `tests`; image build on every run |
-| `web.yml` | `apps/web/**`, `contracts/**` (PR), the workflow | `pnpm build` (`tsc -b` + Vite) | ESLint (typescript-eslint strict type-checked, react-hooks), Prettier check | 183 tests; Vitest thresholds 70% global, 95% lines on `features/*/domain`, 90% on `shared/{format,config,http}` | `eslint-plugin-boundaries` | `tsc --noEmit` typecheck; `pnpm install --frozen-lockfile`; image build on every run |
+| --- | --- | --- | --- | --- | --- | --- |
+| `api.yml` | `services/api/**`, `contracts/**` (PR), the workflow, `deploy-container-app.yml` | `dotnet build -c Release` with the .NET and SonarAnalyzer.CSharp analyzers | `dotnet format --verify-no-changes` | 204 tests incl. Testcontainers SQL Server; ReportGenerator merged line coverage ≥ 80% | 23 architecture tests | image build and push on `main` |
+| `functions.yml` | `services/functions/**`, `contracts/**` (PR), the workflow | `dotnet build -c Release` with the .NET and SonarAnalyzer.CSharp analyzers | `dotnet format --verify-no-changes` | 186 tests; `coverlet.msbuild` line and branch ≥ 80% | NetArchTest and reflection tests | zip package on `main` |
+| `insights.yml` | `services/insights/**`, `contracts/**` (PR), the workflow, `deploy-container-app.yml` | `uv sync --frozen` | `ruff check` (rule families selected in `pyproject.toml`, including bugbear, simplify, comprehensions, Pylint, Bandit, Perflint and Ruff), `ruff format --check` | 178 tests; coverage ≥ 85% with branches; response snapshots | `lint-imports` (7 contracts) | `mypy --strict` on `src` and `tests`; image build on every run |
+| `web.yml` | `apps/web/**`, `contracts/**` (PR), the workflow | `pnpm build` (`tsc -b` + Vite) | ESLint (typescript-eslint strict type-checked, react-hooks, `eslint-plugin-sonarjs` recommended), Prettier check | 183 tests; Vitest thresholds 70% global, 95% lines on `features/*/domain`, 90% on `shared/{format,config,http}` | `eslint-plugin-boundaries` | `tsc --noEmit` typecheck; `pnpm install --frozen-lockfile`; image build on every run |
 | `infra.yml` | `infra/**`, the workflow | `az bicep build`, `az bicep build-params` for both power states | `az bicep lint` with every rule at error in `bicepconfig.json`; ShellCheck on `infra/scripts` | | | Logic App JSON check; Azure DevOps YAML parses; `az deployment group validate` and `what-if` with OIDC, written to the job summary |
 | `docs.yml` | `docs/**`, the workflow | `mkdocs build --strict` (broken links and anchors fail) | | | | |
-| `platform.yml` | `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, `**/*.md`, `.github/**` | `docker compose config` (default and `functions` profile) | Markdown link check over every `.md` file, ShellCheck on `scripts/` and the web container entrypoint, actionlint | `promtool test rules` | | `promtool check config`, `amtool check-config`, Service Bus emulator JSON |
+| `platform.yml` | `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, `**/*.md`, `**/*.yml`, `**/*.yaml`, `**/Dockerfile`, the lint configs, `.github/**` | `docker compose config` (default and `functions` profile) | markdownlint-cli2 (`.markdownlint-cli2.jsonc`), yamllint (`.yamllint.yaml`), hadolint on every Dockerfile (`.hadolint.yaml`), Markdown link check over every `.md` file, ShellCheck on `scripts/` and the web container entrypoint, actionlint | `promtool test rules` | | `promtool check config`, `amtool check-config`, Service Bus emulator JSON |
 
 ## After merge
 
 Deploy jobs run only on pushes to `main` and target the GitHub environment `production`.
 
 | Stage | Gate |
-|---|---|
+| --- | --- |
 | Image publish (API, Insights, Web) | pushed to `ghcr.io/marcelo-roman/incident-ops-api`, `-insights`, `-web`, tagged with the commit SHA and `latest` |
 | Production approval | `production` environment required reviewer + [release readiness](release-readiness-checklist.md) |
 | Azure login | OIDC federated credential for `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:production`; no stored client secret |
@@ -46,15 +46,28 @@ These are review-time expectations today, not CI gates:
 
 - secret scanning;
 - dependency vulnerability audit and container image scanning;
-- Dockerfile linting (every Dockerfile runs as non-root and declares a health check, checked in review);
+- non-root user and health check in every Dockerfile (hadolint checks syntax and practices, review checks these two);
 - OpenAPI document diff and bundle size budget;
 - Playwright smoke test of the console (`pnpm test:e2e`, run on demand);
 - a Functions host start against the Service Bus emulator.
 
+## Linter configuration
+
+The repository-level linters read their configuration from the repository root, so the editor and CI report the same findings. [`.vscode/extensions.json`](https://github.com/marcelo-roman/incident-ops/blob/main/.vscode/extensions.json) recommends the matching VS Code extensions.
+
+| Linter | Configuration | Scope |
+| --- | --- | --- |
+| markdownlint-cli2 | `.markdownlint-cli2.jsonc`; `apps/web/.markdownlint-cli2.jsonc` sets aligned tables, the style Prettier writes there | every `*.md` except generated output, report templates and test snapshots |
+| yamllint | `.yamllint.yaml` | every `*.yml` and `*.yaml` except `pnpm-lock.yaml` |
+| hadolint | `.hadolint.yaml` | every tracked `Dockerfile` |
+| SonarAnalyzer.CSharp | `GlobalPackageReference` in each solution's `Directory.Packages.props` | `services/api`, `services/functions` |
+| eslint-plugin-sonarjs | `apps/web/eslint.config.js` | `apps/web` |
+| Ruff | `services/insights/pyproject.toml` | `services/insights` |
+
 ## GitHub Actions and Azure DevOps equivalents
 
 | Concern | GitHub Actions (live) | Azure DevOps (`infra/azure-devops/` sample) |
-|---|---|---|
+| --- | --- | --- |
 | Path filtering | `on.pull_request.paths`, `on.push.paths` | `trigger.paths.include`, `pr.paths.include` |
 | PR validation | `on: pull_request` + review of the checks that ran | `pr:` trigger + build validation branch policy per path |
 | Azure auth | OIDC via `azure/login@v2` | workload identity federation service connection `sc-incident-ops` |

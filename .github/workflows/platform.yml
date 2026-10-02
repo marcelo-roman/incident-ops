@@ -8,6 +8,12 @@ on:
       - local/**
       - scripts/**
       - "**/*.md"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "**/Dockerfile"
+      - "**/.markdownlint-cli2.jsonc"
+      - .yamllint.yaml
+      - .hadolint.yaml
       - .github/**
   push:
     branches: [main]
@@ -17,6 +23,12 @@ on:
       - local/**
       - scripts/**
       - "**/*.md"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "**/Dockerfile"
+      - "**/.markdownlint-cli2.jsonc"
+      - .yamllint.yaml
+      - .hadolint.yaml
       - .github/**
 
 permissions:
@@ -28,6 +40,9 @@ concurrency:
 
 env:
   ACTIONLINT_VERSION: 1.7.12
+  MARKDOWNLINT_CLI2_IMAGE: davidanson/markdownlint-cli2:v0.23.3
+  YAMLLINT_VERSION: 1.38.0
+  HADOLINT_IMAGE: hadolint/hadolint:v2.15.1
 
 jobs:
   compose:
@@ -46,11 +61,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prometheus config
-        run: docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:v3.15.0 check config /etc/prometheus/prometheus.yml
+        run: >-
+          docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:v3.15.0
+          check config /etc/prometheus/prometheus.yml
       - name: Alert rule unit tests
-        run: docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" -w /etc/prometheus/tests --entrypoint promtool prom/prometheus:v3.15.0 test rules incident-ops-api.test.yml
+        run: >-
+          docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" -w /etc/prometheus/tests --entrypoint promtool prom/prometheus:v3.15.0
+          test rules incident-ops-api.test.yml
       - name: Alertmanager config
-        run: docker run --rm -v "$PWD/local/alertmanager:/etc/alertmanager:ro" --entrypoint amtool prom/alertmanager:v0.34.1 check-config /etc/alertmanager/alertmanager.yml
+        run: >-
+          docker run --rm -v "$PWD/local/alertmanager:/etc/alertmanager:ro" --entrypoint amtool prom/alertmanager:v0.34.1
+          check-config /etc/alertmanager/alertmanager.yml
       - name: Service Bus emulator config is valid JSON
         run: python3 -m json.tool local/servicebus/Config.json > /dev/null
 
@@ -63,6 +84,21 @@ jobs:
         run: python3 scripts/check-links.py
       - name: ShellCheck
         run: shellcheck --severity=style scripts/*.sh apps/web/docker/*.sh
+
+  lint:
+    name: Markdown, YAML and Dockerfile lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: markdownlint
+        run: docker run --rm -v "$PWD:/workdir" "$MARKDOWNLINT_CLI2_IMAGE"
+      - name: yamllint
+        run: pipx run "yamllint==${YAMLLINT_VERSION}" --strict --format github .
+      - name: hadolint
+        run: |
+          mapfile -t dockerfiles < <(git ls-files 'Dockerfile' '**/Dockerfile')
+          docker run --rm -v "$PWD:/repo" -w /repo "$HADOLINT_IMAGE" hadolint "${dockerfiles[@]}"
 
   workflows:
     name: Workflow lint
