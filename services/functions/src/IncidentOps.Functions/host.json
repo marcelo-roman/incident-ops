@@ -1,0 +1,35 @@
+{
+  "version": "2.0",
+  "functionTimeout": "00:05:00",
+  "logging": {
+    "logLevel": {
+      "default": "Information",
+      "Host.Results": "Information",
+      "Function": "Information",
+      "Azure.Core": "Warning",
+      "Azure.Messaging.ServiceBus": "Warning"
+    },
+    "applicationInsights": {
+      "enableLiveMetricsFilters": true,
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 20,
+        "excludedTypes": "Request;Exception"
+      }
+    }
+  },
+  "extensions": {
+    "serviceBus": {
+      "prefetchCount": 0,
+      "maxConcurrentCalls": 16,
+      "maxAutoLockRenewalDuration": "00:05:00",
+      "clientRetryOptions": {
+        "mode": "Exponential",
+        "tryTimeout": "00:01:00",
+        "delay": "00:00:00.80",
+        "maxDelay": "00:01:00",
+        "maxRetries": 3
+      }
+    }
+  }
+}

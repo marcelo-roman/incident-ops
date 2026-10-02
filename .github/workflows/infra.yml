@@ -1,0 +1,214 @@
+name: infra
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - infra/**
+      - .github/workflows/infra.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/**
+      - .github/workflows/infra.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: infra
+
+env:
+  RESOURCE_GROUP: rg-incident-ops
+  DEPLOYMENT_NAME: incident-ops
+  BICEP_VERSION: v0.47.16
+  TEMPLATE_FILE: bicep/main.bicep
+  PARAMETERS_FILE: bicep/main.bicepparam
+  AZURE_CORE_NO_COLOR: "true"
+  AZURE_CORE_ONLY_SHOW_ERRORS: "true"
+  SQL_ADMIN_GROUP_NAME: ${{ vars.SQL_ADMIN_GROUP_NAME }}
+  SQL_ADMIN_GROUP_OBJECT_ID: ${{ vars.SQL_ADMIN_GROUP_OBJECT_ID }}
+  BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
+  ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+  CUSTOM_DOMAIN_BINDING: ${{ vars.CUSTOM_DOMAIN_BINDING || 'None' }}
+
+jobs:
+  bicep:
+    name: Bicep build and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ESCALATION_API_KEY: ci-placeholder-key-that-is-never-deployed
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Bicep
+        run: az bicep install --version "$BICEP_VERSION"
+
+      - name: Build
+        run: |
+          az bicep build --file "$TEMPLATE_FILE" --stdout > /dev/null
+          az bicep build-params --file "$PARAMETERS_FILE" --stdout > /dev/null
+
+      - name: Lint
+        run: |
+          az bicep lint --file "$TEMPLATE_FILE"
+          az bicep lint --file "$PARAMETERS_FILE"
+
+      - name: Logic App workflow is valid JSON
+        run: jq empty bicep/workflows/notify-oncall.json
+
+  scripts:
+    name: ShellCheck and Azure DevOps samples
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: ShellCheck
+        run: shellcheck --severity=style scripts/*.sh
+
+      - name: Azure Pipelines YAML parses
+        run: |
+          for file in azure-devops/*.yml azure-devops/templates/*.yml; do
+            yq eval '.' "$file" > /dev/null
+          done
+
+  plan:
+    name: Validate and what-if
+    needs: bicep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ESCALATION_API_KEY: ${{ secrets.ESCALATION_API_KEY }}
+      NOTIFICATION_WEBHOOK_URL: ${{ secrets.NOTIFICATION_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Bicep
+        run: az bicep install --version "$BICEP_VERSION"
+
+      - name: Build and lint
+        run: |
+          az bicep build --file "$TEMPLATE_FILE" --stdout > /dev/null
+          az bicep lint --file "$TEMPLATE_FILE"
+          az bicep build-params --file "$PARAMETERS_FILE" --stdout > /dev/null
+
+      - name: Resolve running images
+        run: |
+          echo "API_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)" >> "$GITHUB_ENV"
+          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
+
+      - name: Validate deployment
+        run: |
+          az deployment group validate \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$DEPLOYMENT_NAME" \
+            --template-file "$TEMPLATE_FILE" \
+            --parameters "$PARAMETERS_FILE" \
+            --output none
+
+      - name: What-if
+        run: |
+          az deployment group what-if \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$DEPLOYMENT_NAME" \
+            --template-file "$TEMPLATE_FILE" \
+            --parameters "$PARAMETERS_FILE" \
+            --exclude-change-types Ignore NoChange \
+            > what-if.txt
+          {
+            echo "## What-if against \`${RESOURCE_GROUP}\`"
+            echo
+            echo "Images: \`${API_IMAGE}\`, \`${INSIGHTS_IMAGE}\`"
+            echo
+            echo '```text'
+            cat what-if.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish what-if
+        uses: actions/upload-artifact@v7
+        with:
+          name: what-if
+          path: infra/what-if.txt
+          retention-days: 14
+
+  deploy:
+    name: Deploy
+    needs: plan
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ESCALATION_API_KEY: ${{ secrets.ESCALATION_API_KEY }}
+      NOTIFICATION_WEBHOOK_URL: ${{ secrets.NOTIFICATION_WEBHOOK_URL }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Bicep
+        run: az bicep install --version "$BICEP_VERSION"
+
+      - name: Resolve running images
+        run: |
+          echo "API_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)" >> "$GITHUB_ENV"
+          echo "INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        run: |
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$DEPLOYMENT_NAME" \
+            --template-file "$TEMPLATE_FILE" \
+            --parameters "$PARAMETERS_FILE" \
+            --query properties.outputs \
+            --output json > outputs.json
+          jq '.dnsRecords.value' outputs.json > dns-records.json
+
+      - name: Cloudflare DNS
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: scripts/cloudflare-dns.sh dns-records.json
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "## Deployment \`${DEPLOYMENT_NAME}\`"
+            echo
+            echo "Custom domain binding: \`${CUSTOM_DOMAIN_BINDING}\`"
+            echo
+            echo "| Host | Default host name |"
+            echo "|---|---|"
+            jq -r '.defaultHostNames.value | to_entries[] | "| \(.key) | \(.value) |"' outputs.json
+            echo
+            echo "| DNS record | Type | Content |"
+            echo "|---|---|---|"
+            jq -r '.dnsRecords.value[] | "| \(.name) | \(.type) | \(.content) |"' outputs.json
+          } >> "$GITHUB_STEP_SUMMARY"

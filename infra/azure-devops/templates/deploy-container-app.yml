@@ -1,0 +1,89 @@
+parameters:
+  - name: containerAppName
+    type: string
+  - name: image
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: azureSubscription
+    type: string
+  - name: healthUrl
+    type: string
+  - name: attempts
+    type: number
+    default: 20
+  - name: intervalSeconds
+    type: number
+    default: 15
+
+steps:
+  - task: AzureCLI@2
+    name: deployRevision
+    displayName: Update ${{ parameters.containerAppName }} image
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -euo pipefail
+        az extension add --name containerapp --upgrade --only-show-errors
+        previous=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --query properties.latestReadyRevisionName --output tsv)
+        echo "##vso[task.setvariable variable=previousRevision;isOutput=true]${previous}"
+        suffix="ado$(Build.BuildId)-$(System.JobAttempt)"
+        az containerapp update \
+          --name "${{ parameters.containerAppName }}" \
+          --resource-group "${{ parameters.resourceGroup }}" \
+          --image "${{ parameters.image }}" \
+          --revision-suffix "$suffix" \
+          --output none
+        revision="${{ parameters.containerAppName }}--${suffix}"
+        echo "##vso[task.setvariable variable=newRevision;isOutput=true]${revision}"
+        for attempt in $(seq 1 ${{ parameters.attempts }}); do
+          ready=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --query properties.latestReadyRevisionName --output tsv)
+          if [[ "$ready" == "$revision" ]]; then
+            echo "revision ${revision} is ready"
+            exit 0
+          fi
+          state=$(az containerapp revision show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --revision "$revision" --query properties.provisioningState --output tsv)
+          if [[ "$state" == "Failed" ]]; then
+            echo "##vso[task.logissue type=error]revision ${revision} failed to provision"
+            exit 1
+          fi
+          echo "attempt ${attempt}: ready=${ready} provisioning=${state}"
+          sleep ${{ parameters.intervalSeconds }}
+        done
+        echo "##vso[task.logissue type=error]revision ${revision} did not become ready"
+        exit 1
+
+  - bash: |
+      set -euo pipefail
+      for attempt in $(seq 1 ${{ parameters.attempts }}); do
+        status=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 20 "${{ parameters.healthUrl }}" || echo "000")
+        if [[ "$status" =~ ^2 ]]; then
+          echo "health check passed with ${status}"
+          exit 0
+        fi
+        echo "attempt ${attempt}: ${{ parameters.healthUrl }} answered ${status}"
+        sleep ${{ parameters.intervalSeconds }}
+      done
+      echo "##vso[task.logissue type=error]${{ parameters.healthUrl }} did not answer 2xx"
+      exit 1
+    displayName: Smoke test ${{ parameters.healthUrl }}
+
+  - task: AzureCLI@2
+    displayName: Roll back ${{ parameters.containerAppName }} to previous revision
+    condition: and(failed(), ne(variables['deployRevision.previousRevision'], ''))
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -euo pipefail
+        az extension add --name containerapp --upgrade --only-show-errors
+        az containerapp revision copy \
+          --name "${{ parameters.containerAppName }}" \
+          --resource-group "${{ parameters.resourceGroup }}" \
+          --from-revision "$(deployRevision.previousRevision)" \
+          --revision-suffix "rb$(Build.BuildId)-$(System.JobAttempt)" \
+          --output none
+        echo "##vso[task.logissue type=warning]rolled back to the template of $(deployRevision.previousRevision)"

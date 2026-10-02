@@ -1,0 +1,82 @@
+rule_files:
+  - ../rules/incident-ops-api.yml
+
+evaluation_interval: 15s
+
+tests:
+  - name: ApiDown fires after one minute without a successful scrape
+    interval: 15s
+    input_series:
+      - series: 'up{job="incident-ops-api", instance="api:8080"}'
+        values: "1 1 0 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 45s
+        alertname: ApiDown
+        exp_alerts: []
+      - eval_time: 105s
+        alertname: ApiDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: platform
+              job: incident-ops-api
+              instance: api:8080
+            exp_annotations:
+              summary: incident-ops-api is down
+              description: "Prometheus has not been able to scrape api:8080 for 1 minute."
+              runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/api-high-error-rate/
+
+  - name: ApiHighErrorRate fires at 50% errors and stays quiet at 1%
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="incident-ops-api", http_route="/api/incidents", http_response_status_code="200"}'
+        values: "0+300x15"
+      - series: 'http_server_request_duration_seconds_count{job="incident-ops-api", http_route="/api/incidents", http_response_status_code="500"}'
+        values: "0+3x5 15+300x10"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: ApiHighErrorRate
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: ApiHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: high
+              service: platform
+            exp_annotations:
+              summary: incident-ops-api error rate above 5%
+              description: "50% of API requests returned 5xx over the last 5 minutes."
+              runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/api-high-error-rate/
+
+  - name: ApiHighErrorRate ignores low traffic
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="incident-ops-api", http_route="/api/incidents", http_response_status_code="500"}'
+        values: "0+5x15"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: ApiHighErrorRate
+        exp_alerts: []
+
+  - name: SlaBreachesOpen fires after five minutes of breached incidents
+    interval: 1m
+    input_series:
+      - series: 'incidentops_sla_breached_open{job="incident-ops-api", instance="api:8080"}'
+        values: "0 0 2 2 2 2 2 2 2 2"
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: SlaBreachesOpen
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: SlaBreachesOpen
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: platform
+              category: process
+              job: incident-ops-api
+              instance: api:8080
+            exp_annotations:
+              summary: Open incidents with breached SLA
+              description: "2 open incidents have passed an SLA deadline."
+              runbook_url: https://incidents-docs.marceloroman.com.br/operations/runbooks/sla-breach-escalation-not-firing/

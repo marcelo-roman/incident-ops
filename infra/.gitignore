@@ -1,0 +1,13 @@
+bicep/**/*.json
+!bicep/workflows/*.json
+*.parameters.local.json
+*.local.bicepparam
+outputs.json
+dns-records.json
+what-if.txt
+.env
+.env.*
+.azure/
+.vscode/
+.idea/
+.DS_Store

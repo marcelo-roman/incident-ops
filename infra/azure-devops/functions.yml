@@ -1,0 +1,110 @@
+name: sample-functions-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/functions
+      - infra/azure-devops/functions.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - services/functions
+      - contracts
+      - infra/azure-devops/functions.yml
+
+variables:
+  - name: workingDirectory
+    value: services/functions
+  - name: buildConfiguration
+    value: Release
+  - name: functionAppName
+    value: func-incident-ops
+  - name: serviceConnection
+    value: sc-incident-ops
+  - name: packageName
+    value: incident-ops-functions.zip
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    displayName: Build and test
+    jobs:
+      - job: Build
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            inputs:
+              useGlobalJson: true
+              workingDirectory: $(workingDirectory)
+
+          - script: dotnet restore
+            workingDirectory: $(workingDirectory)
+            displayName: Restore
+
+          - script: dotnet format --verify-no-changes --no-restore
+            workingDirectory: $(workingDirectory)
+            displayName: Format
+
+          - script: dotnet build --configuration $(buildConfiguration) --no-restore
+            workingDirectory: $(workingDirectory)
+            displayName: Build
+
+          - task: DotNetCoreCLI@2
+            displayName: Test
+            inputs:
+              command: test
+              projects: $(workingDirectory)/tests/**/*.csproj
+              arguments: --configuration $(buildConfiguration) --no-build -p:CollectCoverage=true
+              publishTestResults: true
+
+          - task: DotNetCoreCLI@2
+            displayName: Publish
+            inputs:
+              command: publish
+              publishWebProjects: false
+              projects: $(workingDirectory)/src/IncidentOps.Functions/IncidentOps.Functions.csproj
+              arguments: --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
+              zipAfterPublish: false
+              modifyOutputPath: false
+
+          - task: ArchiveFiles@2
+            displayName: Package
+            inputs:
+              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/publish
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/$(packageName)
+
+          - publish: $(Build.ArtifactStagingDirectory)/$(packageName)
+            artifact: functions-package
+
+  - stage: Deploy
+    displayName: Deploy to Azure Functions
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: Deploy
+        environment: incident-ops-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureFunctionApp@2
+                  displayName: Deploy to $(functionAppName)
+                  inputs:
+                    connectedServiceNameARM: $(serviceConnection)
+                    appType: functionAppLinux
+                    isFlexConsumption: true
+                    appName: $(functionAppName)
+                    package: $(Pipeline.Workspace)/functions-package/$(packageName)
+                    deploymentMethod: auto

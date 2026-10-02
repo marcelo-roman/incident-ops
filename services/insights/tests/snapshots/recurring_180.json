@@ -1,0 +1,508 @@
+{
+ "clusters": [
+  {
+   "cohesion": 0.963,
+   "count": 32,
+   "firstSeen": "2026-04-17T06:57:00Z",
+   "label": "failures invalid / invalid token / login failures",
+   "lastSeen": "2026-09-21T08:06:00Z",
+   "sampleTitles": [
+    "Login failures with invalid token errors"
+   ],
+   "services": [
+    {
+     "count": 32,
+     "serviceId": "identity"
+    }
+   ],
+   "terms": [
+    "failures invalid",
+    "invalid token",
+    "login failures"
+   ]
+  },
+  {
+   "cohesion": 0.861,
+   "count": 31,
+   "firstSeen": "2026-04-10T11:12:00Z",
+   "label": "error rate / deployment / rate spike",
+   "lastSeen": "2026-09-17T08:03:00Z",
+   "sampleTitles": [
+    "Error rate spike after deployment of payments-gateway",
+    "Error rate spike after deployment of checkout",
+    "Error rate spike after deployment of search"
+   ],
+   "services": [
+    {
+     "count": 8,
+     "serviceId": "payments-gateway"
+    },
+    {
+     "count": 6,
+     "serviceId": "identity"
+    },
+    {
+     "count": 4,
+     "serviceId": "checkout"
+    },
+    {
+     "count": 4,
+     "serviceId": "platform"
+    },
+    {
+     "count": 4,
+     "serviceId": "search"
+    },
+    {
+     "count": 3,
+     "serviceId": "reporting"
+    },
+    {
+     "count": 2,
+     "serviceId": "notifications"
+    }
+   ],
+   "terms": [
+    "error rate",
+    "deployment",
+    "rate spike"
+   ]
+  },
+  {
+   "cohesion": 0.931,
+   "count": 29,
+   "firstSeen": "2026-04-09T18:10:00Z",
+   "label": "connection pool / database connection / exhausted",
+   "lastSeen": "2026-09-13T13:20:00Z",
+   "sampleTitles": [
+    "Database connection pool exhausted on notifications",
+    "Database connection pool exhausted on checkout",
+    "Database connection pool exhausted on identity"
+   ],
+   "services": [
+    {
+     "count": 8,
+     "serviceId": "notifications"
+    },
+    {
+     "count": 6,
+     "serviceId": "checkout"
+    },
+    {
+     "count": 5,
+     "serviceId": "identity"
+    },
+    {
+     "count": 4,
+     "serviceId": "payments-gateway"
+    },
+    {
+     "count": 2,
+     "serviceId": "platform"
+    },
+    {
+     "count": 2,
+     "serviceId": "reporting"
+    },
+    {
+     "count": 2,
+     "serviceId": "search"
+    }
+   ],
+   "terms": [
+    "connection pool",
+    "database connection",
+    "exhausted"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 27,
+   "firstSeen": "2026-04-06T17:12:00Z",
+   "label": "acquirer authorization / authorization timeouts / card authorization",
+   "lastSeen": "2026-09-25T04:37:00Z",
+   "sampleTitles": [
+    "Card authorization timeouts with acquirer"
+   ],
+   "services": [
+    {
+     "count": 27,
+     "serviceId": "payments-gateway"
+    }
+   ],
+   "terms": [
+    "acquirer authorization",
+    "authorization timeouts",
+    "card authorization"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 25,
+   "firstSeen": "2026-04-04T13:34:00Z",
+   "label": "backlog payment / delivery backlog / payment webhook",
+   "lastSeen": "2026-09-21T04:34:00Z",
+   "sampleTitles": [
+    "Payment webhook delivery backlog"
+   ],
+   "services": [
+    {
+     "count": 25,
+     "serviceId": "payments-gateway"
+    }
+   ],
+   "terms": [
+    "backlog payment",
+    "delivery backlog",
+    "payment webhook"
+   ]
+  },
+  {
+   "cohesion": 0.962,
+   "count": 25,
+   "firstSeen": "2026-04-21T13:54:00Z",
+   "label": "codes delivered / mfa sms / delayed delivered",
+   "lastSeen": "2026-09-25T23:47:00Z",
+   "sampleTitles": [
+    "MFA SMS codes not delivered"
+   ],
+   "services": [
+    {
+     "count": 25,
+     "serviceId": "identity"
+    }
+   ],
+   "terms": [
+    "codes delivered",
+    "mfa sms",
+    "delayed delivered"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 25,
+   "firstSeen": "2026-04-11T15:59:00Z",
+   "label": "push notifications / android devices / failing android",
+   "lastSeen": "2026-09-27T23:06:00Z",
+   "sampleTitles": [
+    "Push notifications failing for Android devices"
+   ],
+   "services": [
+    {
+     "count": 25,
+     "serviceId": "notifications"
+    }
+   ],
+   "terms": [
+    "push notifications",
+    "android devices",
+    "failing android"
+   ]
+  },
+  {
+   "cohesion": 0.869,
+   "count": 24,
+   "firstSeen": "2026-04-14T10:24:00Z",
+   "label": "certificate expiring / automated renewal / days automated",
+   "lastSeen": "2026-09-24T23:39:00Z",
+   "sampleTitles": [
+    "TLS certificate expiring on notifications endpoint",
+    "TLS certificate expiring on identity endpoint",
+    "TLS certificate expiring on checkout endpoint"
+   ],
+   "services": [
+    {
+     "count": 7,
+     "serviceId": "notifications"
+    },
+    {
+     "count": 5,
+     "serviceId": "checkout"
+    },
+    {
+     "count": 5,
+     "serviceId": "payments-gateway"
+    },
+    {
+     "count": 4,
+     "serviceId": "search"
+    },
+    {
+     "count": 2,
+     "serviceId": "platform"
+    },
+    {
+     "count": 1,
+     "serviceId": "identity"
+    }
+   ],
+   "terms": [
+    "certificate expiring",
+    "automated renewal",
+    "days automated"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 23,
+   "firstSeen": "2026-04-05T09:49:00Z",
+   "label": "search / catalog update / index lag",
+   "lastSeen": "2026-09-26T00:30:00Z",
+   "sampleTitles": [
+    "Search results stale after catalog update"
+   ],
+   "services": [
+    {
+     "count": 23,
+     "serviceId": "search"
+    }
+   ],
+   "terms": [
+    "search",
+    "catalog update",
+    "index lag"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 22,
+   "firstSeen": "2026-04-13T20:17:00Z",
+   "label": "charges reported / customers customers / duplicate charges",
+   "lastSeen": "2026-09-19T21:48:00Z",
+   "sampleTitles": [
+    "Duplicate charges reported by customers"
+   ],
+   "services": [
+    {
+     "count": 22,
+     "serviceId": "payments-gateway"
+    }
+   ],
+   "terms": [
+    "charges reported",
+    "customers customers",
+    "duplicate charges"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 22,
+   "firstSeen": "2026-04-02T18:25:00Z",
+   "label": "code validation / codes valid / promo code",
+   "lastSeen": "2026-09-04T07:32:00Z",
+   "sampleTitles": [
+    "Promo code validation rejecting valid codes"
+   ],
+   "services": [
+    {
+     "count": 22,
+     "serviceId": "checkout"
+    }
+   ],
+   "terms": [
+    "code validation",
+    "codes valid",
+    "promo code"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 22,
+   "firstSeen": "2026-04-07T06:19:00Z",
+   "label": "search / cluster cpu / cluster high",
+   "lastSeen": "2026-09-27T12:55:00Z",
+   "sampleTitles": [
+    "Search cluster high CPU and slow queries"
+   ],
+   "services": [
+    {
+     "count": 22,
+     "serviceId": "search"
+    }
+   ],
+   "terms": [
+    "search",
+    "cluster cpu",
+    "cluster high"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 21,
+   "firstSeen": "2026-04-12T23:07:00Z",
+   "label": "delivery queue / email delivery / backlog outbound",
+   "lastSeen": "2026-09-25T04:44:00Z",
+   "sampleTitles": [
+    "Email delivery queue backlog"
+   ],
+   "services": [
+    {
+     "count": 21,
+     "serviceId": "notifications"
+    }
+   ],
+   "terms": [
+    "delivery queue",
+    "email delivery",
+    "backlog outbound"
+   ]
+  },
+  {
+   "cohesion": 0.944,
+   "count": 21,
+   "firstSeen": "2026-04-05T19:43:00Z",
+   "label": "p99 latency / api p99 / checkout api",
+   "lastSeen": "2026-09-25T13:45:00Z",
+   "sampleTitles": [
+    "Checkout API p99 latency above 1500ms",
+    "Checkout API p99 latency above 2000ms",
+    "Checkout API p99 latency above 800ms"
+   ],
+   "services": [
+    {
+     "count": 21,
+     "serviceId": "checkout"
+    }
+   ],
+   "terms": [
+    "p99 latency",
+    "api p99",
+    "checkout api"
+   ]
+  },
+  {
+   "cohesion": 0.964,
+   "count": 18,
+   "firstSeen": "2026-04-10T10:43:00Z",
+   "label": "failing http / placement failing / customers place",
+   "lastSeen": "2026-09-22T04:32:00Z",
+   "sampleTitles": [
+    "Order placement failing with HTTP 500"
+   ],
+   "services": [
+    {
+     "count": 18,
+     "serviceId": "checkout"
+    }
+   ],
+   "terms": [
+    "failing http",
+    "placement failing",
+    "customers place"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 14,
+   "firstSeen": "2026-04-10T13:00:00Z",
+   "label": "etl job / job failed / failed nightly",
+   "lastSeen": "2026-09-12T02:56:00Z",
+   "sampleTitles": [
+    "Nightly reporting ETL job failed"
+   ],
+   "services": [
+    {
+     "count": 14,
+     "serviceId": "reporting"
+    }
+   ],
+   "terms": [
+    "etl job",
+    "job failed",
+    "failed nightly"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 10,
+   "firstSeen": "2026-04-16T04:21:00Z",
+   "label": "date ranges / export timeouts / large date",
+   "lastSeen": "2026-09-23T08:52:00Z",
+   "sampleTitles": [
+    "Report export timeouts for large date ranges"
+   ],
+   "services": [
+    {
+     "count": 10,
+     "serviceId": "reporting"
+    }
+   ],
+   "terms": [
+    "date ranges",
+    "export timeouts",
+    "large date"
+   ]
+  },
+  {
+   "cohesion": 0.967,
+   "count": 9,
+   "firstSeen": "2026-04-26T14:42:00Z",
+   "label": "failures sla / function failures / sla watchdog",
+   "lastSeen": "2026-09-10T05:03:00Z",
+   "sampleTitles": [
+    "SLA watchdog function failures"
+   ],
+   "services": [
+    {
+     "count": 9,
+     "serviceId": "platform"
+    }
+   ],
+   "terms": [
+    "failures sla",
+    "function failures",
+    "sla watchdog"
+   ]
+  },
+  {
+   "cohesion": 1.0,
+   "count": 7,
+   "firstSeen": "2026-04-13T06:43:00Z",
+   "label": "incident-events topic / count incident-events / dead-lettered message",
+   "lastSeen": "2026-09-07T00:27:00Z",
+   "sampleTitles": [
+    "Dead-lettered messages on incident-events topic"
+   ],
+   "services": [
+    {
+     "count": 7,
+     "serviceId": "platform"
+    }
+   ],
+   "terms": [
+    "incident-events topic",
+    "count incident-events",
+    "dead-lettered message"
+   ]
+  },
+  {
+   "cohesion": 0.978,
+   "count": 6,
+   "firstSeen": "2026-06-03T02:31:00Z",
+   "label": "availability test / api availability / failing incidents",
+   "lastSeen": "2026-07-27T18:34:00Z",
+   "sampleTitles": [
+    "Availability test failing for incidents API"
+   ],
+   "services": [
+    {
+     "count": 6,
+     "serviceId": "platform"
+    }
+   ],
+   "terms": [
+    "availability test",
+    "api availability",
+    "failing incidents"
+   ]
+  }
+ ],
+ "clustersEvaluated": 20,
+ "incidentsAnalyzed": 413,
+ "silhouette": 0.93,
+ "window": {
+  "days": 180,
+  "end": "2026-09-28T00:00:00Z",
+  "start": "2026-04-01T00:00:00Z"
+ }
+}

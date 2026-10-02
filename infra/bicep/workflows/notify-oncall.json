@@ -1,0 +1,168 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webhookUrl": {
+      "type": "SecureString",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Slack-compatible incoming webhook that receives on-call pages; empty disables posting."
+      }
+    }
+  },
+  "triggers": {
+    "manual": {
+      "type": "Request",
+      "kind": "Http",
+      "inputs": {
+        "method": "POST",
+        "schema": {
+          "type": "object",
+          "required": [
+            "incidentNumber",
+            "title",
+            "severity",
+            "serviceId",
+            "escalationLevel",
+            "target",
+            "url"
+          ],
+          "properties": {
+            "incidentNumber": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "Sev1",
+                "Sev2",
+                "Sev3",
+                "Sev4"
+              ]
+            },
+            "serviceId": {
+              "type": "string"
+            },
+            "escalationLevel": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "target": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "operationOptions": "EnableSchemaValidation"
+    }
+  },
+  "actions": {
+    "Accepted": {
+      "type": "Response",
+      "kind": "Http",
+      "runAfter": {},
+      "inputs": {
+        "statusCode": 202,
+        "body": {
+          "incidentNumber": "@triggerBody()?['incidentNumber']",
+          "target": "@triggerBody()?['target']"
+        }
+      }
+    },
+    "Initialize_headline": {
+      "type": "InitializeVariable",
+      "runAfter": {},
+      "inputs": {
+        "variables": [
+          {
+            "name": "headline",
+            "type": "string",
+            "value": "@{triggerBody()?['severity']} INC-@{triggerBody()?['incidentNumber']}"
+          }
+        ]
+      }
+    },
+    "Is_sev1": {
+      "type": "If",
+      "runAfter": {
+        "Initialize_headline": [
+          "Succeeded"
+        ]
+      },
+      "expression": {
+        "and": [
+          {
+            "equals": [
+              "@triggerBody()?['severity']",
+              "Sev1"
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "Mark_as_page": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "headline",
+            "value": "PAGE @{triggerBody()?['severity']} INC-@{triggerBody()?['incidentNumber']}"
+          }
+        }
+      },
+      "else": {
+        "actions": {}
+      }
+    },
+    "Webhook_configured": {
+      "type": "If",
+      "runAfter": {
+        "Is_sev1": [
+          "Succeeded"
+        ]
+      },
+      "expression": {
+        "and": [
+          {
+            "not": {
+              "equals": [
+                "@parameters('webhookUrl')",
+                ""
+              ]
+            }
+          }
+        ]
+      },
+      "actions": {
+        "Post_to_webhook": {
+          "type": "Http",
+          "inputs": {
+            "method": "POST",
+            "uri": "@parameters('webhookUrl')",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "body": {
+              "text": "@{variables('headline')} | @{triggerBody()?['title']} | service @{triggerBody()?['serviceId']} | level @{triggerBody()?['escalationLevel']} | on call @{triggerBody()?['target']} | @{triggerBody()?['url']}"
+            },
+            "retryPolicy": {
+              "type": "exponential",
+              "count": 4,
+              "interval": "PT15S",
+              "minimumInterval": "PT10S",
+              "maximumInterval": "PT5M"
+            }
+          }
+        }
+      },
+      "else": {
+        "actions": {}
+      }
+    }
+  },
+  "outputs": {}
+}

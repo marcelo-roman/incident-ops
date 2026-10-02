@@ -1,0 +1,126 @@
+name: sample-infra-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - infra/bicep
+      - infra/bicepconfig.json
+      - infra/scripts
+      - infra/azure-devops/infra.yml
+      - infra/azure-devops/templates/bicep-validate.yml
+      - infra/azure-devops/templates/bicep-what-if.yml
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - infra/bicep
+      - infra/bicepconfig.json
+      - infra/scripts
+      - infra/azure-devops/infra.yml
+      - infra/azure-devops/templates/bicep-validate.yml
+      - infra/azure-devops/templates/bicep-what-if.yml
+
+variables:
+  - group: vg-incident-ops
+  - name: azureSubscription
+    value: sc-incident-ops
+  - name: resourceGroup
+    value: rg-incident-ops
+  - name: deploymentName
+    value: incident-ops
+  - name: workingDirectory
+    value: infra
+  - name: isMain
+    value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Validate
+    displayName: Validate
+    jobs:
+      - job: Validate
+        displayName: Build, lint and validate
+        steps:
+          - checkout: self
+          - template: templates/bicep-validate.yml
+            parameters:
+              azureSubscription: $(azureSubscription)
+              resourceGroup: $(resourceGroup)
+              deploymentName: $(deploymentName)
+              workingDirectory: $(workingDirectory)
+
+  - stage: WhatIf
+    displayName: What-if
+    dependsOn: Validate
+    jobs:
+      - job: WhatIf
+        displayName: What-if
+        steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: Resolve running images
+            inputs:
+              azureSubscription: $(azureSubscription)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              inlineScript: |
+                set -euo pipefail
+                echo "##vso[task.setvariable variable=API_IMAGE]$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)"
+                echo "##vso[task.setvariable variable=INSIGHTS_IMAGE]$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)"
+          - template: templates/bicep-what-if.yml
+            parameters:
+              azureSubscription: $(azureSubscription)
+              resourceGroup: $(resourceGroup)
+              deploymentName: $(deploymentName)
+              workingDirectory: $(workingDirectory)
+
+  - stage: Deploy
+    displayName: Deploy
+    dependsOn: WhatIf
+    condition: and(succeeded(), eq(variables.isMain, 'True'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: Deploy
+        displayName: Deploy to rg-incident-ops
+        environment: incident-ops-prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: Deploy Bicep
+                  env:
+                    ESCALATION_API_KEY: $(ESCALATION_API_KEY)
+                    NOTIFICATION_WEBHOOK_URL: $(NOTIFICATION_WEBHOOK_URL)
+                    AZURE_CORE_NO_COLOR: "true"
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    workingDirectory: $(workingDirectory)
+                    inlineScript: |
+                      set -euo pipefail
+                      az bicep install --version v0.47.16
+                      API_IMAGE=$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)
+                      INSIGHTS_IMAGE=$(scripts/resolve-image.sh "$(resourceGroup)" ca-incident-ops-insights ghcr.io/marcelo-roman/incident-ops-insights:latest)
+                      export API_IMAGE INSIGHTS_IMAGE
+                      az deployment group create \
+                        --resource-group "$(resourceGroup)" \
+                        --name "$(deploymentName)" \
+                        --template-file bicep/main.bicep \
+                        --parameters bicep/main.bicepparam \
+                        --query properties.outputs \
+                        --output json > "$(Pipeline.Workspace)/outputs.json"
+                      jq '.dnsRecords.value' "$(Pipeline.Workspace)/outputs.json" > "$(Pipeline.Workspace)/dns-records.json"
+                - publish: $(Pipeline.Workspace)/outputs.json
+                  displayName: Publish deployment outputs
+                  artifact: deployment-outputs

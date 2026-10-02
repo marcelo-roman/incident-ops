@@ -1,0 +1,21 @@
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.form {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.confirmation {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-on-track);
+}
+
+.confirmation:empty {
+  margin: 0;
+}

@@ -1,0 +1,66 @@
+.fuse {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 0.125rem var(--space-2);
+  min-width: 9.5rem;
+}
+
+.label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.time {
+  justify-self: end;
+  font-size: var(--text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.track {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-sunken);
+  overflow: hidden;
+}
+
+.burn {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  transition: width 1s linear;
+}
+
+.OnTrack {
+  color: var(--color-on-track);
+}
+.AtRisk {
+  color: var(--color-at-risk);
+}
+.Breached {
+  color: var(--color-breached);
+}
+
+.Breached .track {
+  background: color-mix(in srgb, var(--color-breached) 22%, transparent);
+}
+
+.time.overdue::after {
+  content: ' over';
+  font-weight: 500;
+  font-size: var(--text-xs);
+}
+
+.large .time {
+  font-size: var(--text-2xl);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.large .track {
+  height: 6px;
+}

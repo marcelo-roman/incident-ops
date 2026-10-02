@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTLO report {{ report.window.start.date() }} to {{ report.window.end.date() }}</title>
+<style>
+:root { color-scheme: light dark; --border: #d0d7de; --muted: #57606a; --accent: #0969da; --bad: #cf222e; }
+@media (prefers-color-scheme: dark) { :root { --border: #30363d; --muted: #8b949e; --accent: #4493f8; --bad: #f85149; } }
+body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 1.6rem; margin-bottom: 0; }
+h2 { font-size: 1.15rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.meta { color: var(--muted); margin-top: 4px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.tile .label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.tile .value { font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+th { font-weight: 600; }
+td.num, th.num { text-align: right; }
+.breach { color: var(--bad); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>KTLO report</h1>
+<p class="meta">{{ report.window.start.date() }} to {{ report.window.end.date() }} &middot; trailing {{ report.window.days }} days &middot; generated {{ report.generated_at.strftime("%Y-%m-%d %H:%M UTC") }}</p>
+
+<div class="tiles">
+  <div class="tile"><div class="label">Incidents</div><div class="value">{{ report.overall.incidents }}</div></div>
+  <div class="tile"><div class="label">Detected by monitoring</div><div class="value">{{ report.detection.alerting_pct | percent }}</div></div>
+  <div class="tile"><div class="label">SLA compliance</div><div class="value">{{ report.overall.sla.overall_pct | percent }}</div></div>
+  <div class="tile"><div class="label">MTTA median</div><div class="value">{{ report.overall.mtta.median_minutes | minutes }}</div></div>
+  <div class="tile"><div class="label">MTTA p90</div><div class="value">{{ report.overall.mtta.p90_minutes | minutes }}</div></div>
+  <div class="tile"><div class="label">MTTR median</div><div class="value">{{ report.overall.mttr.median_minutes | minutes }}</div></div>
+  <div class="tile"><div class="label">MTTR p90</div><div class="value">{{ report.overall.mttr.p90_minutes | minutes }}</div></div>
+</div>
+
+<h2>Detection</h2>
+<div class="scroll"><table>
+<thead><tr><th>Source</th><th class="num">Incidents</th><th class="num">Share</th><th class="num">MTTA median</th><th class="num">MTTA p90</th></tr></thead>
+<tbody>
+{% for item in report.detection.by_source %}
+<tr>
+  <td>{{ item.source }}</td>
+  <td class="num">{{ item.incidents }}</td>
+  <td class="num">{{ item.share_pct | percent }}</td>
+  <td class="num">{{ item.mtta.median_minutes | minutes }}</td>
+  <td class="num">{{ item.mtta.p90_minutes | minutes }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+
+<h2>Top recurring issues</h2>
+{% if report.top_recurring %}
+<div class="scroll"><table>
+<thead><tr><th>Cluster</th><th class="num">Incidents</th><th>Services</th><th>Examples</th></tr></thead>
+<tbody>
+{% for cluster in report.top_recurring %}
+<tr>
+  <td>{{ cluster.label }}</td>
+  <td class="num">{{ cluster.count }}</td>
+  <td>{% for service in cluster.services %}{{ service.service_id }} ({{ service.count }}){% if not loop.last %}, {% endif %}{% endfor %}</td>
+  <td>{{ cluster.sample_titles | join("; ") }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+{% else %}
+<p>No recurring clusters in this window.</p>
+{% endif %}
+
+<h2>SLA breaches</h2>
+{% if report.breaches %}
+<p>{{ report.total_breaches }} incidents breached at least one SLA target{% if report.total_breaches > report.breaches | length %}; the {{ report.breaches | length }} most severe are listed{% endif %}.</p>
+<div class="scroll"><table>
+<thead><tr><th>Incident</th><th>Severity</th><th>Service</th><th>Status</th><th>Breached</th><th class="num">Resolve overrun</th><th>Assignee</th></tr></thead>
+<tbody>
+{% for breach in report.breaches %}
+<tr>
+  <td>INC-{{ breach.number }} {{ breach.title }}</td>
+  <td>{{ breach.severity }}</td>
+  <td>{{ breach.service_id }}</td>
+  <td>{{ breach.status }}</td>
+  <td class="breach">{{ breach.breached_targets | join(", ") }}</td>
+  <td class="num">{{ breach.resolve_overrun_minutes | minutes }}</td>
+  <td>{{ breach.assignee or "unassigned" }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+{% else %}
+<p>No SLA breaches in this window.</p>
+{% endif %}
+
+<h2>MTTR by service</h2>
+<div class="scroll"><table>
+<thead><tr><th>Service</th><th class="num">Incidents</th><th class="num">MTTR median</th><th class="num">MTTR p90</th><th class="num">MTTA median</th><th class="num">SLA compliance</th></tr></thead>
+<tbody>
+{% for group in report.mttr_by_service %}
+<tr>
+  <td>{{ group.service_id }}</td>
+  <td class="num">{{ group.incidents }}</td>
+  <td class="num">{{ group.mttr.median_minutes | minutes }}</td>
+  <td class="num">{{ group.mttr.p90_minutes | minutes }}</td>
+  <td class="num">{{ group.mtta.median_minutes | minutes }}</td>
+  <td class="num">{{ group.sla.overall_pct | percent }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+
+<h2>On-call load</h2>
+<p class="meta">Off-hours means created outside 09:00-18:00 America/New_York on weekdays.</p>
+<div class="scroll"><table>
+<thead><tr><th>Assignee</th><th class="num">Incidents</th><th class="num">Sev1/Sev2</th><th class="num">Off-hours</th><th class="num">Escalated</th></tr></thead>
+<tbody>
+{% for load in report.on_call %}
+<tr>
+  <td>{{ load.assignee }}</td>
+  <td class="num">{{ load.incidents }}</td>
+  <td class="num">{{ load.high_severity }}</td>
+  <td class="num">{{ load.off_hours }}</td>
+  <td class="num">{{ load.escalated }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+</body>
+</html>

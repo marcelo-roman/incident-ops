@@ -1,0 +1,93 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.0625rem 0.4375rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+
+.marker {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 1px;
+  background: currentColor;
+  flex: none;
+}
+
+.Sev1 {
+  color: var(--color-sev1);
+  border-color: color-mix(in srgb, var(--color-sev1) 45%, transparent);
+}
+.Sev2 {
+  color: var(--color-sev2);
+  border-color: color-mix(in srgb, var(--color-sev2) 45%, transparent);
+}
+.Sev3 {
+  color: var(--color-sev3);
+  border-color: color-mix(in srgb, var(--color-sev3) 45%, transparent);
+}
+.Sev4 {
+  color: var(--color-sev4);
+  border-color: color-mix(in srgb, var(--color-sev4) 45%, transparent);
+}
+
+.OnTrack {
+  color: var(--color-on-track);
+}
+.AtRisk {
+  color: var(--color-at-risk);
+}
+.Breached {
+  color: var(--color-breached);
+}
+.Met {
+  color: var(--color-met);
+}
+
+.status {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.Triggered {
+  color: var(--color-text);
+  border-color: var(--color-line-strong);
+  border-style: dashed;
+}
+
+.Acknowledged,
+.Mitigated {
+  color: var(--color-text);
+}
+
+.Resolved {
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.source {
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border-style: dotted;
+}
+
+.Alertmanager,
+.AzureMonitor {
+  color: var(--color-text);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+.ackMissed {
+  color: var(--color-at-risk);
+  border-color: color-mix(in srgb, var(--color-at-risk) 45%, transparent);
+  border-style: dashed;
+}

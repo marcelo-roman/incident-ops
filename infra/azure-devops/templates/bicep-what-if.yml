@@ -1,0 +1,57 @@
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: deploymentName
+    type: string
+  - name: templateFile
+    type: string
+    default: bicep/main.bicep
+  - name: parametersFile
+    type: string
+    default: bicep/main.bicepparam
+  - name: bicepVersion
+    type: string
+    default: v0.47.16
+  - name: workingDirectory
+    type: string
+    default: infra
+
+steps:
+  - task: AzureCLI@2
+    displayName: What-if
+    env:
+      ESCALATION_API_KEY: $(ESCALATION_API_KEY)
+      NOTIFICATION_WEBHOOK_URL: $(NOTIFICATION_WEBHOOK_URL)
+      AZURE_CORE_NO_COLOR: "true"
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      workingDirectory: ${{ parameters.workingDirectory }}
+      inlineScript: |
+        set -euo pipefail
+        az bicep install --version "${{ parameters.bicepVersion }}"
+        mkdir -p "$(Build.ArtifactStagingDirectory)/what-if"
+        output="$(Build.ArtifactStagingDirectory)/what-if/what-if.txt"
+        summary="$(Build.ArtifactStagingDirectory)/what-if/summary.md"
+        az deployment group what-if \
+          --resource-group "${{ parameters.resourceGroup }}" \
+          --name "${{ parameters.deploymentName }}" \
+          --template-file "${{ parameters.templateFile }}" \
+          --parameters "${{ parameters.parametersFile }}" \
+          --exclude-change-types Ignore NoChange \
+          > "$output"
+        {
+          echo "## What-if against ${{ parameters.resourceGroup }}"
+          echo
+          echo '```text'
+          cat "$output"
+          echo '```'
+        } > "$summary"
+        echo "##vso[task.uploadsummary]$summary"
+
+  - publish: $(Build.ArtifactStagingDirectory)/what-if
+    displayName: Publish what-if
+    artifact: what-if
