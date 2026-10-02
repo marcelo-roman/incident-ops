@@ -20,7 +20,7 @@ This repository holds every module: three services, the console, the infrastruct
 
 | What | Where |
 |---|---|
-| Documentation site | https://marcelo-roman.github.io/incident-ops/ |
+| Documentation site | https://incidents-docs.marceloroman.com.br |
 | Operations console, Incidents API, Insights API | run locally with the [quick start](#quick-start); the Azure deployment is defined in [infra](infra) and runs from `main` |
 
 The API is seeded with seven services, a six-engineer on-call rotation and six months of deterministic incident history, so every view has data on first load.
@@ -81,7 +81,7 @@ flowchart LR
     insights -.-> appi
 ```
 
-Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA escalation loop, alert ingestion, SignalR, delivery pipeline, Azure topology) are on the [documentation site](https://marcelo-roman.github.io/incident-ops/architecture/) and in [docs/docs/architecture](docs/docs/architecture).
+Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA escalation loop, alert ingestion, SignalR, delivery pipeline, Azure topology) are on the [documentation site](https://incidents-docs.marceloroman.com.br/architecture/) and in [docs/docs/architecture](docs/docs/architecture).
 
 ## Requirement → evidence
 
