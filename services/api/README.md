@@ -18,8 +18,7 @@ The Incident Management bounded context of Incident Ops and the system of record
 12. [Testing](#testing)
 13. [Deployment](#deployment)
 14. [Known trade-offs](#known-trade-offs)
-15. [How this was built](#how-this-was-built)
-16. [License](#license)
+15. [License](#license)
 
 ## What it does
 
@@ -412,10 +411,6 @@ The container runs as the non-root `app` user on port 8080. Infrastructure (Cont
 - Migrations run at startup when `Database__ApplyMigrations=true`. New migrations target the write context: `dotnet ef migrations add <Name> --context IncidentOpsDbContext -p src/IncidentOps.Infrastructure -s src/IncidentOps.Infrastructure -o Persistence/Migrations`. This suits a single replica; with more replicas, migrations belong in the pipeline (an EF Core migration bundle).
 - Forwarded headers are trusted from any proxy because the API only receives traffic through the Container Apps ingress; rate limiting relies on `X-Forwarded-For`.
 - Seeded history is generated from a fixed random seed relative to the seeding date, so the shape is stable while dates stay recent.
-
-## How this was built
-
-This repository was built with an AI-assisted workflow (Claude Code) under the author's design and review. Architecture, contracts, domain rules and acceptance criteria were defined by the author; generated code was reviewed, tested and adjusted before inclusion.
 
 ## License
 

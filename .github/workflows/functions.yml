@@ -11,7 +11,6 @@ on:
     paths:
       - services/functions/**
       - .github/workflows/functions.yml
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -77,7 +76,7 @@ jobs:
   deploy:
     name: Deploy to Azure Functions
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: production
     permissions:

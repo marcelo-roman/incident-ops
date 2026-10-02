@@ -16,7 +16,7 @@ Documentation site for Incident Ops: architecture diagrams, bounded contexts, op
 |---|---|
 | `docs/architecture` | C4 context and containers, context map, incident lifecycle, SLA timers and escalation, real-time, deployment and delivery, observability, code structure |
 | `docs/operations` | support model, severity and SLA, alerting, incident response, postmortems, runbooks with KQL, KTLO metrics, SLOs |
-| `docs/engineering` | Definition of Ready/Done, release readiness, code review, branching, quality gates, testing strategy, ADO hygiene, AI-assisted development |
+| `docs/engineering` | Definition of Ready/Done, release readiness, code review, branching, quality gates, testing strategy, ADO hygiene |
 | `docs/leadership` | stakeholder updates, KTLO vs roadmap, risk and dependency log, retrospective actions |
 | `docs/adr` | architecture decision records (MADR) |
 
@@ -44,7 +44,7 @@ Open http://127.0.0.1:8000. `mkdocs build --strict` is the same check CI runs.
 
 ## Publishing
 
-[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs on pull requests and pushes that change `docs/**` or the workflow itself. It builds with `--strict` on every run; on `main` it uploads the site and deploys it with `actions/deploy-pages` to GitHub Pages. The custom domain is set in the repository's Pages settings and in `docs/CNAME`; DNS is a Cloudflare CNAME to `marcelo-roman.github.io`.
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs on pull requests and pushes that change `docs/**` or the workflow itself. It builds with `--strict` on every run; on `main` it uploads the site and deploys it with `actions/deploy-pages` to GitHub Pages. The site is served at https://marcelo-roman.github.io/incident-ops/. The custom domain `incidents-docs.marceloroman.com.br` is configured in the repository's Pages settings once its Cloudflare CNAME to `marcelo-roman.github.io` exists, together with `site_url` in `mkdocs.yml`.
 
 ## License
 

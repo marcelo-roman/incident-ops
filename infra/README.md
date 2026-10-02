@@ -19,8 +19,7 @@ Infrastructure as code and delivery for Incident Ops: Bicep for every Azure reso
 13. [Teardown](#teardown)
 14. [Local validation](#local-validation)
 15. [Design decisions](#design-decisions)
-16. [How this was built](#how-this-was-built)
-17. [License](#license)
+16. [License](#license)
 
 ## Architecture
 
@@ -227,10 +226,9 @@ Key Vault references are the next step for the Function app settings; they were 
 | Credential | Subject | Used by |
 |---|---|---|
 | `incident-ops-production` | `repo:marcelo-roman/incident-ops:environment:production` | every deploy job (`api.yml`, `functions.yml`, `insights.yml`, `infra.yml`, and the reusable `deploy-container-app.yml`) |
-| `incident-ops-pull-request` | `repo:marcelo-roman/incident-ops:pull_request` | `infra.yml` validate and what-if on pull requests |
 | `incident-ops-main` | `repo:marcelo-roman/incident-ops:ref:refs/heads/main` | `infra.yml` what-if on `main` before the approval gate |
 
-One repository holds every module, so one set of three subjects covers all workflows. `GITHUB_OWNER` and `GITHUB_REPOSITORY_NAME` override the defaults.
+One repository holds every module, so two subjects cover all workflows. There is deliberately no `pull_request` subject: a pull request, even one that edits a workflow, cannot obtain an Azure token. `GITHUB_OWNER` and `GITHUB_REPOSITORY_NAME` override the defaults.
 
 Roles, both scoped to `rg-incident-ops`:
 
@@ -252,12 +250,12 @@ GitHub Actions is the live delivery path. Authentication uses `azure/login@v2` w
 | Workflow | Trigger | Steps |
 |---|---|---|
 | [`infra.yml`](../.github/workflows/infra.yml) → `bicep`, `scripts` | pull requests to `main` and pushes to `main` that change `infra/**` or the workflow | `az bicep build`, `az bicep build-params`, `az bicep lint` (all rules at error), Logic App JSON check, ShellCheck on `scripts/*.sh`, Azure Pipelines YAML parse for `azure-devops/` |
-| `infra.yml` → `plan` | same, after `bicep` | OIDC login, build and lint, resolve running images, `az deployment group validate`, `az deployment group what-if` written to the job summary and uploaded as the `what-if` artifact |
-| `infra.yml` → `deploy` | pushes to `main` only | waits for the `production` environment approval, `az deployment group create`, Cloudflare DNS upsert when `CLOUDFLARE_API_TOKEN` is set, outputs in the job summary |
+| `infra.yml` → `plan` | pushes to `main` only, after `bicep`, when `DEPLOY_ENABLED` is `true` | OIDC login, build and lint, resolve running images, `az deployment group validate`, `az deployment group what-if` written to the job summary and uploaded as the `what-if` artifact |
+| `infra.yml` → `deploy` | pushes to `main` only, when `DEPLOY_ENABLED` is `true` | waits for the `production` environment approval, `az deployment group create`, Cloudflare DNS upsert when `CLOUDFLARE_API_TOKEN` is set, outputs in the job summary |
 | [`deploy-container-app.yml`](../.github/workflows/deploy-container-app.yml) | `workflow_call` from `api.yml` and `insights.yml` | see below |
 | [`platform.yml`](../.github/workflows/platform.yml) → `workflows` | changes under `.github/**` | actionlint over every workflow |
 
-Steps run with `defaults.run.working-directory: infra`. The reviewer sees the what-if summary of the same run before approving the `deploy` job.
+Steps run with `defaults.run.working-directory: infra`. Every Azure job (infra plan and deploy, and the deploy jobs of `api.yml`, `functions.yml`, `insights.yml` and `web.yml`) also requires the repository variable `DEPLOY_ENABLED=true`, so until the first deployment exists those jobs report as skipped rather than failed. The `production` and `github-pages` environments accept deployments from `main` only. The reviewer sees the what-if summary of the same run before approving the `deploy` job.
 
 ### Gates
 
@@ -363,7 +361,7 @@ A managed certificate can only be issued after the host name is on the app, and 
 | `Disabled` | host names added to both apps without a certificate, managed certificates issued, Static Web App custom domain added |
 | `SniEnabled` | certificates bound; API and insights base URLs switch to the custom hosts |
 
-For GitHub Pages, set the custom domain `incidents-docs.marceloroman.com.br` in the repository's Pages settings after the CNAME exists; `docs/docs/CNAME` carries the same value into the built site.
+For GitHub Pages, set the custom domain `incidents-docs.marceloroman.com.br` in the repository's Pages settings after the CNAME exists, and update `site_url` in `docs/mkdocs.yml` to match.
 
 ## Alerting
 
@@ -423,10 +421,6 @@ shellcheck --severity=style scripts/*.sh
 - **Explicit `dependsOn`** where modules receive names instead of outputs: names known at compile time keep what-if precise (`what-if-short-circuiting`).
 - **No diagnostic settings resources.** Container Apps and Functions already send logs to the workspace. The current `Microsoft.Insights/diagnosticSettings` API version is a 2021 preview, which the strict `use-recent-api-versions` rule rejects.
 - **Logic App webhook format.** The workflow posts `{ "text": ... }`, the Slack incoming-webhook format; Teams Workflows webhooks need an Adaptive Card body instead. Email needs an Office 365 API connection with interactive consent, so it is not part of the template.
-
-## How this was built
-
-The architecture, resource choices and security model are the author's design, and changes go through the author's review. Implementation was AI-assisted with Claude Code working from the shared [contract](../contracts/contracts.md), and every change is checked with the commands in [Local validation](#local-validation) and by the CI workflows.
 
 ## License
 

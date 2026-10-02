@@ -78,7 +78,6 @@ ensure_federated_credential() {
 ensure_federated_credentials() {
   local app_id="$1"
   ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-production" "repo:${REPOSITORY}:environment:production"
-  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-pull-request" "repo:${REPOSITORY}:pull_request"
   ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-main" "repo:${REPOSITORY}:ref:refs/heads/main"
 }
 

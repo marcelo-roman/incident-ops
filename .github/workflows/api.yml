@@ -13,7 +13,6 @@ on:
       - services/api/**
       - .github/workflows/api.yml
       - .github/workflows/deploy-container-app.yml
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -116,7 +115,7 @@ jobs:
   deploy:
     name: Deploy to Azure Container Apps
     needs: image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     permissions:
       contents: read
       id-token: write
