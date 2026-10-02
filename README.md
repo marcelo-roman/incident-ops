@@ -2,6 +2,8 @@
 
 Incident management and KTLO operations platform. It turns alerts into deduplicated incidents, tracks them against severity-based SLAs, escalates unacknowledged incidents through an on-call rotation without polling, pushes changes to the operations console in real time, and turns incident history into KTLO metrics and AI-drafted root cause analyses.
 
+[![Incident Ops demo: declare a Sev1, live escalation, resolution, Azure Monitor alerts, KTLO insights and an AI-drafted RCA](docs/docs/assets/demo/demo-thumbnail.jpg)](https://incidents-docs.marceloroman.com.br/demo/)
+
 This repository holds every module: three services, the console, the infrastructure, the documentation site, the [contract](contracts/contracts.md) they implement, and a Docker Compose stack that runs everything locally with Prometheus and Alertmanager.
 
 ## Contents
