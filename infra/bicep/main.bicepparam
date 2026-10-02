@@ -13,6 +13,9 @@ param sqlEntraAdminLogin = readEnvironmentVariable('SQL_ADMIN_GROUP_NAME', 'sg-i
 param sqlEntraAdminObjectId = readEnvironmentVariable('SQL_ADMIN_GROUP_OBJECT_ID', '00000000-0000-0000-0000-000000000000')
 
 param escalationApiKey = readEnvironmentVariable('ESCALATION_API_KEY')
+param authSigningKey = readEnvironmentVariable('AUTH_SIGNING_KEY')
+param demoUsername = readEnvironmentVariable('DEMO_USERNAME', 'demo')
+param demoPassword = readEnvironmentVariable('DEMO_PASSWORD')
 param notificationWebhookUrl = readEnvironmentVariable('NOTIFICATION_WEBHOOK_URL', '')
 param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')
 

@@ -10,6 +10,7 @@ Incident Ops is the system an operations team uses to open, acknowledge, mitigat
 | [SLA timers and escalation](sla-escalation.md) | scheduled-message timer loop, idempotency guard, on-call rotation |
 | [Real-time updates](real-time.md) | SignalR hub, negotiation, reconnect |
 | [Deployment](deployment.md) | Azure topology, DNS, security, delivery pipeline |
+| [Security](security.md) | authentication schemes, which caller reaches which endpoint, token format, secrets |
 | [Observability](observability.md) | Application Insights vs Prometheus, correlation, KQL and PromQL |
 | [Code structure](code-structure.md) | layers, aggregates and boundaries per module, and how they are enforced |
 | [Alerting](../operations/alerting.md) | alert → incident → SLA → escalation → notification |

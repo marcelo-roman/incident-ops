@@ -47,14 +47,14 @@ sequenceDiagram
         Scheduler->>Queue: schedule {incidentId, escalationLevel} at ackDueAt<br/>MessageId = incidentId-level
     and notifier subscription (Sev1/Sev2)
         Topic->>Notifier: CloudEvent
-        Notifier->>API: GET /api/oncall/current
+        Notifier->>API: GET /api/oncall/current (X-Api-Key)
         Notifier->>Logic: POST {incidentNumber, title, severity, serviceId, escalationLevel, target, url}
         Logic-->>Notifier: 202 Accepted
         Logic->>Channel: incoming webhook
     end
     Note over Queue: message becomes visible at ackDueAt
     Queue->>Checker: {incidentId, escalationLevel}
-    Checker->>API: GET /api/incidents/{id}
+    Checker->>API: GET /api/incidents/{id} (X-Api-Key)
     alt still Triggered at the same level and level < 3
         Checker->>API: POST /api/incidents/{id}/escalate (X-Api-Key)
         API->>Topic: incident.escalated (level + 1, new ackDueAt)
@@ -130,7 +130,7 @@ Names follow the runtime configuration in the shared contract. In Azure they are
 | `NotifierSubscription` | `notifier` | `notifier` |
 | `SlaChecksQueue` | `sla-checks` | `sla-checks` |
 | `IncidentsApi__BaseUrl` | `https://incidents-api.marceloroman.com.br/` | `http://localhost:5080/` |
-| `IncidentsApi__ApiKey` | secure setting injected by the infrastructure; a Key Vault reference (`@Microsoft.KeyVault(SecretUri=...)`) works unchanged | `local-development-key` |
+| `IncidentsApi__ApiKey` | API key sent as `X-Api-Key` on every call to the Incidents API; secure setting injected by the infrastructure; a Key Vault reference (`@Microsoft.KeyVault(SecretUri=...)`) works unchanged | `local-development-key` |
 | `Notifications__LogicAppUrl` | Logic App trigger callback URL (contains a SAS signature) | any HTTP endpoint |
 | `Web__BaseUrl` | `https://incidents.marceloroman.com.br/` | `http://localhost:8080/` |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | shared Application Insights component | optional |
@@ -170,7 +170,7 @@ Requirements: .NET 8 SDK, Docker, Azure Functions Core Tools v4 (`npm i -g azure
 
    ```bash
    curl -s -X POST http://localhost:5080/api/incidents \
-     -H 'Content-Type: application/json' \
+     -H 'Content-Type: application/json' -H 'X-Api-Key: local-development-key' \
      -d '{"title":"Checkout returns 502","description":"Upstream timeout","serviceId":"checkout","severity":"Sev1"}'
    ```
 

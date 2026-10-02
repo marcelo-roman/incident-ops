@@ -2,7 +2,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 DEFAULT_CORS_ORIGINS = ("https://incidents.marceloroman.com.br", "http://localhost:5173")
@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     incidents_api_base_url: str = "https://incidents-api.marceloroman.com.br"
     incidents_api_timeout_seconds: float = 15.0
     incidents_api_attempts: int = Field(default=3, ge=1)
+    incidents_api_key: SecretStr | None = None
+    auth_signing_key: SecretStr | None = None
     insights_data_source: DataSourceKind = DataSourceKind.API
     insights_csv_path: Path = Path("data/sample_incidents.csv")
     insights_cache_ttl_seconds: float = Field(default=300.0, ge=0)

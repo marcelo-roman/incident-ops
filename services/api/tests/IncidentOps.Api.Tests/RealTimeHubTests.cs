@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using IncidentOps.Api.Tests.Infrastructure;
 using IncidentOps.Application.Common;
@@ -18,6 +19,7 @@ public class RealTimeHubTests(ApiFactory factory)
             {
                 options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
                 options.Transports = HttpTransportType.LongPolling;
+                options.AccessTokenProvider = () => Task.FromResult<string?>(TestTokens.Create());
             })
             .AddJsonProtocol(options => ContractJson.Configure(options.PayloadSerializerOptions))
             .Build();
@@ -37,5 +39,22 @@ public class RealTimeHubTests(ApiFactory factory)
         changedPayload.GetProperty("acknowledgementBreached").GetBoolean().Should().BeFalse();
         appendedPayload.GetProperty("incidentId").GetGuid().Should().Be(incident.Id);
         appendedPayload.GetProperty("kind").GetString().Should().Be("Triggered");
+    }
+
+    [Fact]
+    public async Task Negotiate_requires_an_access_token()
+    {
+        var response = await factory.CreateAnonymousClient().PostAsync("/hubs/incidents/negotiate?negotiateVersion=1", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Negotiate_accepts_the_access_token_from_the_query_string()
+    {
+        var response = await factory.CreateAnonymousClient()
+            .PostAsync($"/hubs/incidents/negotiate?negotiateVersion=1&access_token={TestTokens.Create()}", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

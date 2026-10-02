@@ -28,10 +28,10 @@ flowchart TB
 
 | Module | Tests | Coverage today | Gate |
 | --- | --- | --- | --- |
-| `services/api` | 204 (Domain 109, Application 37, Api integration 35, Architecture 23) | 95.8% line, 83.2% branch | 80% merged line coverage (ReportGenerator in `api.yml`) |
-| `services/functions` | 186 (one project: Domain, Application, AntiCorruption, Adapters, Host, Architecture) | 94.8% line, 90.1% branch | 80% line and branch (`coverlet.msbuild`, fails the build) |
-| `services/insights` | 178 | 99% line with branch coverage | 85% (`fail_under` in `pyproject.toml`) |
-| `apps/web` | 161 | above every threshold | 70% global; 95% lines on `src/features/*/domain/**`; 90% on `src/shared/{format,config,http}/**` (`vite.config.ts`) |
+| `services/api` | 245 (Domain 109, Application 37, Api integration 75, Architecture 24) | 96.2% line, 84.6% branch | 80% merged line coverage (ReportGenerator in `api.yml`) |
+| `services/functions` | 187 (one project: Domain, Application, AntiCorruption, Adapters, Host, Architecture) | 94.8% line, 90.1% branch | 80% line and branch (`coverlet.msbuild`, fails the build) |
+| `services/insights` | 215 | 99% line with branch coverage | 85% (`fail_under` in `pyproject.toml`) |
+| `apps/web` | 242 | above every threshold | 70% global; 95% lines on `src/features/*/domain/**`; 90% on `src/shared/{format,config,http}/**` (`vite.config.ts`) |
 
 ## Per module
 

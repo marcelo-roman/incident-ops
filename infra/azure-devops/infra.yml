@@ -103,6 +103,8 @@ stages:
                   displayName: Deploy Bicep
                   env:
                     ESCALATION_API_KEY: $(ESCALATION_API_KEY)
+                    AUTH_SIGNING_KEY: $(AUTH_SIGNING_KEY)
+                    DEMO_PASSWORD: $(DEMO_PASSWORD)
                     NOTIFICATION_WEBHOOK_URL: $(NOTIFICATION_WEBHOOK_URL)
                     AZURE_CORE_NO_COLOR: "true"
                   inputs:

@@ -6,17 +6,25 @@ internal static class ApiKeyReader
     public const string QueryName = "code";
     private const string BearerPrefix = "Bearer ";
 
-    public static string? Read(HttpRequest request)
+    public static bool HasHeader(HttpRequest request) =>
+        request.Headers.TryGetValue(HeaderName, out var header) && !string.IsNullOrEmpty(header);
+
+    public static string? Read(HttpRequest request, ApiKeySources sources)
     {
-        if (request.Headers.TryGetValue(HeaderName, out var header) && !string.IsNullOrEmpty(header))
+        if (HasHeader(request))
         {
-            return header.ToString();
+            return request.Headers[HeaderName].ToString();
         }
 
         var authorization = request.Headers.Authorization.ToString();
-        if (authorization.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
+        if (sources.HasFlag(ApiKeySources.AuthorizationHeader) && authorization.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
         {
             return authorization[BearerPrefix.Length..].Trim();
+        }
+
+        if (!sources.HasFlag(ApiKeySources.Query))
+        {
+            return null;
         }
 
         return request.Query[QueryName].FirstOrDefault();

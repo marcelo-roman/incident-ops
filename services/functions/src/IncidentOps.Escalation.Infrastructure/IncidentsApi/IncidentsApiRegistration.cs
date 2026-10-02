@@ -18,18 +18,14 @@ public static class IncidentsApiRegistration
 
         services.AddHttpClient<IIncidentReader, HttpIncidentReader>(UseApi).AddEscalationResilience();
         services.AddHttpClient<IOnCallDirectory, HttpOnCallDirectory>(UseApi).AddEscalationResilience();
-        services.AddHttpClient<IIncidentEscalator, HttpIncidentEscalator>(UseApiWithKey).AddEscalationResilience();
+        services.AddHttpClient<IIncidentEscalator, HttpIncidentEscalator>(UseApi).AddEscalationResilience();
         return services;
     }
 
     private static void UseApi(IServiceProvider provider, HttpClient client)
     {
-        client.BaseAddress = provider.GetRequiredService<IOptions<IncidentsApiOptions>>().Value.BaseUrl;
-    }
-
-    private static void UseApiWithKey(IServiceProvider provider, HttpClient client)
-    {
-        UseApi(provider, client);
-        client.DefaultRequestHeaders.Add(ApiKeyHeader, provider.GetRequiredService<IOptions<IncidentsApiOptions>>().Value.ApiKey);
+        var options = provider.GetRequiredService<IOptions<IncidentsApiOptions>>().Value;
+        client.BaseAddress = options.BaseUrl;
+        client.DefaultRequestHeaders.Add(ApiKeyHeader, options.ApiKey);
     }
 }

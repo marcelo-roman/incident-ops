@@ -6,9 +6,9 @@ export const hubMethods = {
   timelineAppended: 'TimelineAppended',
 } as const;
 
-export function createIncidentHub(apiBaseUrl: string): HubConnection {
+export function createIncidentHub(apiBaseUrl: string, accessTokenFactory: () => string): HubConnection {
   return new HubConnectionBuilder()
-    .withUrl(`${apiBaseUrl}/hubs/incidents`)
+    .withUrl(`${apiBaseUrl}/hubs/incidents`, { accessTokenFactory })
     .withAutomaticReconnect(backoffRetryPolicy)
     .configureLogging(LogLevel.Warning)
     .build();

@@ -4,6 +4,7 @@ import './app/styles/base.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
+import { connectSessionToHttp } from './app/connectSessionToHttp';
 import { buildTimeConfig, setConfig, type AppConfig } from './shared/config/appConfig';
 import { loadRuntimeConfig } from './shared/config/runtimeConfig';
 
@@ -18,6 +19,7 @@ async function startMockServiceWorker(config: AppConfig): Promise<void> {
 async function bootstrap(): Promise<void> {
   const config = await loadRuntimeConfig(buildTimeConfig);
   setConfig(config);
+  connectSessionToHttp();
   await startMockServiceWorker(config);
   const container = document.getElementById('root');
   if (container === null) {

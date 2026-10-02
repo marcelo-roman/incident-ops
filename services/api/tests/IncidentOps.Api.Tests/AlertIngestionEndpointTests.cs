@@ -15,6 +15,7 @@ public class AlertIngestionEndpointTests(ApiFactory factory)
     private const string AzureMonitor = "/api/alerts/azure-monitor";
 
     private readonly HttpClient _client = factory.CreateClient();
+    private readonly HttpClient _alerting = factory.CreateAnonymousClient();
     private readonly string _run = Guid.NewGuid().ToString("N")[..8];
 
     [Fact]
@@ -76,13 +77,21 @@ public class AlertIngestionEndpointTests(ApiFactory factory)
         var request = ApiClientExtensions.PostFixture(Alertmanager, "alertmanager-resolved.json", _run);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiFactory.ApiKey);
 
-        var response = await _client.SendAsync(request);
+        var response = await _alerting.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task Missing_key_returns_401()
+    {
+        var response = await _alerting.SendAsync(ApiClientExtensions.PostFixture(Alertmanager, "alertmanager-firing.json", _run));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Access_token_is_rejected()
     {
         var response = await _client.SendAsync(ApiClientExtensions.PostFixture(Alertmanager, "alertmanager-firing.json", _run));
 
@@ -94,14 +103,14 @@ public class AlertIngestionEndpointTests(ApiFactory factory)
     {
         var request = ApiClientExtensions.Post(Alertmanager, new { version = "3", alerts = Array.Empty<object>() }).WithApiKey();
 
-        var response = await _client.SendAsync(request);
+        var response = await _alerting.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     private async Task<AlertIngestionResult> IngestAsync(HttpRequestMessage request)
     {
-        var response = await _client.SendAsync(request);
+        var response = await _alerting.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return await response.ReadAsync<AlertIngestionResult>();
     }

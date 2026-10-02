@@ -61,9 +61,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prometheus config
-        run: >-
-          docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:v3.15.0
-          check config /etc/prometheus/prometheus.yml
+        run: |
+          printf '%s' placeholder > "$RUNNER_TEMP/api-key"
+          docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" -v "$RUNNER_TEMP/api-key:/prometheus/api-key:ro" \
+            --entrypoint promtool prom/prometheus:v3.15.0 check config /etc/prometheus/prometheus.yml
       - name: Alert rule unit tests
         run: >-
           docker run --rm -v "$PWD/local/prometheus:/etc/prometheus:ro" -w /etc/prometheus/tests --entrypoint promtool prom/prometheus:v3.15.0

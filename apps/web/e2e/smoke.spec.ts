@@ -1,7 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-test('an operator declares an incident and acknowledges it', async ({ page }) => {
+test('an operator signs in, declares an incident and acknowledges it', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Sign in to Incident Ops' })).toBeVisible();
+  await page.getByLabel('Username').fill('demo');
+  await page.getByLabel('Password').fill('local-demo-password');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
   await expect(page.getByRole('heading', { name: 'Command overview' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Open incidents' }).getByRole('timer').first()).toBeVisible();
 

@@ -53,12 +53,22 @@ class ApiIncidentSource:
         raise IncidentSourceError(f"Incidents API answered {response.status_code} for {path}")
 
 
-def create_api_client(base_url: str, timeout_seconds: float) -> httpx.Client:
+API_KEY_HEADER = "X-Api-Key"
+
+
+def create_api_client(base_url: str, timeout_seconds: float, api_key: str) -> httpx.Client:
     return httpx.Client(
         base_url=base_url,
         timeout=timeout_seconds,
-        headers={"Accept": "application/json", "User-Agent": "incident-ops-insights"},
+        headers=_headers(api_key),
     )
+
+
+def _headers(api_key: str) -> dict[str, str]:
+    headers = {"Accept": "application/json", "User-Agent": "incident-ops-insights"}
+    if not api_key:
+        return headers
+    return {**headers, API_KEY_HEADER: api_key}
 
 
 def _iso(moment: datetime) -> str:

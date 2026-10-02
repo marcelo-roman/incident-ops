@@ -1,0 +1,14 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-5) var(--space-4);
+}
+
+.content {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 40rem;
+}

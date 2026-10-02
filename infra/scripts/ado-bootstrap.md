@@ -64,7 +64,10 @@ Name: `vg-incident-ops`, under Pipelines → Library. The pipeline exposes non-s
 | `BUDGET_EMAIL` | no | budget alert recipient |
 | `ALERT_EMAIL` | no | optional Azure Monitor alert recipient |
 | `CUSTOM_DOMAIN_BINDING` | no | `None`, `Disabled` or `SniEnabled` |
+| `DEMO_USERNAME` | no | `demo` |
 | `ESCALATION_API_KEY` | yes | `openssl rand -hex 32` |
+| `AUTH_SIGNING_KEY` | yes | `openssl rand -hex 32` |
+| `DEMO_PASSWORD` | yes | password of the shared demo account |
 | `NOTIFICATION_WEBHOOK_URL` | yes | Slack-compatible incoming webhook |
 | `SWA_DEPLOYMENT_TOKEN` | yes | Static Web App deployment token, read by `web.yml` |
 

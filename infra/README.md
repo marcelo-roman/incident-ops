@@ -182,10 +182,11 @@ Idempotent; requires the Azure CLI, `curl` and, for `up`, [go-sqlcmd](https://gi
 | `down` | deploy with `environmentState=off`; delete the dead-letter alert, the Service Bus namespace and the SQL database when present; print the status |
 | `status` | print the state (`on`, `off`, or `partial` when only one of the namespace and the database exists), the namespace, the database and its SKU, and the API minimum replicas |
 
-`up` and `down` take the same inputs as the infra workflow: `ESCALATION_API_KEY`, `SQL_ADMIN_GROUP_NAME`, `SQL_ADMIN_GROUP_OBJECT_ID`, `BUDGET_EMAIL` and `CUSTOM_DOMAIN_BINDING` are required, `ALERT_EMAIL` and `NOTIFICATION_WEBHOOK_URL` are optional, and `API_IMAGE` / `INSIGHTS_IMAGE` default to the images running now. To run it from a workstation, sign in with an account in `sg-incident-ops-sql-admins` and export the same values the repository variables and secrets hold:
+`up` and `down` take the same inputs as the infra workflow: `ESCALATION_API_KEY`, `AUTH_SIGNING_KEY`, `DEMO_PASSWORD`, `SQL_ADMIN_GROUP_NAME`, `SQL_ADMIN_GROUP_OBJECT_ID`, `BUDGET_EMAIL` and `CUSTOM_DOMAIN_BINDING` are required, `ALERT_EMAIL`, `NOTIFICATION_WEBHOOK_URL` and `DEMO_USERNAME` (default `demo`) are optional, and `API_IMAGE` / `INSIGHTS_IMAGE` default to the images running now. To run it from a workstation, sign in with an account in `sg-incident-ops-sql-admins` and export the same values the repository variables and secrets hold:
 
 ```bash
 export ESCALATION_API_KEY=<same value as the GitHub secret>
+export AUTH_SIGNING_KEY=<same value as the GitHub secret> DEMO_PASSWORD=<same value as the GitHub secret>
 export SQL_ADMIN_GROUP_NAME=sg-incident-ops-sql-admins SQL_ADMIN_GROUP_OBJECT_ID=<group object id>
 export BUDGET_EMAIL=<email> CUSTOM_DOMAIN_BINDING=<None|Disabled|SniEnabled>
 infra/scripts/power.sh status
@@ -277,9 +278,12 @@ The template injects configuration as environment variables; the application mod
 | API | `ServiceBus__FullyQualifiedNamespace`, `ServiceBus__TopicName` | `<namespace>.servicebus.windows.net`, built from the namespace name; `incident-events` |
 | API | `Azure__SignalR__ConnectionString` | `Endpoint=https://<signalr>;AuthType=azure.msi;Version=1.0;` |
 | API | `Security__EscalationApiKey` | secret reference `escalation-api-key` |
+| API | `Auth__SigningKey`, `Auth__DemoPassword` | secret references `auth-signing-key`, `demo-password` |
+| API | `Auth__DemoUsername` | `demoUsername` parameter (`DEMO_USERNAME`, default `demo`) |
 | API | `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1` | custom web origin, Static Web App default origin |
 | API, insights | `APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_SERVICE_NAME` | shared component, `incident-ops-api` / `incident-ops-insights` |
 | Insights | `INCIDENTS_API_BASE_URL` | API base URL |
+| Insights | `INCIDENTS_API_KEY`, `AUTH_SIGNING_KEY` | secret references `escalation-api-key`, `auth-signing-key` |
 | Insights | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` | account endpoint, `rca-drafts` |
 | Insights | `CORS_ALLOWED_ORIGINS` | comma-separated web origins |
 | Functions | `AzureWebJobsStorage__accountName` | identity-based host storage |
@@ -313,7 +317,9 @@ Local authentication is disabled where the service allows it: Service Bus (`disa
 
 | Secret | Where it lives | Reason |
 | --- | --- | --- |
-| `ESCALATION_API_KEY` | GitHub secret → Container Apps secret, Function app setting, Action Group webhook `code` | the contract authenticates machine callers of `/escalate` and `/api/alerts/*` with an API key; Azure Monitor webhooks cannot send headers |
+| `ESCALATION_API_KEY` | GitHub secret → Container Apps secrets of the API and Insights, Function app setting, Action Group webhook `code` | the contract authenticates machine callers (escalate, alert ingestion, `/metrics`, reads from Functions and Insights) with an API key; Azure Monitor webhooks cannot send headers |
+| `AUTH_SIGNING_KEY` | GitHub secret → Container Apps secrets of the API (`Auth__SigningKey`) and Insights (`AUTH_SIGNING_KEY`) | HS256 key for console access tokens ([ADR 0011](../docs/docs/adr/0011-demo-authentication-with-signed-jwt-and-service-api-keys.md)) |
+| `DEMO_PASSWORD` | GitHub secret → Container Apps secret of the API (`Auth__DemoPassword`) | password of the shared demo account; shared on request, never committed |
 | `NOTIFICATION_WEBHOOK_URL` | GitHub secret → Logic App `securestring` parameter | third-party webhook |
 | Logic App callback URL | Function app setting, resolved at deploy time with `listCallbackUrl()` | Consumption HTTP triggers authenticate with SAS |
 | `SWA_DEPLOYMENT_TOKEN` | GitHub repository secret | Static Web Apps deploy action |
@@ -428,7 +434,15 @@ Nothing here runs automatically; these are the manual steps, in order.
    ```
 
    It creates `rg-incident-ops`, `sp-incident-ops-github`, the three federated credentials for `marcelo-roman/incident-ops`, the two scoped role assignments and the Entra group `sg-incident-ops-sql-admins` with you and `sp-incident-ops-github` as members, then prints the `gh` commands for repository variables, secrets and the `production` and `power` environments.
-2. Run the printed `gh` commands. `ESCALATION_API_KEY` must be at least 32 characters. `KEEP_ON_UNTIL` is optional.
+2. Run the printed `gh` commands. They set the repository variables (including `DEMO_USERNAME`, default `demo`) and the secrets the deployment reads:
+
+   | Secret | Value |
+   | --- | --- |
+   | `ESCALATION_API_KEY` | at least 32 characters, `openssl rand -hex 32` |
+   | `AUTH_SIGNING_KEY` | at least 32 bytes, `openssl rand -hex 32`; signs console access tokens |
+   | `DEMO_PASSWORD` | at least 12 characters; the password reviewers receive on request |
+
+   `KEEP_ON_UNTIL` is optional.
 3. In the repository settings: a ruleset on `main` (pull request, review from code owners, block force pushes and deletion), GitHub Pages with source "GitHub Actions", and Actions permission to create the `github-pages` environment.
 4. Publish at least one image of `incident-ops-api` and `incident-ops-insights` to GHCR and make both packages public (the first `main` run of `api.yml` and `insights.yml` pushes them; their deploy jobs fail until the container apps exist).
 5. Run `infra.yml` on `main` (push or `workflow_dispatch`) and approve the `deploy` job. No Service Bus namespace exists yet, so this deployment is `off`: everything except Service Bus and the database.
@@ -515,7 +529,8 @@ Requires Azure CLI with Bicep (`az bicep install`), ShellCheck and actionlint. R
 az bicep build --file bicep/main.bicep --stdout > /dev/null
 az bicep lint --file bicep/main.bicep
 for state in on off; do
-  ENVIRONMENT_STATE=$state ESCALATION_API_KEY=$(openssl rand -hex 32) az bicep build-params --file bicep/main.bicepparam --stdout > /dev/null
+  ENVIRONMENT_STATE=$state ESCALATION_API_KEY=$(openssl rand -hex 32) AUTH_SIGNING_KEY=$(openssl rand -hex 32) DEMO_PASSWORD=$(openssl rand -hex 12) \
+    az bicep build-params --file bicep/main.bicepparam --stdout > /dev/null
 done
 shellcheck --severity=style scripts/*.sh
 (cd .. && actionlint)

@@ -44,6 +44,9 @@ services:
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
       ServiceBus__TopicName: incident-events
       Security__EscalationApiKey: ${ESCALATION_API_KEY:-local-dev-key}
+      Auth__SigningKey: ${AUTH_SIGNING_KEY:-local-development-signing-key-change-me-32b}
+      Auth__DemoUsername: ${DEMO_USERNAME:-demo}
+      Auth__DemoPassword: ${DEMO_PASSWORD:-local-demo-password}
       Cors__AllowedOrigins__0: http://localhost:5173
       Cors__AllowedOrigins__1: https://incidents.marceloroman.com.br
       Sla__TimeScale: ${SLA_TIME_SCALE:-1}

@@ -84,7 +84,7 @@ public class ReadEndpointTests(ApiFactory factory)
     [InlineData("/health/ready")]
     public async Task Health_checks_are_healthy(string path)
     {
-        var response = await _client.GetAsync(path);
+        var response = await factory.CreateAnonymousClient().GetAsync(path);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -95,17 +95,19 @@ public class ReadEndpointTests(ApiFactory factory)
         await _client.GetAsync("/api/services");
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        var metrics = await _client.GetStringAsync("/metrics");
+        var metrics = await factory.CreateAnonymousClient().SendAsync(new HttpRequestMessage(HttpMethod.Get, "/metrics").WithApiKey());
+        var body = await metrics.Content.ReadAsStringAsync();
 
-        metrics.Should().Contain("http_server_request_duration_seconds_bucket");
-        metrics.Should().Contain("incidentops_incidents_open{");
-        metrics.Should().Contain("incidentops_sla_breached_open");
+        metrics.StatusCode.Should().Be(HttpStatusCode.OK);
+        body.Should().Contain("http_server_request_duration_seconds_bucket");
+        body.Should().Contain("incidentops_incidents_open{");
+        body.Should().Contain("incidentops_sla_breached_open");
     }
 
     [Fact]
     public async Task Swagger_document_is_served()
     {
-        var response = await _client.GetAsync("/swagger/v1/swagger.json");
+        var response = await factory.CreateAnonymousClient().GetAsync("/swagger/v1/swagger.json");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }

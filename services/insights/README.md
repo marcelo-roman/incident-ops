@@ -8,12 +8,13 @@ KTLO analytics and AI-assisted root cause analysis for the Incident Ops system. 
 2. [Architecture](#architecture)
 3. [Methods](#methods)
 4. [HTTP API](#http-api)
-5. [CLI](#cli)
-6. [Running locally](#running-locally)
-7. [Configuration](#configuration)
-8. [Testing and quality](#testing-and-quality)
-9. [Deployment](#deployment)
-10. [License](#license)
+5. [Authentication](#authentication)
+6. [CLI](#cli)
+7. [Running locally](#running-locally)
+8. [Configuration](#configuration)
+9. [Testing and quality](#testing-and-quality)
+10. [Deployment](#deployment)
+11. [License](#license)
 
 ## What it does
 
@@ -74,8 +75,10 @@ src/incident_insights/
                      outputs: camelCase response models built from domain results
   infrastructure/    adapters: anti-corruption layer for the Incidents API payload, API (httpx,
                      retries, TTL cache) and CSV sources, Azure OpenAI and deterministic RCA
-                     drafters, settings, sample generator, logging and telemetry, composition root
-  interface/         FastAPI app and routers, Typer CLI, report rendering (Jinja)
+                     drafters, JWT verification (PyJWT), settings, sample generator, logging and
+                     telemetry, composition root
+  interface/         FastAPI app, routers and the bearer authentication dependency, Typer CLI,
+                     report rendering (Jinja)
 ```
 
 Use cases only orchestrate: load the history for a window through the `IncidentSource` port, call a domain service, and return its output model. The anti-corruption layer (`infrastructure/incidents/acl.py`) is the only place that knows the API's field names (`serviceId`, `ackDueAt`, ...); it translates the export and the CSV rows into `IncidentRecord` and back. The Azure OpenAI structured-output schema lives in the adapter and is mapped to `RcaDraft`, so a model answer that breaks the draft's invariants is rejected.
@@ -85,7 +88,7 @@ The boundaries are [import-linter](https://import-linter.readthedocs.io/) contra
 | Contract | Rule |
 | --- | --- |
 | Layers | `interface` → `infrastructure` → `application` → `domain`; never upwards |
-| No I/O frameworks inside | `domain` and `application` do not import `httpx`, `openai`, `azure`, `fastapi`, `typer`, `jinja2`, `pydantic_settings`, `opentelemetry` |
+| No I/O frameworks inside | `domain` and `application` do not import `httpx`, `openai`, `azure`, `fastapi`, `jwt`, `typer`, `jinja2`, `pydantic_settings`, `opentelemetry` |
 | Plain domain | `domain` does not import `pydantic` |
 | Computation stays in services | entities, collections and value-object modules do not import `pandas`, `sklearn`, `scipy` |
 | Routers use use cases | `interface.api.routers` does not import `infrastructure` |
@@ -166,7 +169,7 @@ A model refusal, a truncated answer (`finish_reason: length`) or an Azure OpenAI
 
 ## HTTP API
 
-Base URL `https://incidents-insights.marceloroman.com.br`. JSON in camelCase. Errors are RFC 7807 `application/problem+json`. Every response carries `X-Correlation-Id` (echoed from the request or generated). OpenAPI at `/docs`.
+Base URL `https://incidents-insights.marceloroman.com.br`. JSON in camelCase. Errors are RFC 7807 `application/problem+json`. Every response carries `X-Correlation-Id` (echoed from the request or generated). OpenAPI at `/docs`. Every `/api/*` endpoint requires a bearer token (see [Authentication](#authentication)); `/health`, `/docs` and `/openapi.json` are anonymous.
 
 | Method | Path | Result |
 | --- | --- | --- |
@@ -176,15 +179,44 @@ Base URL `https://incidents-insights.marceloroman.com.br`. JSON in camelCase. Er
 | POST | `/api/rca/draft` `{ "incidentId": "uuid" }` | `summary`, `impact`, `timeline[]`, `contributingFactors[]`, `actionItems[{title, owner, priority}]`, `generatedBy`, `generatedAt`, `incidentId`, `incidentNumber` |
 | GET | `/health` | `{ "status": "ok" }`; liveness only, does not call the Incidents API |
 
-`days` accepts 1 to 730. Status codes: `404` unknown incident, `422` invalid input, `502` Incidents API or Azure OpenAI failure.
+`days` accepts 1 to 730. Status codes: `401` missing, invalid or expired token, `404` unknown incident, `422` invalid input, `502` Incidents API or Azure OpenAI failure.
 
 ```bash
-curl -s "https://incidents-insights.marceloroman.com.br/api/kpis?days=30" | jq '.overall'
+TOKEN=$(curl -s -X POST https://incidents-api.marceloroman.com.br/api/auth/token \
+  -H 'Content-Type: application/json' -d '{"username":"<user>","password":"<password>"}' | jq -r '.accessToken')
+curl -s "https://incidents-insights.marceloroman.com.br/api/kpis?days=30" \
+  -H "Authorization: Bearer $TOKEN" | jq '.overall'
 curl -s -X POST https://incidents-insights.marceloroman.com.br/api/rca/draft \
-  -H 'Content-Type: application/json' -d '{"incidentId":"<uuid>"}' | jq '.generatedBy, .actionItems'
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"incidentId":"<uuid>"}' | jq '.generatedBy, .actionItems'
 ```
 
-CORS allows `https://incidents.marceloroman.com.br` and `http://localhost:5173`.
+CORS allows `https://incidents.marceloroman.com.br` and `http://localhost:5173`, with the `Authorization`, `Content-Type` and `X-Correlation-Id` request headers.
+
+## Authentication
+
+Insights does not issue tokens. It accepts the access token issued by the Incidents API (`POST /api/auth/token`) and validates it locally with the shared signing key:
+
+| Check | Value |
+| --- | --- |
+| Algorithm | `HS256` only |
+| Key | `AUTH_SIGNING_KEY`, at least 32 bytes; the same value as the API's `Auth__SigningKey` |
+| Issuer | `incident-ops-api` |
+| Audience | `incident-ops` |
+| Required claims | `exp`, `iss`, `aud`, `sub` |
+| Clock skew | 30 seconds |
+
+`interface/api/authentication.py` is a FastAPI dependency attached to every `/api` router in `create_app`; routers and use cases do not know about it. The verifier (`infrastructure/security/token_verifier.py`) is the only module that imports PyJWT. A missing token, another scheme, a bad signature, an expired token or a wrong issuer or audience returns `401` with `WWW-Authenticate: Bearer` and a problem body that does not say which check failed. OpenAPI declares the `HTTPBearer` scheme, so **Authorize** in `/docs` accepts a token.
+
+`create_app` refuses to start when `AUTH_SIGNING_KEY` is missing or shorter than 32 bytes. The CLI does not read it.
+
+Calls from Insights to the Incidents API send the service API key in `X-Api-Key` (`INCIDENTS_API_KEY`). Without it the API answers `401`, which surfaces as `502`.
+
+For a manual call without the API, sign a token with the same key:
+
+```bash
+uv run python -c "import jwt, time; print(jwt.encode({'sub': 'demo', 'name': 'demo', 'iss': 'incident-ops-api', 'aud': 'incident-ops', 'exp': int(time.time()) + 3600}, '<AUTH_SIGNING_KEY>', algorithm='HS256'))"
+```
 
 ## CLI
 
@@ -247,16 +279,17 @@ The full stack runs from the [root compose file](../../docker-compose.yml) (`cp 
 
 ```bash
 uv sync
-INSIGHTS_DATA_SOURCE=csv uv run uvicorn incident_insights.interface.api.app:create_app --factory --reload
+AUTH_SIGNING_KEY=local-signing-key-at-least-32-bytes INSIGHTS_DATA_SOURCE=csv uv run uvicorn incident_insights.interface.api.app:create_app --factory --reload
 ```
 
-Against the deployed Incidents API instead of the sample, omit `INSIGHTS_DATA_SOURCE`. To use Azure OpenAI, sign in with `az login` (or any `DefaultAzureCredential` source) with the `Cognitive Services OpenAI User` role on the resource and set `AZURE_OPENAI_ENDPOINT`.
+Against the deployed Incidents API instead of the sample, omit `INSIGHTS_DATA_SOURCE` and set `INCIDENTS_API_KEY`. To use Azure OpenAI, sign in with `az login` (or any `DefaultAzureCredential` source) with the `Cognitive Services OpenAI User` role on the resource and set `AZURE_OPENAI_ENDPOINT`.
 
 With Docker:
 
 ```bash
 docker build -t incident-insights .
-docker run --rm -p 8000:8000 -e INSIGHTS_DATA_SOURCE=csv incident-insights
+docker run --rm -p 8000:8000 -e INSIGHTS_DATA_SOURCE=csv \
+  -e AUTH_SIGNING_KEY=local-signing-key-at-least-32-bytes incident-insights
 ```
 
 The image is a two-stage build on `python:3.12-slim`, runs uvicorn as a non-root user (uid 10001) and declares a `HEALTHCHECK` on `/health`. It includes the sample CSV.
@@ -270,11 +303,13 @@ uv run jupyter nbconvert --execute --inplace notebooks/ktlo_exploration.ipynb
 
 ## Configuration
 
-Environment variables (a `.env` file is also read; see `.env.example`). `INCIDENTS_API_BASE_URL`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `CORS_ALLOWED_ORIGINS`, `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME` are the names injected by the infrastructure; the others are local tuning with working defaults.
+Environment variables (a `.env` file is also read; see `.env.example`). `INCIDENTS_API_BASE_URL`, `INCIDENTS_API_KEY`, `AUTH_SIGNING_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `CORS_ALLOWED_ORIGINS`, `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME` are the names injected by the infrastructure; the others are local tuning with working defaults.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `INCIDENTS_API_BASE_URL` | `https://incidents-api.marceloroman.com.br` | Incidents API base URL |
+| `INCIDENTS_API_KEY` | unset | Service API key sent as `X-Api-Key` to the Incidents API |
+| `AUTH_SIGNING_KEY` | required by the HTTP API | HS256 key that validates bearer tokens, at least 32 bytes |
 | `INCIDENTS_API_TIMEOUT_SECONDS` | `15` | HTTP timeout for the Incidents API |
 | `INCIDENTS_API_ATTEMPTS` | `3` | Attempts per Incidents API request (1 disables retries) |
 | `INSIGHTS_DATA_SOURCE` | `api` | `api` or `csv` |
@@ -310,8 +345,8 @@ Tests mirror the layers:
 | --- | --- | --- |
 | `tests/domain` | value objects and their invariants, `IncidentRecord` behaviour, `IncidentHistory`, `KpiCalculator`, `RecurringIssueDetector`, `VolumeAnomalyDetector`, `RcaDraftComposer`, `KtloReportComposer` | small hand-built incident sets with known answers (percentiles, SLA outcomes, z-scores, cluster membership) |
 | `tests/application` | use cases | in-memory incident source, canned and failing drafters, fixed clock |
-| `tests/infrastructure` | anti-corruption layer mapping, Incidents API client and retries, CSV source, cache, settings, Azure OpenAI drafter, logging, telemetry | `httpx.MockTransport`; the real `AzureOpenAI` client over a mocked transport, asserting the structured-output request, `max_completion_tokens`, no sampling parameters, and the refusal, truncation, invalid-draft and error paths |
-| `tests/interface` | HTTP API, CLI, report rendering, snapshots | `TestClient` with use cases over fakes; `CliRunner` against the committed sample |
+| `tests/infrastructure` | anti-corruption layer mapping, Incidents API client (API key header) and retries, JWT verification (signature, expiry, issuer, audience, required claims, key length), CSV source, cache, settings, Azure OpenAI drafter, logging, telemetry | `httpx.MockTransport`; the real `AzureOpenAI` client over a mocked transport, asserting the structured-output request, `max_completion_tokens`, no sampling parameters, and the refusal, truncation, invalid-draft and error paths |
+| `tests/interface` | HTTP API, bearer authentication (`401` paths, anonymous health and docs, OpenAPI scheme, startup without a key), CLI, report rendering, snapshots | `TestClient` with use cases over fakes and tokens signed by `tests/tokens.py`; `CliRunner` against the committed sample |
 
 `tests/snapshots` holds the responses of `/api/kpis`, `/api/recurring`, `/api/anomalies`, five RCA drafts and the Markdown and HTML reports, all computed on the committed sample with a fixed clock. `tests/interface/test_snapshots.py` compares the current output with them, so a refactoring that changes a number or a field fails the build.
 

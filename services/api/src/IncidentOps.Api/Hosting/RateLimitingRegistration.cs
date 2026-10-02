@@ -6,34 +6,36 @@ namespace IncidentOps.Api.Hosting;
 internal static class RateLimitingRegistration
 {
     public const string WritesPolicy = "writes";
+    public const string TokenPolicy = "token";
 
-    public static IServiceCollection AddWriteRateLimiting(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddClientRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration.GetSection(RateLimitingOptions.SectionName).Get<RateLimitingOptions>() ?? new RateLimitingOptions();
         return services.AddRateLimiter(limiter =>
         {
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            limiter.OnRejected = WriteRejectionAsync;
-            limiter.AddPolicy(WritesPolicy, context => PerClientWindow(context, options));
+            limiter.OnRejected = RejectAsync;
+            limiter.AddPolicy(WritesPolicy, context => PerClientWindow(context, options.WritePermitLimit, options.WindowSeconds));
+            limiter.AddPolicy(TokenPolicy, context => PerClientWindow(context, options.TokenPermitLimit, options.WindowSeconds));
         });
     }
 
-    private static RateLimitPartition<string> PerClientWindow(HttpContext context, RateLimitingOptions options) =>
+    private static RateLimitPartition<string> PerClientWindow(HttpContext context, int permitLimit, int windowSeconds) =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = options.WritePermitLimit,
-                Window = TimeSpan.FromSeconds(options.WindowSeconds),
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromSeconds(windowSeconds),
                 QueueLimit = 0,
             });
 
-    private static async ValueTask WriteRejectionAsync(OnRejectedContext context, CancellationToken cancellationToken)
+    private static async ValueTask RejectAsync(OnRejectedContext context, CancellationToken cancellationToken)
     {
         var problem = Results.Problem(
             statusCode: StatusCodes.Status429TooManyRequests,
             title: "Too many requests",
-            detail: "The write rate limit for this client was exceeded. Retry later.");
+            detail: "The rate limit for this client was exceeded. Retry later.");
 
         await problem.ExecuteAsync(context.HttpContext);
     }

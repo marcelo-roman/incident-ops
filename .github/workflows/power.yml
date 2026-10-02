@@ -38,6 +38,7 @@ env:
   BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
   ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
   CUSTOM_DOMAIN_BINDING: ${{ vars.CUSTOM_DOMAIN_BINDING || 'None' }}
+  DEMO_USERNAME: ${{ vars.DEMO_USERNAME || 'demo' }}
   POWER_ACTION: ${{ github.event_name == 'schedule' && 'down' || inputs.action }}
 
 jobs:
@@ -52,6 +53,8 @@ jobs:
       id-token: write
     env:
       ESCALATION_API_KEY: ${{ secrets.ESCALATION_API_KEY }}
+      AUTH_SIGNING_KEY: ${{ secrets.AUTH_SIGNING_KEY }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
       NOTIFICATION_WEBHOOK_URL: ${{ secrets.NOTIFICATION_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v7

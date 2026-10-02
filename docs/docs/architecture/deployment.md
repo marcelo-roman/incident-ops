@@ -78,9 +78,12 @@ Every module reads configuration from environment variables injected by Bicep (p
 | API | `ServiceBus__ConnectionString` | not set | emulator connection string |
 | API | `Azure__SignalR__ConnectionString` | `Endpoint=https://<signalr>;AuthType=azure.msi;Version=1.0;` | not set (in-process hub) |
 | API | `Security__EscalationApiKey` | Container Apps secret `escalation-api-key` | `.env` |
+| API | `Auth__SigningKey`, `Auth__DemoPassword` | Container Apps secrets `auth-signing-key`, `demo-password` | `.env` |
+| API | `Auth__DemoUsername` | `demo` unless the `DEMO_USERNAME` variable is set | `.env` |
 | API | `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1` | console origins | `http://localhost:8080` |
 | API, Insights | `APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_SERVICE_NAME` | shared component; `incident-ops-api` / `incident-ops-insights` | empty (telemetry off) |
 | Insights | `INCIDENTS_API_BASE_URL` | API URL | `http://api:8080` |
+| Insights | `INCIDENTS_API_KEY`, `AUTH_SIGNING_KEY` | Container Apps secrets `escalation-api-key`, `auth-signing-key` | `.env` |
 | Insights | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` | account endpoint, `rca-drafts` | optional |
 | Insights | `CORS_ALLOWED_ORIGINS` | comma-separated console origins | `http://localhost:8080` |
 | Functions | `AzureWebJobsStorage__accountName` | identity-based host storage | `AzureWebJobsStorage` = Azurite |
@@ -89,7 +92,7 @@ Every module reads configuration from environment variables injected by Bicep (p
 | Functions | `IncidentsApi__BaseUrl`, `IncidentsApi__ApiKey` | API URL, secure app setting | `http://localhost:5080`, `.env` |
 | Functions | `Notifications__LogicAppUrl`, `Web__BaseUrl` | Logic App callback URL, console URL | stub URL, `http://localhost:8080` |
 
-Identity-based settings (`__fullyQualifiedNamespace`, `__accountName`, `AuthType=azure.msi`) mean production holds no connection string for Service Bus, Storage or SignalR. The only shared secret is the API key: a GitHub secret injected at deploy time as a Container Apps secret, a Function app setting and the Action Group webhook `code`. Key Vault references for the Function app settings are the next hardening step.
+Identity-based settings (`__fullyQualifiedNamespace`, `__accountName`, `AuthType=azure.msi`) mean production holds no connection string for Service Bus, Storage or SignalR. The shared secrets are the API key (a GitHub secret injected at deploy time as a Container Apps secret, a Function app setting and the Action Group webhook `code`), the token signing key (a Container Apps secret of the API and of Insights) and the demo password (a Container Apps secret of the API). Key Vault references for the Function app settings are the next hardening step.
 
 ## Delivery pipeline
 
@@ -146,8 +149,8 @@ Every workflow also triggers on changes to its own file; the four application wo
 ## Security
 
 - Managed identities with RBAC for SQL (Entra authentication), Service Bus (`Azure Service Bus Data Sender/Receiver`), SignalR and Azure OpenAI. No connection strings in production for these.
-- `POST /escalate` and the alert webhooks require the API key (`X-Api-Key`, `Authorization: Bearer`, or `?code=` for Azure Monitor, which cannot send custom headers). The key is a Container Apps secret for the API and a secure app setting for the Function App, both set from one GitHub secret at deploy time.
-- The console is public in the demo, protected by per-IP rate limiting on writes. A production deployment puts Entra ID in front of the console and write endpoints.
-- No secrets in the repository; `.env.example` carries placeholders. GitHub secrets hold the API key, the notification webhook, the Cloudflare token and the Static Web App token.
+- Nothing but health checks is anonymous. People sign in to the console with a shared demo account and receive a signed access token; services use the API key. The model is described in [Security](security.md) and decided in [ADR 0011](../adr/0011-demo-authentication-with-signed-jwt-and-service-api-keys.md).
+- `POST /escalate` and the alert webhooks accept only the API key (`X-Api-Key`, `Authorization: Bearer`, or `?code=` for Azure Monitor, which cannot send custom headers). The key is a Container Apps secret for the API and Insights and a secure app setting for the Function App, all set from one GitHub secret at deploy time.
+- No secrets in the repository; `.env.example` carries local-only values. GitHub secrets hold the API key, the token signing key, the demo password, the notification webhook, the Cloudflare token and the Static Web App token.
 - Container images run as non-root and declare health checks; image scanning is not automated yet ([quality gates](../engineering/quality-gates.md#not-automated-yet)).
 - `POST /api/chaos/faults` exists only when `Chaos:Enabled=true` (set only in the local compose stack), requires the API key, and injects faults only on `/api/incidents`, `/api/services`, `/api/oncall` and `/api/metrics`; alert ingestion, `/metrics`, health and the hub are never affected.

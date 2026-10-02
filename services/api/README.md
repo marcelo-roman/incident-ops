@@ -10,15 +10,16 @@ The Incident Management bounded context of Incident Ops and the system of record
 4. [Design decisions](#design-decisions)
 5. [Domain rules](#domain-rules)
 6. [Alert ingestion](#alert-ingestion)
-7. [HTTP API](#http-api)
-8. [Real-time hub and events](#real-time-hub-and-events)
-9. [Running locally](#running-locally)
-10. [Configuration](#configuration)
-11. [Observability](#observability)
-12. [Testing](#testing)
-13. [Deployment](#deployment)
-14. [Known trade-offs](#known-trade-offs)
-15. [License](#license)
+7. [Authentication](#authentication)
+8. [HTTP API](#http-api)
+9. [Real-time hub and events](#real-time-hub-and-events)
+10. [Running locally](#running-locally)
+11. [Configuration](#configuration)
+12. [Observability](#observability)
+13. [Testing](#testing)
+14. [Deployment](#deployment)
+15. [Known trade-offs](#known-trade-offs)
+16. [License](#license)
 
 ## What it does
 
@@ -30,6 +31,7 @@ The Incident Management bounded context of Incident Ops and the system of record
 - Pushes every change to the console over SignalR.
 - Exposes KTLO metrics (open incidents, SLA compliance, MTTA, MTTR) and a flat export for the Insights service.
 - Seeds seven services, the rotation and six months of deterministic incident history so analytics have data from the first run.
+- Requires a caller on every endpoint except health checks: a signed access token for people, the API key for services.
 
 ## Architecture
 
@@ -79,7 +81,7 @@ The solution follows a layered, ports-and-adapters structure. Dependencies point
 | `IncidentOps.Domain` | Aggregates, entities, value objects, domain events, SLA clock, state machine, on-call rotation, alert rules, repository interfaces | nothing outside the base class library |
 | `IncidentOps.Application` | One handler per use case, query handlers over read models, domain event translation, ports (`IUnitOfWork`, `IIncidentQueries`, `ICatalogQueries`, `IEventPublisher`, `IIncidentNotifier`, `IClock`), views returned to adapters | Domain |
 | `IncidentOps.Infrastructure` | EF Core write model with value-object mappings and migrations, read-model context, repositories, unit of work, transactional outbox and dispatcher, Service Bus publisher, seeding | Application, Domain |
-| `IncidentOps.Api` | Composition root, Minimal API endpoint groups, SignalR hub, problem details, API key filter, rate limiting, health checks, OpenTelemetry, demo traffic, chaos | Application, Infrastructure |
+| `IncidentOps.Api` | Composition root, Minimal API endpoint groups, SignalR hub, problem details, authentication (JWT and API key schemes, token endpoint), rate limiting, health checks, OpenTelemetry, demo traffic, chaos | Application, Infrastructure |
 
 Application and Api are organized by feature (`Incidents`, `Alerts`, `Catalog`, `OnCall`, `Metrics`, `Chaos`). Each incident use case has its own folder with a command or query record and a single handler, for example `Incidents/Escalate/EscalateIncident.cs` and `EscalateIncidentHandler.cs`. Endpoints bind the request, call the handler and map the result; they hold no business rules.
 
@@ -232,18 +234,52 @@ sequenceDiagram
     API-->>Web: IncidentChanged
 ```
 
+## Authentication
+
+Authentication is an adapter concern: it lives in `IncidentOps.Api` (`Security` and `Authentication`), and the domain, the application layer and the use cases do not know about it.
+
+| Type | Responsibility |
+| --- | --- |
+| `TokenEndpoints` | `POST /api/auth/token`: verifies the demo account, returns `{ accessToken, tokenType, expiresAt }`, or `401` problem details |
+| `DemoAccount` | compares username and password with the configured demo account in constant time (SHA-256 digests compared with `CryptographicOperations.FixedTimeEquals`) |
+| `AccessTokenIssuer` | signs the JWT (HS256, `iss` `incident-ops-api`, `aud` `incident-ops`, `sub` and `name` the username, `jti`, `exp` after `Auth:TokenLifetime`) |
+| `JwtBearerConfiguration` | validation parameters for the `Bearer` scheme, and the `access_token` query parameter on `/hubs/incidents` only |
+| `ApiKeyAuthenticationHandler` | the `ApiKey` scheme; reads `X-Api-Key`, plus `Authorization: Bearer` and `?code=` where the endpoint allows them (`ApiKeySourcesMetadata`) |
+| `CallerSchemeSelector` | the `BearerOrApiKey` policy scheme: `X-Api-Key` selects `ApiKey`, anything else `Bearer` |
+| `SecurityRegistration` | options validation at startup (signing key of at least 32 bytes), schemes, the default and fallback policy (any authenticated caller) and the `ServiceApiKey` policy |
+
+```mermaid
+flowchart LR
+    R[Request] --> E{Endpoint}
+    E -->|health, token, swagger| A[Anonymous]
+    E -->|escalate, chaos, alerts, /metrics| K[ServiceApiKey policy: ApiKey scheme]
+    E -->|everything else, hub| P[BearerOrApiKey policy scheme]
+    P -->|X-Api-Key present| K2[ApiKey scheme]
+    P -->|otherwise| J[Bearer scheme: JWT]
+```
+
+The fallback authorization policy requires an authenticated caller, so a new endpoint is protected unless it opts out with `AllowAnonymous()`. Service endpoints call `RequireApiKey(sources)`, which applies the `ServiceApiKey` policy, so a JWT is rejected there. Swagger declares both schemes, so **Authorize** accepts a token from `POST /api/auth/token` or the API key.
+
+```bash
+token=$(curl -s -X POST localhost:5080/api/auth/token -H 'content-type: application/json' \
+  -d '{"username":"demo","password":"local-demo-password"}' | jq -r .accessToken)
+curl -H "Authorization: Bearer $token" localhost:5080/api/incidents?open=true
+curl -H "X-Api-Key: local-development-key" localhost:5080/api/services
+```
+
 ## HTTP API
 
 JSON in camelCase, enums as strings, timestamps ISO-8601 UTC, errors as RFC 7807 `application/problem+json`. Swagger UI is served at `/swagger`.
 
 | Method | Path | Body | Result |
 | --- | --- | --- | --- |
+| POST | `/api/auth/token` | `{ username, password }` | `{ accessToken, tokenType, expiresAt }`; anonymous, 5 attempts a minute per client IP |
 | GET | `/api/services` | | `Service[]` |
 | GET | `/api/incidents?status=&severity=&serviceId=&open=&limit=` | | `Incident[]`, newest first, `limit` 1 to 500 (default 100) |
 | GET | `/api/incidents/{id}` | | `Incident` with `timeline` |
 | POST | `/api/incidents` | `{ title, description, serviceId, severity }` | `201 Incident` |
 | POST | `/api/incidents/{id}/acknowledge` | `{ actor }` | `Incident` |
-| POST | `/api/incidents/{id}/escalate` | `{ reason }` | `Incident`, requires the API key |
+| POST | `/api/incidents/{id}/escalate` | `{ reason }` | `Incident`, API key only |
 | POST | `/api/incidents/{id}/mitigate` | `{ actor, note }` | `Incident` |
 | POST | `/api/incidents/{id}/resolve` | `{ actor, rootCause }` | `Incident` |
 | POST | `/api/incidents/{id}/notes` | `{ actor, message }` | `TimelineEntry` |
@@ -252,26 +288,26 @@ JSON in camelCase, enums as strings, timestamps ISO-8601 UTC, errors as RFC 7807
 | POST | `/api/alerts/azure-monitor` | Azure Monitor common alert schema | same as above, requires the API key |
 | GET | `/api/oncall/current` | | `{ weekStart, primary, secondary, lead }` |
 | GET | `/api/metrics/summary` | | `{ openBySeverity, slaCompliance30d, mtta30dMinutes, mttr30dMinutes, breachedOpen }` |
-| POST | `/api/chaos/faults` | `{ errorRate, latencyMs, durationSeconds }` | active fault; only mapped when `Chaos:Enabled=true`, requires the API key |
-| DELETE | `/api/chaos/faults` | | `204`; clears the active fault |
-| GET | `/health/live`, `/health/ready` | | liveness; readiness including the database |
-| GET | `/metrics` | | Prometheus exposition |
+| POST | `/api/chaos/faults` | `{ errorRate, latencyMs, durationSeconds }` | active fault; only mapped when `Chaos:Enabled=true`, API key only |
+| DELETE | `/api/chaos/faults` | | `204`; clears the active fault, API key only |
+| GET | `/health/live`, `/health/ready` | | liveness; readiness including the database; anonymous |
+| GET | `/metrics` | | Prometheus exposition, API key only |
 
 `slaCompliance30d` is a percentage (0 to 100) with one decimal; `mtta30dMinutes` and `mttr30dMinutes` are averages in minutes.
 
-The API key is accepted as `X-Api-Key: <key>`, `Authorization: Bearer <key>` or `?code=<key>` (Azure Monitor webhooks cannot send custom headers). Comparison is constant-time; with no key configured every protected call is rejected.
+Endpoints without a note accept a JWT or the API key. The API key is accepted as `X-Api-Key: <key>` everywhere; alert ingestion also accepts `Authorization: Bearer <key>` and `?code=<key>` (Azure Monitor webhooks cannot send custom headers), and `/metrics` also accepts `Authorization: Bearer <key>` (Prometheus bearer credentials). Comparison is constant-time; with no key configured every API key is rejected, and with no demo password every login is rejected.
 
 | Status | Meaning |
 | --- | --- |
 | `400` | validation problem with `errors` per field (unknown service, empty title, unsupported webhook version) |
-| `401` | missing or wrong API key |
+| `401` | missing, expired or invalid token, missing or wrong API key, or failed login; `WWW-Authenticate` names the scheme |
 | `404` | incident not found |
 | `409` | invalid transition, escalation not allowed, or concurrent update |
-| `429` | write rate limit per client IP exceeded |
+| `429` | write or login rate limit per client IP exceeded |
 
 ## Real-time hub and events
 
-Hub path: `/hubs/incidents`. Server-to-client methods: `IncidentChanged(Incident)` and `TimelineAppended(TimelineEntry)`. It uses Azure SignalR Service when `Azure:SignalR:ConnectionString` is set and runs in-process otherwise.
+Hub path: `/hubs/incidents`. Negotiation requires a JWT, read from the `access_token` query parameter (browsers cannot set headers on WebSocket requests) or the `Authorization` header, or the API key. Server-to-client methods: `IncidentChanged(Incident)` and `TimelineAppended(TimelineEntry)`. It uses Azure SignalR Service when `Azure:SignalR:ConnectionString` is set and runs in-process otherwise.
 
 State changes are published to the `incident-events` topic as structured CloudEvents 1.0 (`application/cloudevents+json`) with `type` one of `incident.triggered`, `incident.acknowledged`, `incident.escalated`, `incident.mitigated`, `incident.resolved`, `subject` set to the incident id and the incident as `data`. Each message carries the application properties `eventType` and `severity` for subscription filters, and `MessageId` equal to the CloudEvent `id`. Notes and alert entries notify the hub but do not publish integration events. Events and notifications leave through the transactional outbox described in [Design decisions](#design-decisions). Scheduling SLA checks on the `sla-checks` queue is the job of the [Escalation functions](../functions), not of this API. Shapes are fixed by the [contract](../../contracts/contracts.md).
 
@@ -300,7 +336,8 @@ The API applies migrations, seeds the database and publishes to the emulator thr
 | `API_PORT`, `SQL_PORT`, `SERVICEBUS_PORT`, `SERVICEBUS_HEALTH_PORT` | `8080`, `1433`, `5672`, `5300` | host ports |
 | `SLA_TIME_SCALE` | `1` | divides SLA windows; `60` turns minutes into seconds |
 | `DEMO_TRAFFIC_ENABLED` | `false` | triggers and advances incidents periodically |
-| `ESCALATION_API_KEY` | `local-dev-key` | API key for escalate, alerts and chaos |
+| `ESCALATION_API_KEY` | `local-dev-key` | API key for service callers |
+| `AUTH_SIGNING_KEY`, `DEMO_USERNAME`, `DEMO_PASSWORD` | local values | token signing key and the demo account |
 | `MSSQL_SA_PASSWORD` | `IncidentOps!Local1` | SQL Server password |
 
 The module stack binds the same host ports as the root stack, so run one of them at a time (or override the ports).
@@ -309,7 +346,7 @@ Exercise the escalation loop in seconds:
 
 ```bash
 SLA_TIME_SCALE=60 DEMO_TRAFFIC_ENABLED=true docker compose up --build
-curl -X POST localhost:8080/api/incidents -H 'content-type: application/json' \
+curl -X POST localhost:8080/api/incidents -H 'content-type: application/json' -H 'X-Api-Key: local-dev-key' \
   -d '{"title":"Checkout errors","description":"5xx on payment","serviceId":"checkout","severity":"Sev1"}'
 curl -X POST "localhost:8080/api/alerts/alertmanager?code=local-dev-key" -H 'content-type: application/json' \
   --data @tests/IncidentOps.Api.Tests/Fixtures/alertmanager-firing.json
@@ -322,7 +359,7 @@ docker compose up -d sqlserver servicebus
 dotnet run --project src/IncidentOps.Api
 ```
 
-The `Development` environment (`appsettings.Development.json`) points at `localhost`, applies migrations, seeds, enables chaos and listens on <http://localhost:5080>.
+The `Development` environment (`appsettings.Development.json`) points at `localhost`, applies migrations, seeds, enables chaos, sets local authentication values (demo account `demo` / `local-demo-password`, API key `local-dev-key`) and listens on <http://localhost:5080>.
 
 ## Configuration
 
@@ -337,10 +374,13 @@ Every setting can be supplied as an environment variable using `__` as the secti
 | `ServiceBus__ConnectionString` | empty | connection string, used for the local emulator |
 | `ServiceBus__TopicName` | `incident-events` | topic for incident events |
 | `Azure__SignalR__ConnectionString` | empty | Azure SignalR Service; in-process SignalR when empty |
-| `Security__EscalationApiKey` | empty | API key for escalate, alert ingestion and chaos |
+| `Security__EscalationApiKey` | empty | API key for service callers: escalate, alert ingestion, chaos, `/metrics` and reads |
+| `Auth__SigningKey` | required | HS256 key for access tokens, at least 32 bytes; the API does not start without it |
+| `Auth__DemoUsername`, `Auth__DemoPassword` | `demo`, empty | the shared demo account; with an empty password every login is rejected |
+| `Auth__TokenLifetime` | `08:00:00` | access token lifetime |
 | `Cors__AllowedOrigins__0..n` | `https://incidents.marceloroman.com.br`, `http://localhost:5173` | origins allowed to call the API and the hub |
 | `Sla__TimeScale` | `1` | divides SLA windows for local testing |
-| `RateLimiting__WritePermitLimit`, `RateLimiting__WindowSeconds` | `30`, `60` | fixed window per client IP for write endpoints |
+| `RateLimiting__WritePermitLimit`, `RateLimiting__TokenPermitLimit`, `RateLimiting__WindowSeconds` | `30`, `5`, `60` | fixed windows per client IP for write endpoints and for `POST /api/auth/token` |
 | `DemoTraffic__Enabled`, `DemoTraffic__IntervalSeconds`, `DemoTraffic__TargetOpenIncidents` | `false`, `45`, `4` | background traffic for a live dashboard |
 | `Chaos__Enabled` | `false` | maps the fault injection endpoints and middleware; local only |
 | `Outbox__PollingIntervalMilliseconds`, `Outbox__BatchSize` | `1000`, `50` | fallback polling interval and batch size of the outbox dispatcher |
@@ -378,7 +418,7 @@ dotnet test
 | --- | --- |
 | `IncidentOps.Domain.Tests` | value object invariants, aggregate behaviors and the events they raise, state machine, SLA clock and compliance, escalation, rotation (week boundaries, daylight saving time), alert rules |
 | `IncidentOps.Application.Tests` | every use case and query against in-memory fakes of the ports, wired through the real dependency injection registration; domain event translation, outbox message handling and retries; metrics report |
-| `IncidentOps.Api.Tests` | `WebApplicationFactory` integration tests on SQL Server 2022 started by Testcontainers: lifecycle, problem details, escalation and API key, alert ingestion with real Alertmanager and Azure Monitor payloads (`tests/IncidentOps.Api.Tests/Fixtures`), outbox retries, seeded history, SignalR broadcast, rate limiting, chaos, Prometheus output, CloudEvent format |
+| `IncidentOps.Api.Tests` | `WebApplicationFactory` integration tests on SQL Server 2022 started by Testcontainers: token issuance, login rate limit, JWT and API key schemes per endpoint, expired and forged tokens, hub negotiation, lifecycle, problem details, escalation and API key, alert ingestion with real Alertmanager and Azure Monitor payloads (`tests/IncidentOps.Api.Tests/Fixtures`), outbox retries, seeded history, SignalR broadcast, rate limiting, chaos, Prometheus output, CloudEvent format |
 | `IncidentOps.Architecture.Tests` | layer dependencies (domain without dependencies, application on domain and ports only, Api features on application only), aggregates and owned entities, immutable value objects and domain events, no public setters on entities, repositories only for aggregate roots, sealed single-method handlers |
 
 The integration tests need Docker. Coverage is collected with coverlet and merged with ReportGenerator:
@@ -389,7 +429,7 @@ dotnet tool restore
 dotnet reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:coverage -reporttypes:TextSummary
 ```
 
-CI fails when merged line coverage drops below 80%. The current suite has 204 tests with 95% line and 82% branch coverage.
+CI fails when merged line coverage drops below 80%. The current suite has 245 tests with 96% line and 84% branch coverage.
 
 Code quality gates: nullable reference types, `TreatWarningsAsErrors`, `AnalysisLevel` `latest-recommended`, code style enforced in build, and `dotnet format --verify-no-changes`.
 

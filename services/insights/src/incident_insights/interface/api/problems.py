@@ -9,18 +9,34 @@ from fastapi.responses import JSONResponse
 
 from incident_insights.application.draft_rca import IncidentNotFoundError
 from incident_insights.application.ports import IncidentSourceError, RcaDraftError
+from incident_insights.interface.api.authentication import NotAuthenticatedError
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 
 logger = logging.getLogger(__name__)
 
 
-def problem(status: HTTPStatus, detail: str, **extensions: Any) -> JSONResponse:
+def problem(
+    status: HTTPStatus,
+    detail: str,
+    headers: dict[str, str] | None = None,
+    **extensions: Any,
+) -> JSONResponse:
     body = {"type": "about:blank", "title": status.phrase, "status": status.value, "detail": detail}
     return JSONResponse(
         jsonable_encoder({**body, **extensions}),
         status_code=status.value,
         media_type=PROBLEM_MEDIA_TYPE,
+        headers=headers,
+    )
+
+
+async def _unauthorized(request: Request, error: Exception) -> JSONResponse:
+    return problem(
+        HTTPStatus.UNAUTHORIZED,
+        str(error),
+        headers={"WWW-Authenticate": "Bearer"},
+        instance=request.url.path,
     )
 
 
@@ -49,6 +65,7 @@ def _validation_errors(error: Exception) -> list[Any]:
 
 
 def register_problem_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(NotAuthenticatedError, _unauthorized)
     app.add_exception_handler(IncidentNotFoundError, _not_found)
     app.add_exception_handler(IncidentSourceError, _bad_gateway)
     app.add_exception_handler(RcaDraftError, _bad_gateway)
