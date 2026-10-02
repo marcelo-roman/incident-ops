@@ -11,7 +11,7 @@ interface PanelProps {
   children: ReactNode;
 }
 
-export function Panel({ title, meta, actions, flush = false, className, children }: PanelProps) {
+export function Panel({ title, meta, actions, flush = false, className, children }: Readonly<PanelProps>) {
   const headingId = useId();
   return (
     <section className={cx(styles.panel, className)} aria-labelledby={headingId}>

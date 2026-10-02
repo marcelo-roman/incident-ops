@@ -32,7 +32,7 @@ function TrendTooltip({ active, payload, metric }: TooltipContentProps & { metri
   );
 }
 
-export function KpiTrendChart({ points, metric }: KpiTrendChartProps) {
+export function KpiTrendChart({ points, metric }: Readonly<KpiTrendChartProps>) {
   return (
     <div className={styles.chart} role="img" aria-label={`${metric.label} per week`}>
       <ResponsiveContainer width="100%" height="100%">

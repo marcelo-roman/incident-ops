@@ -8,7 +8,7 @@ import { cx } from '../../../shared/lib/cx';
 import { formatShortDate } from '../../../shared/format/dates';
 import styles from './Insights.module.css';
 
-function AnomalyRow({ anomaly }: { anomaly: VolumeAnomaly }) {
+function AnomalyRow({ anomaly }: Readonly<{ anomaly: VolumeAnomaly }>) {
   const serviceName = useServiceName();
   return (
     <tr>
@@ -21,7 +21,7 @@ function AnomalyRow({ anomaly }: { anomaly: VolumeAnomaly }) {
   );
 }
 
-export function AnomaliesPanel({ days }: { days: number }) {
+export function AnomaliesPanel({ days }: Readonly<{ days: number }>) {
   const query = useAnomalies(days);
   return (
     <Panel title="Volume anomalies" meta={query.data?.method} flush>

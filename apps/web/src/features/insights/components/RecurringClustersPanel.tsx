@@ -9,7 +9,7 @@ import { useServiceName } from '../../incidents';
 import { useClusterList } from '../hooks/useClusterList';
 import styles from './Insights.module.css';
 
-function ClusterItem({ cluster }: { cluster: RecurringCluster }) {
+function ClusterItem({ cluster }: Readonly<{ cluster: RecurringCluster }>) {
   const serviceName = useServiceName();
   return (
     <li className={styles.cluster}>
@@ -34,7 +34,7 @@ function ClusterItem({ cluster }: { cluster: RecurringCluster }) {
   );
 }
 
-function ClusterList({ clusters }: { clusters: RecurringCluster[] }) {
+function ClusterList({ clusters }: Readonly<{ clusters: RecurringCluster[] }>) {
   const list = useClusterList(clusters);
   const listId = useId();
   return (
@@ -55,7 +55,7 @@ function ClusterList({ clusters }: { clusters: RecurringCluster[] }) {
   );
 }
 
-export function RecurringClustersPanel({ days }: { days: number }) {
+export function RecurringClustersPanel({ days }: Readonly<{ days: number }>) {
   const query = useRecurringClusters(days);
   return (
     <Panel title="Recurring incidents" meta={query.data && `${String(query.data.incidentsAnalyzed)} analyzed`} flush>

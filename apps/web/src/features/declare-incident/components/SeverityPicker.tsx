@@ -8,7 +8,7 @@ interface SeverityPickerProps {
   error: string | undefined;
 }
 
-export function SeverityPicker({ registration, error }: SeverityPickerProps) {
+export function SeverityPicker({ registration, error }: Readonly<SeverityPickerProps>) {
   return (
     <fieldset className={styles.fieldset} aria-invalid={error !== undefined}>
       <legend className={styles.legend}>Severity</legend>

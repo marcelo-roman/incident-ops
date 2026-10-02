@@ -99,7 +99,7 @@ Event flow, as defined in the shared contract:
 The environment has two power states (see [Power states](#power-states)). The last column says whether a resource exists in both or only while the environment is on.
 
 | Resource | Name | SKU / plan | Present |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Log Analytics workspace | `log-incident-ops` | PerGB2018, 30 days, 0.25 GB/day cap | always |
 | Application Insights | `appi-incident-ops` | workspace-based | always |
 | Container Apps environment | `cae-incident-ops` | Consumption workload profile | always |
@@ -127,7 +127,7 @@ Figures below are estimates in USD from `eastus2` list prices, for evaluation tr
 ### On
 
 | Item | Basis | Per day | Per week |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Service Bus Standard | 0.0135 per hour base charge | ~0.32 | ~2.27 |
 | Azure SQL Basic | 4.90 per month | ~0.16 | ~1.13 |
 | API container app, 1 replica of 0.25 vCPU / 0.5 GiB | a week fits in the Container Apps monthly free grant (180,000 vCPU-seconds, 360,000 GiB-seconds) | ~0 | ~0 |
@@ -144,7 +144,7 @@ Log Analytics stays at ~0 while a month's ingestion fits in the free 5 GB; past 
 ### Off
 
 | Item | Basis | Per month |
-|---|---|---|
+| --- | --- | --- |
 | Storage account | function host state and deployment package | <0.10 |
 | Log Analytics | residual platform logs, 30-day retention, within the free 5 GB | ~0 |
 | Availability test, alert rules | deployed disabled; the dead-letter rule is deleted with the namespace | 0 |
@@ -158,7 +158,7 @@ Log Analytics stays at ~0 while a month's ingestion fits in the free 5 GB; past 
 `environmentState` (`on` or `off`) is a parameter of `main.bicep`; `main.bicepparam` reads it from `ENVIRONMENT_STATE` and defaults to `on`.
 
 | | On | Off |
-|---|---|---|
+| --- | --- | --- |
 | Service Bus namespace, topic, subscriptions, queue | deployed, with the Service Bus role assignments | not in the template; deleted by `power.sh down` |
 | Azure SQL database | Basic, 5 DTU, 2 GB | not in the template; deleted by `power.sh down` |
 | API container app | `minReplicas` 1, so requests never wait for a cold start | `minReplicas` 0 |
@@ -177,7 +177,7 @@ Contained database users live in the database, so the API identity is granted ag
 Idempotent; requires the Azure CLI, `curl` and, for `up`, [go-sqlcmd](https://github.com/microsoft/go-sqlcmd).
 
 | Command | Steps |
-|---|---|
+| --- | --- |
 | `up` | deploy with `environmentState=on` using `main.bicepparam` and the running images; grant the API identity on the new database; restart the latest API revision; wait for `/health/ready` on the custom API host when it is bound (`SniEnabled`), otherwise on the container app FQDN; print the console, API, Swagger, insights and docs URLs |
 | `down` | deploy with `environmentState=off`; delete the dead-letter alert, the Service Bus namespace and the SQL database when present; print the status |
 | `status` | print the state (`on`, `off`, or `partial` when only one of the namespace and the database exists), the namespace, the database and its SKU, and the API minimum replicas |
@@ -197,7 +197,7 @@ infra/scripts/power.sh up
 [`.github/workflows/power.yml`](../.github/workflows/power.yml) runs `power.sh`:
 
 | Trigger | Action | Environment |
-|---|---|---|
+| --- | --- | --- |
 | `workflow_dispatch` with input `action` (`up` or `down`) | the chosen action | `production`, with its required reviewer |
 | `schedule`, every day at 05:00 UTC | `down` | `power`, which accepts deployments from protected branches and has no reviewer, so the nightly run does not wait for an approval |
 
@@ -219,7 +219,7 @@ Delete the variable, or let the date pass, to return to the nightly `down`. A va
 
 ## Folder layout
 
-```
+```text
 infra/
   bicep/
     main.bicep                    resource group scope, wires every module
@@ -271,7 +271,7 @@ Every resource carries `project`, `owner`, `costCenter`, `environment` and `mana
 The template injects configuration as environment variables; the application modules read these names, fixed by the [contract](../contracts/contracts.md#runtime-configuration).
 
 | Consumer | Variable | Value |
-|---|---|---|
+| --- | --- | --- |
 | API | `ConnectionStrings__IncidentOps` | `Server=tcp:<server>,1433;Database=sqldb-incident-ops;Authentication=Active Directory Managed Identity;Encrypt=True;...` |
 | API | `Database__ApplyMigrations`, `Database__Seed` | `true`, `true`: migrate and seed the empty database created by each power up |
 | API | `ServiceBus__FullyQualifiedNamespace`, `ServiceBus__TopicName` | `<namespace>.servicebus.windows.net`, built from the namespace name; `incident-events` |
@@ -298,7 +298,7 @@ API base URLs switch from the `*.azurecontainerapps.io` host to the custom host 
 Each compute resource has a system-assigned managed identity. Role assignments are scoped to the narrowest resource the identity touches, not to the namespace or resource group.
 
 | Identity | Role | Scope | Why |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `ca-incident-ops-api` | Azure Service Bus Data Sender | topic `incident-events` | publish domain events |
 | `ca-incident-ops-api` | SignalR App Server | SignalR Service | serve the hub with Entra auth |
 | `ca-incident-ops-api` | `db_datareader`, `db_datawriter`, `db_ddladmin` (database roles) | `sqldb-incident-ops` | data access and EF Core migrations at startup |
@@ -312,7 +312,7 @@ Local authentication is disabled where the service allows it: Service Bus (`disa
 ### Remaining shared secrets
 
 | Secret | Where it lives | Reason |
-|---|---|---|
+| --- | --- | --- |
 | `ESCALATION_API_KEY` | GitHub secret → Container Apps secret, Function app setting, Action Group webhook `code` | the contract authenticates machine callers of `/escalate` and `/api/alerts/*` with an API key; Azure Monitor webhooks cannot send headers |
 | `NOTIFICATION_WEBHOOK_URL` | GitHub secret → Logic App `securestring` parameter | third-party webhook |
 | Logic App callback URL | Function app setting, resolved at deploy time with `listCallbackUrl()` | Consumption HTTP triggers authenticate with SAS |
@@ -325,7 +325,7 @@ Key Vault references are the next step for the Function app settings; they were 
 `scripts/github-oidc-bootstrap.sh` creates `sp-incident-ops-github` with federated credentials only (no client secret):
 
 | Credential | Subject | Used by |
-|---|---|---|
+| --- | --- | --- |
 | `incident-ops-production-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:production` | every deploy job (`api.yml`, `functions.yml`, `insights.yml`, `infra.yml`, the reusable `deploy-container-app.yml`) and manual `power.yml` runs |
 | `incident-ops-main-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:ref:refs/heads/main` | `infra.yml` what-if on `main` before the approval gate |
 | `incident-ops-power-id` | `repo:marcelo-roman@195764956/incident-ops@1401969545:environment:power` | the scheduled `power.yml` run |
@@ -354,7 +354,7 @@ GitHub Actions is the live delivery path. Authentication uses `azure/login@v2` w
 ### Workflows
 
 | Workflow | Trigger | Steps |
-|---|---|---|
+| --- | --- | --- |
 | [`infra.yml`](../.github/workflows/infra.yml) → `bicep`, `scripts` | pull requests to `main` and pushes to `main` that change `infra/**` or the workflow | `az bicep build`, then `az bicep build-params` and `az bicep lint` of the parameters for both power states (all rules at error), Logic App JSON check, ShellCheck on `scripts/*.sh`, Azure Pipelines YAML parse for `azure-devops/` |
 | `infra.yml` → `plan` | pushes to `main` only, after `bicep`, when `DEPLOY_ENABLED` is `true` | OIDC login, build and lint, detect the current power state, resolve running images, `az deployment group validate`, `az deployment group what-if` written to the job summary and uploaded as the `what-if` artifact |
 | `infra.yml` → `deploy` | pushes to `main` only, when `DEPLOY_ENABLED` is `true` | waits for the `production` environment approval, detects the current power state, `az deployment group create` with that state, Cloudflare DNS upsert when `CLOUDFLARE_API_TOKEN` is set, outputs in the job summary |
@@ -410,7 +410,7 @@ Infrastructure redeploys do not undo application releases: `scripts/resolve-imag
 [`azure-devops/`](azure-devops) holds one pipeline per deployable (`api.yml`, `functions.yml`, `insights.yml`, `web.yml`, `infra.yml`) and the step templates in `azure-devops/templates/`. They are samples: delivery runs on GitHub Actions, and the pipelines are not wired to any Azure DevOps project. Each one uses `trigger.paths.include` and `pr.paths.include` for its module folder, checks out the repository once with `checkout: self`, sets `workingDirectory` to its module and references templates by relative path. [`scripts/ado-bootstrap.md`](scripts/ado-bootstrap.md) lists the one-time setup: project, service connection `sc-incident-ops` with workload identity federation, registry connection `ghcr-marcelo-roman`, variable group `vg-incident-ops` and environment `incident-ops-prod` with approval and branch control checks.
 
 | Stage of `infra.yml` | Condition | Steps |
-|---|---|---|
+| --- | --- | --- |
 | Validate | always | `templates/bicep-validate.yml`: build, lint, build-params, `az deployment group validate` |
 | WhatIf | after Validate | `templates/bicep-what-if.yml`: what-if published as artifact and run summary |
 | Deploy | `main`, not a pull request | deployment job on `incident-ops-prod`; approvals and branch control are configured on the environment in Azure DevOps |
@@ -441,7 +441,7 @@ Nothing here runs automatically; these are the manual steps, in order.
 DNS for `marceloroman.com.br` lives in Cloudflare. Records must be DNS-only (grey cloud): Container Apps managed certificates and Static Web Apps validate the CNAME directly.
 
 | Host | Record | Target |
-|---|---|---|
+| --- | --- | --- |
 | `incidents.marceloroman.com.br` | CNAME | Static Web App default host name (validated by CNAME delegation) |
 | `incidents-api.marceloroman.com.br` | CNAME | `ca-incident-ops-api` default FQDN |
 | `asuid.incidents-api.marceloroman.com.br` | TXT | `containerAppsVerificationId` output |
@@ -460,7 +460,7 @@ CLOUDFLARE_API_TOKEN=<token> scripts/cloudflare-dns.sh dns-records.json
 A managed certificate can only be issued after the host name is on the app, and the binding can only reference a certificate that exists, so binding takes three deployments driven by the `CUSTOM_DOMAIN_BINDING` repository variable:
 
 | Value | Effect |
-|---|---|
+| --- | --- |
 | `None` | no custom domains; DNS records are created from the outputs |
 | `Disabled` | host names added to both apps without a certificate, managed certificates issued, Static Web App custom domain added |
 | `SniEnabled` | certificates bound; API and insights base URLs switch to the custom hosts |
@@ -472,7 +472,7 @@ For GitHub Pages, set the custom domain `incidents-docs.marceloroman.com.br` in 
 `alerting.bicep` routes every rule to one Action Group whose webhook targets `<api>/api/alerts/azure-monitor?code=<ESCALATION_API_KEY>` with the common alert schema, so alerts become incidents through the API's alert ingestion. An optional email receiver is added when `ALERT_EMAIL` is set.
 
 | Rule | Signal | Condition | Severity |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `alert-incident-ops-api-availability` | standard availability test on `/health/live`, 1 location, every 15 min, one retry | the location failing | Sev1 |
 | `alert-incident-ops-api-failed-requests` | `requests/failed` for role `incident-ops-api` | more than 5 in 5 min | Sev2 |
 | `alert-incident-ops-api-response-time` | `requests/duration` average for role `incident-ops-api` | above 2000 ms over 15 min | Sev3 |

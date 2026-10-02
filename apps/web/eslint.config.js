@@ -3,6 +3,7 @@ import prettier from 'eslint-config-prettier';
 import boundaries from 'eslint-plugin-boundaries';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import sonarjs from 'eslint-plugin-sonarjs';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -63,6 +64,10 @@ export default tseslint.config(
       'max-lines-per-function': ['error', { max: 80, skipBlankLines: true, skipComments: true }],
       'boundaries/dependencies': ['error', { default: 'disallow', policies: architecturePolicies }],
     },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [sonarjs.configs.recommended],
   },
   {
     files: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/mocks/**', 'e2e/**'],

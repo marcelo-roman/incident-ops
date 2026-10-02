@@ -12,7 +12,7 @@ internal sealed class OutboxMessage
 
     public Guid Id { get; private set; }
 
-    public long Sequence { get; private set; }
+    public long Sequence { get; }
 
     public string Type { get; private set; } = string.Empty;
 

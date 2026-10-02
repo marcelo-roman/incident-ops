@@ -34,7 +34,7 @@ function describedBy(hintId: string, errorId: string, hint: string | undefined, 
   return ids.join(' ');
 }
 
-export function Field({ label, hint, error, className, children }: FieldProps) {
+export function Field({ label, hint, error, className, children }: Readonly<FieldProps>) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;

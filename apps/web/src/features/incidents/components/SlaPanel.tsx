@@ -7,7 +7,7 @@ import { timeToAcknowledgeMs, timeToResolveMs } from '../domain/incidentDuration
 import { useSlaClocks } from '../hooks/useSlaClocks';
 import styles from './SlaPanel.module.css';
 
-function Outcome({ label, elapsedMs }: { label: string; elapsedMs: number | null }) {
+function Outcome({ label, elapsedMs }: Readonly<{ label: string; elapsedMs: number | null }>) {
   if (elapsedMs === null) {
     return null;
   }
@@ -19,7 +19,7 @@ function Outcome({ label, elapsedMs }: { label: string; elapsedMs: number | null
   );
 }
 
-export function SlaPanel({ incident }: { incident: Incident }) {
+export function SlaPanel({ incident }: Readonly<{ incident: Incident }>) {
   const clocks = useSlaClocks(incident);
   return (
     <Panel title="Service level" actions={<SlaStateBadge state={clocks.state} />}>

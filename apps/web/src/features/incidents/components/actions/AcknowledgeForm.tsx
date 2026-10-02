@@ -3,7 +3,7 @@ import { useAcknowledgeForm } from '../../hooks/useIncidentActionForms';
 import { ActionForm } from './ActionForm';
 import type { IncidentActionFormProps } from './actionProps';
 
-export function AcknowledgeForm({ incidentId, onDone, onCancel }: IncidentActionFormProps) {
+export function AcknowledgeForm({ incidentId, onDone, onCancel }: Readonly<IncidentActionFormProps>) {
   const form = useAcknowledgeForm(incidentId, onDone);
   return (
     <ActionForm

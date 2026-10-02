@@ -78,7 +78,7 @@ def _azure(
 
 
 def test_azure_drafter_requests_structured_output_for_reasoning_models() -> None:
-    drafter, requests = _azure(lambda request: httpx2.Response(200, json=_completion(DRAFT_JSON)))
+    drafter, requests = _azure(lambda _request: httpx2.Response(200, json=_completion(DRAFT_JSON)))
 
     draft = drafter.draft(make_record())
 
@@ -97,7 +97,7 @@ def test_azure_drafter_requests_structured_output_for_reasoning_models() -> None
 
 def test_azure_drafter_raises_on_refusal() -> None:
     completion = _completion(None, refusal="cannot help")
-    drafter, _ = _azure(lambda request: httpx2.Response(200, json=completion))
+    drafter, _ = _azure(lambda _request: httpx2.Response(200, json=completion))
 
     with pytest.raises(RcaDraftError, match="cannot help"):
         drafter.draft(make_record())
@@ -105,14 +105,14 @@ def test_azure_drafter_raises_on_refusal() -> None:
 
 def test_azure_drafter_raises_when_output_is_truncated() -> None:
     completion = _completion('{"summary": "cut', finish_reason="length")
-    drafter, _ = _azure(lambda request: httpx2.Response(200, json=completion))
+    drafter, _ = _azure(lambda _request: httpx2.Response(200, json=completion))
 
     with pytest.raises(RcaDraftError, match="Azure OpenAI request failed"):
         drafter.draft(make_record())
 
 
 def test_azure_drafter_wraps_http_errors() -> None:
-    drafter, _ = _azure(lambda request: httpx2.Response(500, json={"error": {"message": "boom"}}))
+    drafter, _ = _azure(lambda _request: httpx2.Response(500, json={"error": {"message": "boom"}}))
 
     with pytest.raises(RcaDraftError, match="Azure OpenAI request failed"):
         drafter.draft(make_record())
@@ -146,7 +146,7 @@ def test_factory_uses_azure_only_when_endpoint_is_configured() -> None:
 
 def test_azure_drafter_rejects_drafts_that_break_domain_invariants() -> None:
     blank = json.dumps({**json.loads(DRAFT_JSON), "summary": " "})
-    drafter, _ = _azure(lambda request: httpx2.Response(200, json=_completion(blank)))
+    drafter, _ = _azure(lambda _request: httpx2.Response(200, json=_completion(blank)))
 
     with pytest.raises(RcaDraftError, match="invalid draft"):
         drafter.draft(make_record())

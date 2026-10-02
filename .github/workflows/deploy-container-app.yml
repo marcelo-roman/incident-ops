@@ -20,7 +20,9 @@ on:
         type: string
         required: true
       requires-environment-on:
-        description: Skips the readiness wait and the smoke test when the environment is powered off, because the app then depends on resources that do not exist.
+        description: >-
+          Skips the readiness wait and the smoke test when the environment is powered off,
+          because the app then depends on resources that do not exist.
         type: boolean
         default: false
       attempts:
@@ -115,7 +117,8 @@ jobs:
               echo "revision ${REVISION} is ready"
               exit 0
             fi
-            state=$(az containerapp revision show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --revision "$REVISION" --query properties.provisioningState --output tsv)
+            state=$(az containerapp revision show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" \
+              --revision "$REVISION" --query properties.provisioningState --output tsv)
             if [[ "$state" == "Failed" ]]; then
               echo "::error::revision ${REVISION} failed to provision"
               exit 1

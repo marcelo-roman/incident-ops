@@ -5,7 +5,7 @@ Incident Ops is split into four bounded contexts. Each one is a module in the re
 ## Bounded contexts
 
 | Context | Module | Owns | Core model |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Incident Management | [`services/api`](https://github.com/marcelo-roman/incident-ops/tree/main/services/api) | incidents and their timeline, SLA clock, escalation level, alert deduplication, service catalog, on-call rotation; system of record | `Incident` aggregate with `TimelineEntry` and `SlaClock`, `Service`, `OnCallRotation` |
 | Escalation | [`services/functions`](https://github.com/marcelo-roman/incident-ops/tree/main/services/functions) | acknowledgement watches, escalation decisions, paging decisions | `AcknowledgementWatch` aggregate, `EscalationDecision`, `PagingDecision` |
 | Operational Analytics | [`services/insights`](https://github.com/marcelo-roman/incident-ops/tree/main/services/insights) | KTLO measures, recurring issue clusters, volume anomalies, RCA drafts; never changes an incident | `IncidentRecord`, `IncidentHistory`, `KpiCalculator`, `RecurringIssueDetector`, `VolumeAnomalyDetector`, `RcaDraft` |
@@ -47,7 +47,7 @@ flowchart LR
 ### Incident Management → Escalation
 
 | Aspect | Value |
-|---|---|
+| --- | --- |
 | Pattern | customer/supplier over a published language; anti-corruption layer on the downstream side |
 | Upstream | Incident Management publishes `incident.triggered` and `incident.escalated` (CloudEvents 1.0) on `incident-events` and serves `GET /api/incidents/{id}` and `GET /api/oncall/current` |
 | Downstream | Escalation translates the envelope and payload in `Infrastructure/AntiCorruption` into `IncidentProfile`, `IncidentState`, `EscalationLevel` and `AcknowledgementDeadline`; upstream DTOs never reach the domain |
@@ -57,7 +57,7 @@ flowchart LR
 ### Incident Management → Operational Analytics
 
 | Aspect | Value |
-|---|---|
+| --- | --- |
 | Pattern | customer/supplier over a published language; anti-corruption layer on the downstream side |
 | Upstream | `GET /api/incidents/export?from=&to=` (flat incidents, no timeline) and `GET /api/incidents/{id}` for RCA drafts |
 | Downstream | `infrastructure/incidents/acl.py` is the only code that knows the API field names (`serviceId`, `ackDueAt`, ...); it builds `IncidentRecord` value types, and the CSV source goes through the same translation |
@@ -66,7 +66,7 @@ flowchart LR
 ### Incident Management → Operations Console
 
 | Aspect | Value |
-|---|---|
+| --- | --- |
 | Pattern | conformist over the published language |
 | Upstream | REST endpoints and the `/hubs/incidents` SignalR hub (`IncidentChanged`, `TimelineAppended`) |
 | Downstream | the console adopts the contract shapes as its types (`features/incidents/domain`), and mirrors the transition rules and SLA thresholds only to decide what to show and which actions to offer; the API stays the authority and answers `409` to an invalid action |
@@ -74,7 +74,7 @@ flowchart LR
 ### Operational Analytics → Operations Console
 
 | Aspect | Value |
-|---|---|
+| --- | --- |
 | Pattern | conformist |
 | Upstream | `GET /api/kpis`, `/api/recurring`, `/api/anomalies`, `POST /api/rca/draft` (camelCase response models of the Insights application layer) |
 | Downstream | `features/insights` and `features/rca` render those shapes; each RCA draft is labelled with its `generatedBy` value |
@@ -84,7 +84,7 @@ flowchart LR
 The same real-world incident is a different thing in each context, and each context names only what it needs.
 
 | Term | Incident Management | Escalation | Operational Analytics | Operations Console |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Incident | `Incident` aggregate, the only writable copy | `IncidentProfile` (identity, severity, service) and `IncidentState` (status, level) read from events and the API | `IncidentRecord`, an immutable fact with derived measures | contract `Incident` shape, cached in TanStack Query |
 | Deadline | `SlaClock` with acknowledge window and resolve deadline | `AcknowledgementDeadline` for one level | `SlaTargets` and `SlaOutcome` judged after the fact | countdown on screen |
 | Escalation | behavior `Escalate`, raises `IncidentEscalated` | `EscalationDecision`: `Escalate`, `AlreadyAcknowledged`, `Superseded`, `FinalLevelReached` | escalated past level 1 counts toward on-call load | escalation chain display |

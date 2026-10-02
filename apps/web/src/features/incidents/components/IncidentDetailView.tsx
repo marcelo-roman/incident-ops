@@ -9,7 +9,7 @@ import { IncidentFacts } from './IncidentFacts';
 import { SlaPanel } from './SlaPanel';
 import { Timeline } from './Timeline';
 
-export function IncidentDetailView({ incident }: { incident: IncidentDetail }) {
+export function IncidentDetailView({ incident }: Readonly<{ incident: IncidentDetail }>) {
   return (
     <>
       <PageHeader

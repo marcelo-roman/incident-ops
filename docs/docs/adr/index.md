@@ -3,7 +3,7 @@
 Format: [MADR](https://adr.github.io/madr/). One record per decision that is expensive to reverse. Records are immutable once accepted; a change of mind is a new record that supersedes the old one.
 
 | # | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | [0001](0001-minimal-apis-over-controllers.md) | Minimal APIs over MVC controllers | Accepted |
 | [0002](0002-service-bus-scheduled-messages-for-sla-timers.md) | Service Bus scheduled messages for SLA timers instead of polling | Accepted |
 | [0003](0003-azure-signalr-service.md) | Azure SignalR Service for real-time updates | Accepted |

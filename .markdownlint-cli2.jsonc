@@ -1,0 +1,18 @@
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD060": {
+      "style": "compact"
+    }
+  },
+  "globs": ["**/*.md"],
+  "gitignore": true,
+  "ignores": [
+    "**/node_modules/**",
+    "**/.venv/**",
+    "**/site/**",
+    "services/insights/src/incident_insights/interface/reports/templates/**",
+    "services/insights/tests/snapshots/**"
+  ]
+}

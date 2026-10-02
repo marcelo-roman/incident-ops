@@ -4,7 +4,7 @@ import { cx } from '../../../shared/lib/cx';
 import { formatShortDate, formatTime } from '../../../shared/format/dates';
 import styles from './Timeline.module.css';
 
-export function Timeline({ entries }: { entries: TimelineEntry[] }) {
+export function Timeline({ entries }: Readonly<{ entries: TimelineEntry[] }>) {
   return (
     <ol className={styles.timeline} aria-label="Incident timeline">
       {entries.map((entry) => (

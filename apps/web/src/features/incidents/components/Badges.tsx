@@ -3,7 +3,7 @@ import { cx } from '../../../shared/lib/cx';
 import styles from './Badge.module.css';
 import { slaStateLabels, sourceLabels, statusLabels } from '../domain/labels';
 
-export function SeverityBadge({ severity }: { severity: Severity }) {
+export function SeverityBadge({ severity }: Readonly<{ severity: Severity }>) {
   return (
     <span className={cx(styles.badge, styles[severity])}>
       <span className={styles.marker} aria-hidden="true" />
@@ -12,11 +12,11 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
   );
 }
 
-export function StatusBadge({ status }: { status: IncidentStatus }) {
+export function StatusBadge({ status }: Readonly<{ status: IncidentStatus }>) {
   return <span className={cx(styles.badge, styles.status, styles[status])}>{statusLabels[status]}</span>;
 }
 
-export function SlaStateBadge({ state }: { state: SlaState }) {
+export function SlaStateBadge({ state }: Readonly<{ state: SlaState }>) {
   return (
     <span className={cx(styles.badge, styles[state])}>
       <span className={styles.marker} aria-hidden="true" />
@@ -25,7 +25,7 @@ export function SlaStateBadge({ state }: { state: SlaState }) {
   );
 }
 
-export function SourceBadge({ source }: { source: IncidentSource }) {
+export function SourceBadge({ source }: Readonly<{ source: IncidentSource }>) {
   return <span className={cx(styles.badge, styles.source, styles[source])}>{sourceLabels[source]}</span>;
 }
 

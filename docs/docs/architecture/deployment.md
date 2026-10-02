@@ -45,7 +45,7 @@ flowchart TB
 ```
 
 | Host | Target |
-|---|---|
+| --- | --- |
 | `incidents.marceloroman.com.br` | Static Web App |
 | `incidents-api.marceloroman.com.br` | Container App `ca-incident-ops-api` |
 | `incidents-insights.marceloroman.com.br` | Container App `ca-incident-ops-insights` |
@@ -58,7 +58,7 @@ Hosting rationale: [ADR 0004](../adr/0004-container-apps-for-hosting.md).
 The environment is started on request and powered down every day at 05:00 UTC by [`power.yml`](https://github.com/marcelo-roman/incident-ops/blob/main/.github/workflows/power.yml), which runs [`infra/scripts/power.sh`](https://github.com/marcelo-roman/incident-ops/blob/main/infra/scripts/power.sh). The documentation site on GitHub Pages is always on.
 
 | | On | Off |
-|---|---|---|
+| --- | --- | --- |
 | Service Bus namespace | present | deleted |
 | Azure SQL database | Basic, 5 DTU, re-created empty and seeded by the API on first start | deleted |
 | API container app | one warm replica | scaled to zero |
@@ -72,7 +72,7 @@ Infrastructure deploys from `infra.yml` keep the current state. The repository v
 Every module reads configuration from environment variables injected by Bicep (production) or Docker Compose (local). Names are fixed by the [contract](https://github.com/marcelo-roman/incident-ops/blob/main/contracts/contracts.md#runtime-configuration); a module that needs a new setting proposes a contract change first.
 
 | Module | Variables | Production value | Local value |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | API | `ConnectionStrings__IncidentOps` | Azure SQL, `Authentication=Active Directory Managed Identity` | SQL Server container, SQL login |
 | API | `ServiceBus__FullyQualifiedNamespace`, `ServiceBus__TopicName` | namespace host, `incident-events` | — |
 | API | `ServiceBus__ConnectionString` | not set | emulator connection string |
@@ -129,7 +129,7 @@ sequenceDiagram
 ```
 
 | Module | Workflow | Path filter | Deploy step |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | API | `api.yml` | `services/api/**` | image to GHCR, then the local reusable workflow `./.github/workflows/deploy-container-app.yml` |
 | Insights | `insights.yml` | `services/insights/**` | image to GHCR, then `./.github/workflows/deploy-container-app.yml` |
 | Functions | `functions.yml` | `services/functions/**` | `Azure/functions-action@v1` to `func-incident-ops` (Flex Consumption) |

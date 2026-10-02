@@ -1,11 +1,10 @@
 # Runbook: SLA breach escalation not firing
 
 | | |
-|---|---|
+| --- | --- |
 | Alert | an incident is `Triggered` more than 5 minutes past `ackDueAt` with no `Escalated` timeline entry for that window |
 | Default severity | Sev2 (on-call paging is the safety net for every other incident) |
 | Tier | L2 |
-
 
 ## How escalation works
 

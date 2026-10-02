@@ -19,7 +19,7 @@ class Scripted:
         self.outcomes = list(outcomes)
         self.calls = 0
 
-    def __call__(self, request: httpx.Request) -> httpx.Response:
+    def __call__(self, _request: httpx.Request) -> httpx.Response:
         self.calls += 1
         outcome = self.outcomes.pop(0)
         if isinstance(outcome, Exception):
@@ -91,7 +91,7 @@ def test_exhausted_timeouts_surface_as_source_error() -> None:
 def test_single_attempt_policy_does_not_retry() -> None:
     script = Scripted(503)
     client = httpx.Client(base_url="https://incidents.test", transport=httpx.MockTransport(script))
-    getter = RetryingGetter(client, RetryPolicy(attempts=1), sleep=lambda delay: None)
+    getter = RetryingGetter(client, RetryPolicy(attempts=1), sleep=lambda _delay: None)
 
     assert getter.get("/api/incidents/export", None).status_code == 503
     assert script.calls == 1

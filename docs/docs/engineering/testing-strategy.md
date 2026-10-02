@@ -16,7 +16,7 @@ flowchart TB
 ```
 
 | Level | Speed | Runs | Proves |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Unit | ms | every PR that touches the module | business rules are correct, including edge cases |
 | Use case | ms | same | orchestration: right ports called, right events raised, right errors |
 | Integration | seconds | same | mapping, SQL, migrations, HTTP contract, serialization against real dependencies |
@@ -27,7 +27,7 @@ flowchart TB
 ## Test counts
 
 | Module | Tests | Coverage today | Gate |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `services/api` | 204 (Domain 109, Application 37, Api integration 35, Architecture 23) | 95.8% line, 83.2% branch | 80% merged line coverage (ReportGenerator in `api.yml`) |
 | `services/functions` | 186 (one project: Domain, Application, AntiCorruption, Adapters, Host, Architecture) | 94.8% line, 90.1% branch | 80% line and branch (`coverlet.msbuild`, fails the build) |
 | `services/insights` | 178 | 99% line with branch coverage | 85% (`fail_under` in `pyproject.toml`) |
@@ -38,7 +38,7 @@ flowchart TB
 ### Incident Management (`services/api`)
 
 | Level | Project | Tools | Covers |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Unit | `tests/IncidentOps.Domain.Tests` | xUnit | value object invariants, aggregate behaviors and the events they raise, state machine, `SlaClock` state and compliance, escalation cap at level 3, rotation across week boundaries and daylight saving time, alert rules |
 | Use case | `tests/IncidentOps.Application.Tests` | xUnit, in-memory fakes of the ports wired through the real DI registration | every use case and query, domain event translation, outbox message handling and retries, metrics report |
 | Integration | `tests/IncidentOps.Api.Tests` | `WebApplicationFactory`, Testcontainers SQL Server 2022 | lifecycle over HTTP, problem details, API key, alert ingestion with real payloads, outbox retries, seeded history, SignalR broadcast, rate limiting, chaos, Prometheus output, CloudEvent format |
@@ -47,7 +47,7 @@ flowchart TB
 ### Escalation (`services/functions`)
 
 | Suite | Covers |
-|---|---|
+| --- | --- |
 | `Domain` | value object invariants; `AcknowledgementWatch.Open`, `Schedule`, `Evaluate` and `PagingDecision.Decide` as decision tables |
 | `Application` | each use case against hand-written port fakes, time through `FakeTimeProvider`, log fields through `FakeLogger` |
 | `AntiCorruption` | CloudEvent and SLA check translation, upstream status mapping, rejection of payloads that break the contract or the model |
@@ -58,7 +58,7 @@ flowchart TB
 ### Operational Analytics (`services/insights`)
 
 | Folder | Covers | How |
-|---|---|---|
+| --- | --- | --- |
 | `tests/domain` | value objects, `IncidentRecord`, `IncidentHistory`, `KpiCalculator`, `RecurringIssueDetector`, `VolumeAnomalyDetector`, `RcaDraftComposer`, `KtloReportComposer` | small hand-built incident sets with known answers |
 | `tests/application` | use cases | in-memory incident source, canned and failing drafters, fixed clock |
 | `tests/infrastructure` | anti-corruption layer, API client and retries, CSV source, cache, settings, Azure OpenAI drafter, logging, telemetry | `httpx.MockTransport`; the real `AzureOpenAI` client over a mocked transport |
@@ -68,7 +68,7 @@ flowchart TB
 ### Operations Console (`apps/web`)
 
 | Level | Location | Tools | Covers |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Unit | `src/features/*/domain`, `src/features/realtime/connection`, `src/shared/**` | Vitest | SLA clocks and edge cases (exactly 25% remaining, escalated windows), transitions, schemas, formatting, runtime config, reconnect backoff, connection supervisor |
 | Component | `src/features/*/{pages,components,hooks,api}`, `src/app` | Vitest, Testing Library, MSW | dashboard, filters, incident actions (validation, success, `409`), declaration, insights, on-call, RCA drafts, realtime cache wiring, app shell |
 | Boundaries | lint | `eslint-plugin-boundaries` | feature isolation ([code structure](../architecture/code-structure.md#operations-console-appsweb)) |
@@ -77,7 +77,7 @@ flowchart TB
 ### Infrastructure and platform
 
 | Workflow | Checks |
-|---|---|
+| --- | --- |
 | `infra.yml` | `az bicep build`, `build-params` and `lint` (every rule at error), Logic App JSON, ShellCheck on `infra/scripts`, Azure DevOps YAML parses, `validate` and `what-if` with OIDC |
 | `platform.yml` | `promtool test rules` (each alert fires and stays quiet where it should), `promtool check config`, `amtool check-config`, `docker compose config` (default and `functions` profile), Service Bus emulator JSON, Markdown link check over every `.md`, ShellCheck, actionlint |
 | `docs.yml` | `mkdocs build --strict` |

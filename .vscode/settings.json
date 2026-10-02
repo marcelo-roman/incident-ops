@@ -1,0 +1,4 @@
+{
+  "eslint.workingDirectories": [{ "directory": "apps/web", "changeProcessCWD": true }],
+  "prettier.requireConfig": true
+}

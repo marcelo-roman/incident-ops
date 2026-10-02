@@ -3,6 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 WEEKEND_START = 5
+HOURS_PER_DAY = 24
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,7 +13,7 @@ class BusinessHours:
     end_hour: int
 
     def __post_init__(self) -> None:
-        if not 0 <= self.start_hour < self.end_hour <= 24:
+        if not 0 <= self.start_hour < self.end_hour <= HOURS_PER_DAY:
             raise ValueError("business hours must be a range within a day")
 
     def excludes(self, moment: datetime) -> bool:

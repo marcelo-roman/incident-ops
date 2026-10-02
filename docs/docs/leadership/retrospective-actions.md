@@ -5,7 +5,7 @@ Retros and postmortems are only worth the actions that get closed. This page def
 ## Sources
 
 | Source | Cadence | Typical actions |
-|---|---|---|
+| --- | --- | --- |
 | Sprint retrospective | every 2 weeks | process, collaboration, tooling |
 | Postmortem | per Sev1/Sev2 within 5 business days | prevent, detect, mitigate, process ([template](../operations/postmortem-template.md)) |
 | Ops review | weekly | alert tuning, runbook gaps, toil automation |
@@ -24,7 +24,7 @@ Retros and postmortems are only worth the actions that get closed. This page def
 Kept as a shared query in Azure Boards; this is the view reviewed in each retro.
 
 | ID | Source | Action | Type | Owner | Created | Due | Status | Evidence of closure |
-|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | A-031 | INC-1187 | Size processor connection limit from Little's law at 2× peak | prevent | D. Okafor | 2026-09-19 | 2026-09-24 | Done | PR #412, load test report |
 | A-032 | INC-1187 | Alert on payments-gateway p95 > 2 s for 5 min | detect | A. Ribeiro | 2026-09-19 | 2026-09-24 | Done | rule merged, fired in test |
 | A-033 | INC-1187 | Canary analysis compares latency at matching traffic | mitigate | P. Nair | 2026-09-19 | 2026-10-15 | In progress | — |
@@ -43,7 +43,7 @@ Statuses: Open → In progress → Done (with evidence) or Dropped (with reason 
 ## Metrics
 
 | Metric | Target | Reported in |
-|---|---|---|
+| --- | --- | --- |
 | Actions closed by due date | ≥ 85% | monthly ops report, [stakeholder update](stakeholder-updates.md) |
 | Median age of open actions | < 21 days | retro |
 | Recurrence: incidents linked to a cluster that already had a closed action | 0 | [KTLO metrics](../operations/ktlo-metrics.md) |

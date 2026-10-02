@@ -51,8 +51,10 @@ stages:
               dotnet tool restore
               dotnet format --verify-no-changes --no-restore
               dotnet build --configuration Release --no-restore
-              dotnet test --configuration Release --no-build --settings coverage.runsettings --collect "XPlat Code Coverage" --logger trx --results-directory $(Agent.TempDirectory)/TestResults
-              dotnet reportgenerator -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" -targetdir:$(Agent.TempDirectory)/coverage -reporttypes:TextSummary
+              dotnet test --configuration Release --no-build --settings coverage.runsettings --collect "XPlat Code Coverage" \
+                --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+              dotnet reportgenerator -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" \
+                -targetdir:$(Agent.TempDirectory)/coverage -reporttypes:TextSummary
               line=$(grep -oP 'Line coverage: \K[0-9.]+' $(Agent.TempDirectory)/coverage/Summary.txt)
               awk -v value="$line" -v threshold=80 'BEGIN { exit !(value >= threshold) }'
             workingDirectory: $(workingDirectory)

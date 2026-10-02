@@ -5,7 +5,7 @@ Two telemetry paths with different jobs. Application Insights is the system of i
 ## What goes where
 
 | Signal | Application Insights | Prometheus |
-|---|---|---|
+| --- | --- | --- |
 | HTTP requests (rate, errors, latency) | `requests` table, every module | `http_server_request_duration_seconds` histogram, API `/metrics` |
 | Dependencies (SQL, Service Bus, HTTP) | `dependencies` table | — |
 | Exceptions with stack traces | `exceptions` table | — |

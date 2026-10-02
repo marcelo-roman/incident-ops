@@ -2,13 +2,12 @@
 
 How an incident is run from detection to closure.
 
-
 ## Roles
 
 Roles are filled for every Sev1 and Sev2. For Sev3/Sev4 the assignee holds all three.
 
 | Role | Default | Responsibilities | Does not |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Incident commander (IC) | L2 primary until handed off; engineering lead for Sev1 longer than 1 h | owns severity, decisions, priorities, role assignments, when to escalate, when to declare mitigated | debug hands-on |
 | Comms lead | L1 lead or secondary on call | stakeholder updates on cadence, status page, single point of contact for questions | make technical decisions |
 | Scribe | any engineer not debugging | timeline in the incident (`POST /notes`): actions, findings, decisions with timestamps | filter what goes in |
@@ -55,7 +54,7 @@ For a Sev1 or Sev2, the person acknowledging:
 ## Escalation paths
 
 | Trigger | Escalate to | How |
-|---|---|---|
+| --- | --- | --- |
 | Not acknowledged within ack window | next on-call level (automatic) | `CheckAcknowledgementSla` → `POST /escalate` |
 | Sev1 not mitigated in 60 min, Sev2 in 2 h | engineering lead + owning team lead | IC pages directly |
 | Needs code change or deep component knowledge | owning team (L3) | page the team's on-call or lead |
@@ -69,7 +68,7 @@ Escalating early is never a mistake in review. Escalating late is the common one
 ## Stakeholder communication
 
 | Severity | Audience | Channel | First update | Cadence | Resolution |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `Sev1` | engineering leadership, product owners, support, account owners | incident channel + email list + status page | 15 min after declaration | every 30 min, even if nothing changed | within 1 h of resolution; postmortem link in 5 business days |
 | `Sev2` | product owners of affected service, support | incident channel + email | 30 min | every 60 min | within 2 h |
 | `Sev3` | owning team, support | incident channel | 4 h | daily | on resolution |
@@ -81,7 +80,7 @@ Rules: say what is known, what is not, and when the next update is. No speculati
 
 ### Initial update
 
-```
+```text
 [INC-{number}] {Sev} — {title}
 Status: Investigating
 Impact: {who is affected and how; % of requests or users if known}
@@ -94,7 +93,7 @@ Next update: {time UTC} or sooner if status changes
 
 ### Progress update
 
-```
+```text
 [INC-{number}] {Sev} — {title}
 Status: Investigating | Identified | Mitigating | Monitoring
 Impact: {current impact; changed since last update?}
@@ -105,7 +104,7 @@ Next update: {time UTC}
 
 ### Mitigated
 
-```
+```text
 [INC-{number}] {Sev} — Mitigated
 Impact ended: {time UTC}; duration {h:mm}
 Mitigation: {what restored service}
@@ -115,7 +114,7 @@ Next: root cause and permanent fix; postmortem by {date}
 
 ### Resolved
 
-```
+```text
 [INC-{number}] {Sev} — Resolved
 Root cause (summary): {one or two sentences}
 Customer impact: {scope, duration}
@@ -124,7 +123,7 @@ Follow-up: postmortem {link} on {date}
 
 ### Executive summary (Sev1, within 24 h)
 
-```
+```text
 What happened: {one paragraph, plain language}
 Impact: {customers, transactions, revenue if known, SLA breached?}
 Duration: detection {t}, mitigation {t}, resolution {t}

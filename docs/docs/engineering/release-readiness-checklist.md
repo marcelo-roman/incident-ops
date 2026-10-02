@@ -2,7 +2,6 @@
 
 Completed by the release owner and linked in the pull request (or the release work item) before a reviewer approves the `production` environment deployment in GitHub Actions. Small changes behind the standard pipeline (no schema, no contract, no new resource) only need section 1 and 5.
 
-
 ## 1. Scope and approval
 
 - [ ] Work items in the release are Done per [DoD](definition-of-done.md) and linked to the run.
@@ -40,7 +39,7 @@ Completed by the release owner and linked in the pull request (or the release wo
 ## 6. Go/no-go
 
 | Role | Name | Go |
-|---|---|---|
+| --- | --- | --- |
 | Release owner | | ☐ |
 | Engineering lead | | ☐ |
 | Product Owner (user-visible changes) | | ☐ |

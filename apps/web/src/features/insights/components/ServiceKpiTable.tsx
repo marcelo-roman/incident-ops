@@ -4,7 +4,7 @@ import type { KpiGroup } from '../domain/insights';
 import { useServiceName } from '../../incidents';
 import styles from './Insights.module.css';
 
-export function ServiceKpiTable({ groups }: { groups: KpiGroup[] }) {
+export function ServiceKpiTable({ groups }: Readonly<{ groups: KpiGroup[] }>) {
   const serviceName = useServiceName();
   return (
     <Panel title="By service" flush>

@@ -11,7 +11,7 @@ A weekly written status for Product Owners, Engineering Owners and leadership. O
 - Bad news goes out the same day it is known, not in Friday's update.
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | Green: on track | committed dates hold with current scope and capacity |
 | Amber: at risk | a date or scope is at risk; mitigation in progress; no decision needed yet |
 | Red: off track | a date or scope will be missed without a decision from the reader |
@@ -97,7 +97,7 @@ Allocation actual: features 58%, KTLO 29%, tech debt 13% (plan 60/25/15).
 ## Audience variants
 
 | Audience | Length | Keep | Drop |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Executives | 5 lines | overall status, decisions, top risk, one operations number | delivery table detail, done list |
 | Product Owners | full template | everything | — |
 | Engineering team | full template + links to boards | everything, plus carry-over reasons | — |

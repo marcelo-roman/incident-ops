@@ -6,7 +6,7 @@ import type { AppConfig } from '../shared/config/appConfig';
 import { createQueryClient } from './queryClient';
 import { createAppRouter } from './router';
 
-export function App({ config }: { config: AppConfig }) {
+export function App({ config }: Readonly<{ config: AppConfig }>) {
   const [queryClient] = useState(createQueryClient);
   const [router] = useState(createAppRouter);
   return (

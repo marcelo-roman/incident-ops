@@ -18,7 +18,7 @@ KTLO analytics and AI-assisted root cause analysis for the Incident Ops system. 
 ## What it does
 
 | Capability | Where |
-|---|---|
+| --- | --- |
 | MTTA and MTTR (median, p90) per service and severity, SLA compliance, detection coverage, weekly trend | `GET /api/kpis` |
 | Clusters of similar incidents from their title and description | `GET /api/recurring` |
 | Weeks with abnormal incident volume per service | `GET /api/anomalies` |
@@ -36,7 +36,7 @@ The service is one bounded context, **Operational Analytics**: it reads incident
 The domain is plain Python (frozen dataclasses and enums, no Pydantic, no I/O). Behaviour lives on the types that own the data:
 
 | Type | Kind | Behaviour |
-|---|---|---|
+| --- | --- | --- |
 | `IncidentRecord` | entity (identity: incident id, immutable) | `time_to_acknowledge()`, `time_to_resolve()`, `acknowledgement_outcome()`, `resolution_outcome(as_of)`, `sla_outcome(as_of)`, `complies_with_sla()`, `is_settled(as_of)`, `detected_by_monitoring()`, `created_off_hours()`, `week_start()`, `chronology()` (recorded timeline, or one derived from the lifecycle timestamps) |
 | `IncidentHistory` | first-class collection | `within(window)`, `by_service()`, `by_severity()`, `by_source()`, `by_responder()`, `in_week()`, `weekly_volume(window)`, `find(id)` |
 | `Severity`, `ServiceId`, `DetectionSource`, `IncidentStatus` | value objects | `ServiceId` validates the slug; `Severity.is_high`; `DetectionSource.is_monitoring` |
@@ -50,7 +50,7 @@ The domain is plain Python (frozen dataclasses and enums, no Pydantic, no I/O). 
 Domain services hold behaviour that spans many records. They take and return domain types; pandas, NumPy and scikit-learn appear only inside them as computation detail:
 
 | Service | Responsibility |
-|---|---|
+| --- | --- |
 | `KpiCalculator` | MTTA/MTTR statistics, SLA compliance, detection coverage, groupings and the weekly trend (pandas for the per-record facts) |
 | `RecurringIssueDetector` | TF-IDF, LSA and k-means clustering of incident text (scikit-learn) and cluster description |
 | `VolumeAnomalyDetector` | rolling z-score over weekly volume (NumPy) |
@@ -59,7 +59,7 @@ Domain services hold behaviour that spans many records. They take and return dom
 
 ### Layers
 
-```
+```text
 src/incident_insights/
   domain/            Operational Analytics model
     shared/          Severity, ServiceId, DetectionSource, ReportingWindow, Percentage, DurationStats
@@ -83,7 +83,7 @@ Use cases only orchestrate: load the history for a window through the `IncidentS
 The boundaries are [import-linter](https://import-linter.readthedocs.io/) contracts in `pyproject.toml`, checked by `uv run lint-imports` in CI:
 
 | Contract | Rule |
-|---|---|
+| --- | --- |
 | Layers | `interface` → `infrastructure` → `application` → `domain`; never upwards |
 | No I/O frameworks inside | `domain` and `application` do not import `httpx`, `openai`, `azure`, `fastapi`, `typer`, `jinja2`, `pydantic_settings`, `opentelemetry` |
 | Plain domain | `domain` does not import `pydantic` |
@@ -99,7 +99,7 @@ The boundaries are [import-linter](https://import-linter.readthedocs.io/) contra
 Each `IncidentRecord` answers these questions itself, evaluated at the end of the window (`as_of`):
 
 | Measure | Definition |
-|---|---|
+| --- | --- |
 | time to acknowledge (MTTA) | `acknowledgedAt - createdAt`; empty while unacknowledged |
 | time to resolve (MTTR) | `resolvedAt - createdAt`; empty while unresolved |
 | acknowledgement outcome | `Breached` if `acknowledgementBreached` is true or the incident was resolved without an acknowledgement; `Met` if acknowledged without a breach; `Pending` while open and unacknowledged |
@@ -169,7 +169,7 @@ A model refusal, a truncated answer (`finish_reason: length`) or an Azure OpenAI
 Base URL `https://incidents-insights.marceloroman.com.br`. JSON in camelCase. Errors are RFC 7807 `application/problem+json`. Every response carries `X-Correlation-Id` (echoed from the request or generated). OpenAPI at `/docs`.
 
 | Method | Path | Result |
-|---|---|---|
+| --- | --- | --- |
 | GET | `/api/kpis?days=90` | `window`, `overall`, `detection`, `bySeverity`, `byService`, `byServiceSeverity`, `weekly` |
 | GET | `/api/recurring?days=180` | `incidentsAnalyzed`, `clustersEvaluated`, `silhouette`, `clusters[]` with `label`, `terms`, `count`, `cohesion`, `services`, `sampleTitles`, `firstSeen`, `lastSeen` |
 | GET | `/api/anomalies?days=180` | `method`, `baselineWeeks`, `threshold`, `anomalies[]` with `serviceId`, `weekStart`, `count`, `baselineMean`, `baselineStd`, `zScore` |
@@ -196,7 +196,7 @@ uv run incident-insights generate-sample
 ```
 
 | Command | Options |
-|---|---|
+| --- | --- |
 | `report` | `--days` (default 30), `--format md\|html`, `--source api\|csv` (default `INSIGHTS_DATA_SOURCE`), `--csv-path`, `--as-of` (ISO-8601, default now), `--output` (default stdout) |
 | `generate-sample` | `--output` (default `data/sample_incidents.csv`), `--end` (default 2026-09-28), `--days` (default 182), `--seed` (default 42) |
 
@@ -273,7 +273,7 @@ uv run jupyter nbconvert --execute --inplace notebooks/ktlo_exploration.ipynb
 Environment variables (a `.env` file is also read; see `.env.example`). `INCIDENTS_API_BASE_URL`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `CORS_ALLOWED_ORIGINS`, `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME` are the names injected by the infrastructure; the others are local tuning with working defaults.
 
 | Variable | Default | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `INCIDENTS_API_BASE_URL` | `https://incidents-api.marceloroman.com.br` | Incidents API base URL |
 | `INCIDENTS_API_TIMEOUT_SECONDS` | `15` | HTTP timeout for the Incidents API |
 | `INCIDENTS_API_ATTEMPTS` | `3` | Attempts per Incidents API request (1 disables retries) |
@@ -307,7 +307,7 @@ uv run pytest
 Tests mirror the layers:
 
 | Folder | What is tested | How |
-|---|---|---|
+| --- | --- | --- |
 | `tests/domain` | value objects and their invariants, `IncidentRecord` behaviour, `IncidentHistory`, `KpiCalculator`, `RecurringIssueDetector`, `VolumeAnomalyDetector`, `RcaDraftComposer`, `KtloReportComposer` | small hand-built incident sets with known answers (percentiles, SLA outcomes, z-scores, cluster membership) |
 | `tests/application` | use cases | in-memory incident source, canned and failing drafters, fixed clock |
 | `tests/infrastructure` | anti-corruption layer mapping, Incidents API client and retries, CSV source, cache, settings, Azure OpenAI drafter, logging, telemetry | `httpx.MockTransport`; the real `AzureOpenAI` client over a mocked transport, asserting the structured-output request, `max_completion_tokens`, no sampling parameters, and the refusal, truncation, invalid-draft and error paths |
@@ -322,7 +322,7 @@ Tests mirror the layers:
 GitHub Actions delivers; [`.github/workflows/insights.yml`](../../.github/workflows/insights.yml) runs when `services/insights/**` or the workflow changes (and on pull requests that change `contracts/**`):
 
 | Job | When | Steps |
-|---|---|---|
+| --- | --- | --- |
 | `verify` | pull requests and pushes to `main` | `uv sync --frozen`, ruff check, ruff format check, mypy, import-linter contracts, pytest with coverage |
 | `image` | after `verify` | builds the image; on `main` pushes `ghcr.io/marcelo-roman/incident-ops-insights:<sha>` and `:latest` |
 | `deploy` | `main` only | calls the reusable [`deploy-container-app.yml`](../../.github/workflows/deploy-container-app.yml) with `container-app-name: ca-incident-ops-insights`, `resource-group: rg-incident-ops`, the image of the commit and `health-url: https://incidents-insights.marceloroman.com.br/health` |

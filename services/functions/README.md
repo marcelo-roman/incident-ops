@@ -67,7 +67,7 @@ sequenceDiagram
 ## Functions
 
 | Function | Trigger | Use case | Does |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `ScheduleSlaCheck` | topic `incident-events`, subscription `sla-scheduler` | `ScheduleAcknowledgementCheck` | Translates the CloudEvent, asks `AcknowledgementWatch.Open` whether a watch is needed (acknowledgement pending, level below 3) and schedules `{ incidentId, escalationLevel }` on `sla-checks` at the deadline, or immediately when it already passed. `MessageId` is the watch key `{incidentId}-{level}`, so duplicate detection drops a second schedule for the same level. |
 | `CheckAcknowledgementSla` | queue `sla-checks` | `CheckAcknowledgementSla` | Resumes the watch from the message, reads the current incident state from the API and lets `AcknowledgementWatch.Evaluate` decide: `Escalate`, `AlreadyAcknowledged`, `Superseded` or `FinalLevelReached`. Only `Escalate` calls `POST /api/incidents/{id}/escalate` with reason `Acknowledgement SLA breached at level N`. |
 | `NotifyOnCall` | topic `incident-events`, subscription `notifier` | `PageOnCall` | Reads the rotation from `GET /api/oncall/current` and lets `PagingDecision.Decide` choose: `Sev1`/`Sev2` awaiting acknowledgement page the primary, secondary or lead for the level. The page goes to the Logic App. |
@@ -78,7 +78,7 @@ Entity names come from app settings through `%binding%` expressions, so the same
 
 This module is the **Escalation** bounded context. It consumes the integration events and HTTP API of Incident Management ([`services/api`](../api)) through an anti-corruption layer; the upstream DTOs never reach the domain.
 
-```
+```text
 src/
   IncidentOps.Escalation.Domain/          the model, no dependencies
     Incidents/        IncidentId, IncidentNumber, ServiceId, Severity, IncidentProfile, IncidentState
@@ -120,7 +120,7 @@ The dependency rule is enforced at compile time by project references and checke
 Names follow the runtime configuration in the shared contract. In Azure they are app settings; locally they go in `src/IncidentOps.Functions/local.settings.json` (copy `local.settings.json.example`).
 
 | Setting | Azure value | Local value |
-|---|---|---|
+| --- | --- | --- |
 | `AzureWebJobsStorage__accountName` | host storage account, identity-based | `AzureWebJobsStorage=UseDevelopmentStorage=true` (Azurite) |
 | `ServiceBusConnection__fullyQualifiedNamespace` | `<namespace>.servicebus.windows.net`, used by the triggers and by the sender with `DefaultAzureCredential` | not set |
 | `ServiceBusConnection` | not set | emulator connection string |
@@ -185,7 +185,7 @@ dotnet test -p:CollectCoverage=true
 ```
 
 | Suite | Covers |
-|---|---|
+| --- | --- |
 | `Domain` | value object invariants; `AcknowledgementWatch.Open`, `Schedule` and `Evaluate` and `PagingDecision.Decide` as decision tables |
 | `Application` | each use case against hand-written port fakes, time through `FakeTimeProvider`, structured log fields through `FakeLogger` |
 | `AntiCorruption` | CloudEvent and SLA check translation, upstream status mapping, rejection of envelopes and payloads that break the contract or the model |
@@ -200,7 +200,7 @@ Coverage runs through `coverlet.msbuild`; the build fails below 80% line or bran
 Every trigger uses `AutoCompleteMessages = false` and settles explicitly through `MessageSettlement`:
 
 | Outcome | Settlement | Effect |
-|---|---|---|
+| --- | --- | --- |
 | Handler finished, acted or skipped | complete | message removed |
 | Body breaks the upstream contract or a domain invariant (`MalformedMessageException` from the anti-corruption layer) | dead-letter with reason `InvalidMessage` and the parse error as description | no retries for a message that can never succeed |
 | Any other exception (API down, timeout, 5xx) | abandon, then rethrow so the invocation is recorded as failed | Service Bus redelivers; after `maxDeliveryCount` deliveries (10 in the infrastructure) the broker moves it to the dead-letter queue with `MaxDeliveryCountExceeded` |
@@ -246,7 +246,7 @@ The Consumption workflow definition lives with the infrastructure, in [`infra/bi
 GitHub Actions is the delivery system. [`.github/workflows/functions.yml`](../../.github/workflows/functions.yml) runs when `services/functions/**` or the workflow changes (and on pull requests that change `contracts/**`):
 
 | Job | When | Steps |
-|---|---|---|
+| --- | --- | --- |
 | `build` | pull requests and pushes | restore, `dotnet format --verify-no-changes`, build, tests with the coverage gate; on `main` also publishes the zip package as an artifact |
 | `deploy` | pushes to `main`, environment `production` | `azure/login@v2` with OpenID Connect (`vars.AZURE_CLIENT_ID`, `vars.AZURE_TENANT_ID`, `vars.AZURE_SUBSCRIPTION_ID`), then `Azure/functions-action@v1` to `func-incident-ops` on Flex Consumption |
 

@@ -37,7 +37,8 @@ services:
     image: incident-ops-api:local
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__IncidentOps: "Server=sqlserver,1433;Database=IncidentOps;User Id=sa;Password=${MSSQL_SA_PASSWORD:-IncidentOps!Local1};TrustServerCertificate=true"
+      ConnectionStrings__IncidentOps: "Server=sqlserver,1433;Database=IncidentOps;User Id=sa;\
+        Password=${MSSQL_SA_PASSWORD:-IncidentOps!Local1};TrustServerCertificate=true"
       Database__ApplyMigrations: "true"
       Database__Seed: "true"
       ServiceBus__ConnectionString: "Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"

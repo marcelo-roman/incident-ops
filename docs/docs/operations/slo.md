@@ -2,13 +2,12 @@
 
 SLIs and SLOs for the Incidents API (`services/api`, role `incident-ops-api`), measured from Application Insights, and the policy for spending the error budget.
 
-
 ## SLIs and SLOs
 
 Window: rolling 28 days. Excludes `/health/*` and requests rejected by rate limiting (`429`).
 
 | SLI | Definition | SLO |
-|---|---|---|
+| --- | --- | --- |
 | Availability | requests with `resultCode < 500` ÷ all requests | 99.5% |
 | Read latency | `GET /api/*` with duration ≤ 300 ms ÷ all `GET /api/*` | 95% |
 | Write latency | `POST /api/*` with duration ≤ 800 ms ÷ all `POST /api/*` | 95% |
@@ -20,7 +19,7 @@ Why these numbers: the API runs on consumption infrastructure with one warm repl
 ## Error budget
 
 | SLO | Budget per 28 days |
-|---|---|
+| --- | --- |
 | Availability 99.5% | 0.5% of requests; at 50 000 requests/28 d, 250 failed requests (≈ 3 h 22 min of full outage) |
 | Escalation timeliness 99% | 1 late escalation in 100 |
 
@@ -66,7 +65,7 @@ traces
 Multi-window burn-rate alerts on availability (burn rate 1 = spending the budget exactly over 28 days):
 
 | Alert | Long window | Short window | Burn rate | Budget spent at trigger | Severity |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Fast burn | 1 h | 5 min | 14.4 | 2% | Sev2, page |
 | Slow burn | 6 h | 30 min | 6 | 5% | Sev3, ticket |
 
@@ -88,7 +87,7 @@ Fast burn fires when both windows exceed 14.4. Low traffic can make one failed r
 ## Error budget policy
 
 | Budget remaining (28 d) | Policy |
-|---|---|
+| --- | --- |
 | > 50% | Normal. Releases follow the [release readiness checklist](../engineering/release-readiness-checklist.md). |
 | 25–50% | Releases that touch the failing path need a second reviewer and a canary at 10% for 30 minutes. |
 | 0–25% | Feature releases to the API pause unless the Product Owner and engineering lead accept the risk in writing. Reliability work moves to the top of the sprint. |

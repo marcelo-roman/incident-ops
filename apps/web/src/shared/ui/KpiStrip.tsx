@@ -7,7 +7,7 @@ export interface Kpi {
   alert?: boolean;
 }
 
-export function KpiStrip({ items, label }: { items: Kpi[]; label: string }) {
+export function KpiStrip({ items, label }: Readonly<{ items: Kpi[]; label: string }>) {
   return (
     <dl className={styles.strip} aria-label={label}>
       {items.map((item) => (

@@ -3,7 +3,7 @@
 Incident Ops is the system an operations team uses to open, acknowledge, mitigate and resolve incidents against a severity-based SLA, to turn alerts into incidents, to get paged when nobody acknowledges, and to measure KTLO load from the history. Every interface is defined in the [contract](https://github.com/marcelo-roman/incident-ops/blob/main/contracts/contracts.md); these pages explain how the pieces fit and why.
 
 | Page | Covers |
-|---|---|
+| --- | --- |
 | This page | goals, system context, containers, failure modes, capacity |
 | [Context map](context-map.md) | bounded contexts and how they relate |
 | [Incident lifecycle](incident-lifecycle.md) | status state machine, write/read paths, event flow per transition |
@@ -92,7 +92,7 @@ flowchart LR
 ```
 
 | Container | Responsibility | Runtime | State |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Console (`apps/web`) | incident list, detail, timeline, on-call, KPIs | Static Web App | none |
 | Incidents API (`services/api`) | system of record; transitions; SLA deadlines and `slaState`; alert ingestion and dedupe; events; SignalR hub; `/metrics` | Container App | Azure SQL |
 | Functions (`services/functions`) | SLA timers, escalation on missed acknowledgement, paging | Function App, Flex Consumption | Service Bus |
@@ -109,7 +109,7 @@ Insights pulls `GET /api/incidents/export?from=&to=` and computes with Pandas. I
 ## Failure modes
 
 | Failure | Effect | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | Service Bus unavailable | Events wait in the transactional outbox; timers and pages start late | API keeps serving; the outbox dispatcher retries with capped backoff and delivers when Service Bus recovers. Runbook: [escalation not firing](../operations/runbooks/sla-breach-escalation-not-firing.md) |
 | Function throws on check | Message retried, then dead-lettered after 10 deliveries | Dead-letter alert. Runbook: [dead letters](../operations/runbooks/service-bus-dead-letters.md) |
 | API unavailable when check fires | Escalation call fails, message retried | Retries cover a ~10 minute outage; beyond that dead letters are replayed |

@@ -7,7 +7,7 @@ import { TrendDataTable } from './TrendDataTable';
 import { trendMetricDefinitions } from '../domain/trendMetrics';
 import { useTrendMetric } from '../hooks/useTrendMetric';
 
-export function KpiTrendPanel({ weeks }: { weeks: WeeklyKpi[] }) {
+export function KpiTrendPanel({ weeks }: Readonly<{ weeks: WeeklyKpi[] }>) {
   const { metric, setMetric, definition, points } = useTrendMetric(weeks);
   return (
     <Panel

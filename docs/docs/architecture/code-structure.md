@@ -3,7 +3,7 @@
 Every module follows the same idea: business rules in the center with no framework dependencies, use cases around them, adapters at the edge, and the dependency direction enforced by a test or a lint rule, not by convention alone. Each module is one bounded context ([context map](context-map.md)); folders are organized by feature inside each layer.
 
 | Module | Context | Layers | Organized by | Enforced by |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `services/api` | Incident Management | Domain → Application → Infrastructure, Api | feature (`Incidents`, `Alerts`, `Catalog`, `OnCall`, `Metrics`, `Sla`) | project references + 23 architecture tests (NetArchTest and reflection) |
 | `services/functions` | Escalation | Domain → Application → Infrastructure, Functions host | concept (`Incidents`, `Escalation`, `Watches`, `Paging`) | project references + NetArchTest and reflection tests |
 | `services/insights` | Operational Analytics | domain → application → infrastructure → interface | feature (`kpis`, `recurring`, `anomalies`, `rca`, `reports`) | 7 import-linter contracts |
@@ -26,7 +26,7 @@ flowchart TB
 ### Tactical model
 
 | Aggregate | Root | Owns | Behavior |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Incident | `Incident` (`IncidentId`) | `TimelineEntry` entities, `SlaClock` | `Trigger`, `TriggerFromAlert`, `Acknowledge`, `Escalate`, `Mitigate`, `Resolve`, `AddNote`, `RecordAlert`, `SlaStateAt`, `CompliesWithSla` |
 | Service | `Service` (`ServiceId`) | | catalog entry; incidents reference it by `ServiceId` only |
 | On-call rotation | `OnCallRotation` | `Engineer` entities | `ShiftAt(instant)` returns primary, secondary and lead |
@@ -48,7 +48,7 @@ flowchart TB
 `tests/IncidentOps.Architecture.Tests`:
 
 | Test | Rule |
-|---|---|
+| --- | --- |
 | `Domain_depends_on_no_other_layer_or_framework`, `Domain_references_only_the_base_class_library` | the domain references nothing outside the BCL |
 | `Application_depends_only_on_domain` | application references no infrastructure, API or framework |
 | `Infrastructure_does_not_depend_on_the_api` | adapters do not reach the host |
@@ -85,7 +85,7 @@ flowchart TB
 Architecture tests (`tests/IncidentOps.Functions.Tests/Architecture`):
 
 | Test | Rule |
-|---|---|
+| --- | --- |
 | `DomainDependsOnNothingOutsideItself` | the domain has no dependencies |
 | `ApplicationDependsOnDomainAndAbstractionsOnly`, `UseCasesDependOnDomainAndPortsOnly`, `PortsAreTheOnlyApplicationInterfaces` | use cases see the model and their ports only |
 | `TriggersDependOnTheApplicationOnly` | triggers never touch the domain or infrastructure |
@@ -114,7 +114,7 @@ flowchart TB
 import-linter contracts in `pyproject.toml`, run by `uv run lint-imports`:
 
 | Contract | Type | Rule |
-|---|---|---|
+| --- | --- | --- |
 | Layers | `layers` | `interface` → `infrastructure` → `application` → `domain`, never upwards |
 | No I/O frameworks inside | `forbidden` | `domain` and `application` do not import `azure`, `fastapi`, `httpx`, `jinja2`, `openai`, `opentelemetry`, `pydantic_settings`, `starlette`, `typer`, `uvicorn` |
 | Plain domain | `forbidden` | `domain` does not import `pydantic` |
@@ -139,7 +139,7 @@ flowchart TB
 Inside a feature: `domain` (pure TypeScript: SLA clocks, transitions, schemas, labels), `api` (the only network code: typed client, query keys, hooks), `hooks` (view logic), `components` (rendering), `pages` (routed screens), `index.ts` (public API).
 
 | Rule (`boundaries/dependencies`, default `disallow`) | Why |
-|---|---|
+| --- | --- |
 | a feature imports another feature only through its `index.ts` (`testing.ts` from tests) | features stay replaceable; deep imports fail lint |
 | `shared` never imports `app` or `features` | shared code has no knowledge of screens |
 | `app` composes features through their public APIs | one composition point |
@@ -150,7 +150,7 @@ Plus `typescript-eslint` strict type-checked rules, `max-lines-per-function: 80`
 ## Infrastructure (`infra`)
 
 | Folder | Content |
-|---|---|
+| --- | --- |
 | `bicep/main.bicep`, `main.bicepparam`, `naming.bicep` | composition of all resources for `rg-incident-ops`, naming function |
 | `bicep/modules/` | one module per resource: containerapp, containerapps-environment, functions, servicebus, signalr, sql, openai, monitoring, alerting, logicapp, staticwebapp, roleassignments, budget |
 | `bicep/workflows/` | Logic App workflow definition |

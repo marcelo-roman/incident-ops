@@ -22,7 +22,7 @@ Shared contract between the Incident Ops modules. Every module implements agains
 Every module lives in the `marcelo-roman/incident-ops` repository.
 
 | Path | Bounded context | Role | Stack |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | [`services/api`](../services/api) | Incident Management | system of record for incidents, SLA clock, escalation, real-time hub | .NET 8, ASP.NET Core Minimal APIs, EF Core, SignalR, Azure Service Bus |
 | [`services/functions`](../services/functions) | Escalation | SLA watchdog and escalation notifications | Azure Functions (.NET 8 isolated), Service Bus, Logic Apps |
 | [`services/insights`](../services/insights) | Operational Analytics | KTLO analytics and AI-assisted RCA | Python, FastAPI, Pandas, NumPy, scikit-learn, Azure OpenAI |
@@ -40,7 +40,7 @@ GitHub owner: `marcelo-roman`. Container images: `ghcr.io/marcelo-roman/incident
 ### Service
 
 | Field | Type |
-|---|---|
+| --- | --- |
 | `id` | string slug (`checkout`, `payments-gateway`, `identity`, `notifications`, `search`, `reporting`, `platform`) |
 | `name` | string |
 | `tier` | `Tier1` \| `Tier2` \| `Tier3` |
@@ -49,7 +49,7 @@ GitHub owner: `marcelo-roman`. Container images: `ghcr.io/marcelo-roman/incident
 ### Incident
 
 | Field | Type |
-|---|---|
+| --- | --- |
 | `id` | uuid |
 | `number` | int, human friendly, sequential (`INC-1042`) |
 | `title` | string |
@@ -76,7 +76,7 @@ SLA compliance (any metric, in the API and in Insights): an incident complies wh
 ### TimelineEntry
 
 | Field | Type |
-|---|---|
+| --- | --- |
 | `id` | uuid |
 | `incidentId` | uuid |
 | `at` | ISO-8601 UTC |
@@ -87,7 +87,7 @@ SLA compliance (any metric, in the API and in Insights): an incident complies wh
 ## SLA policy
 
 | Severity | Acknowledge within | Resolve within |
-|---|---|---|
+| --- | --- | --- |
 | `Sev1` | 15 minutes | 4 hours |
 | `Sev2` | 30 minutes | 8 hours |
 | `Sev3` | 4 hours | 3 days |
@@ -98,7 +98,7 @@ SLA compliance (any metric, in the API and in Insights): an incident complies wh
 Weekly rotation of six engineers, primary and secondary, one week on call every six. Rotation starts Monday 10:30 America/New_York.
 
 | Level | Target |
-|---|---|
+| --- | --- |
 | 1 | primary on call |
 | 2 | secondary on call |
 | 3 | engineering lead |
@@ -110,7 +110,7 @@ An incident not acknowledged by `ackDueAt` escalates one level. Escalation stops
 Base URL: `https://incidents-api.marceloroman.com.br`. JSON, camelCase, enums as strings, timestamps ISO-8601 UTC. Errors as RFC 7807 `application/problem+json`.
 
 | Method | Path | Body | Result |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | GET | `/api/services` | | `Service[]` |
 | GET | `/api/incidents?status=&severity=&serviceId=&open=true` | | `Incident[]` newest first |
 | GET | `/api/incidents/{id}` | | `Incident` with `timeline: TimelineEntry[]` |
@@ -132,7 +132,7 @@ Write endpoints are rate limited per IP. The database is seeded with the seven s
 Path `/hubs/incidents` (Azure SignalR Service in production, in-process locally). Server to client:
 
 | Method | Arguments |
-|---|---|
+| --- | --- |
 | `IncidentChanged` | `Incident` |
 | `TimelineAppended` | `TimelineEntry` |
 
@@ -156,7 +156,7 @@ Azure Service Bus, CloudEvents 1.0 structured JSON (`application/cloudevents+jso
 Types: `incident.triggered`, `incident.acknowledged`, `incident.escalated`, `incident.mitigated`, `incident.resolved`. The Service Bus message carries `type` also as application property `eventType` for subscription filters.
 
 | Entity | Kind | Consumer |
-|---|---|---|
+| --- | --- | --- |
 | `incident-events` | topic | |
 | `incident-events/sla-scheduler` | subscription, filter `eventType IN ('incident.triggered','incident.escalated')` | Functions `ScheduleSlaCheck` |
 | `incident-events/notifier` | subscription, filter `eventType IN ('incident.triggered','incident.escalated')` and `Sev1/Sev2` via property `severity` | Functions `NotifyOnCall` |
@@ -171,7 +171,7 @@ Types: `incident.triggered`, `incident.acknowledged`, `incident.escalated`, `inc
 Alerts become incidents. Both endpoints authenticate with the API key, accepted as `X-Api-Key`, `Authorization: Bearer <key>` or query `code=<key>` (Azure Monitor webhooks cannot send custom headers).
 
 | Method | Path | Payload |
-|---|---|---|
+| --- | --- | --- |
 | POST | `/api/alerts/alertmanager` | Prometheus Alertmanager webhook, version 4 |
 | POST | `/api/alerts/azure-monitor` | Azure Monitor common alert schema |
 
@@ -185,7 +185,7 @@ Rules, implemented in the domain:
 - Severity mapping:
 
 | Alertmanager `severity` label | Azure Monitor `essentials.severity` | Incident |
-|---|---|---|
+| --- | --- | --- |
 | `critical` | `Sev0`, `Sev1` | `Sev1` |
 | `high`, `error` | `Sev2` | `Sev2` |
 | `warning` | `Sev3` | `Sev3` |
@@ -202,7 +202,7 @@ Azure alerting: Application Insights standard availability test on `/health/live
 Base URL: `https://incidents-insights.marceloroman.com.br`. Reads from `GET /api/incidents/export`.
 
 | Method | Path | Result |
-|---|---|---|
+| --- | --- | --- |
 | GET | `/api/kpis?days=90` | MTTA, MTTR, SLA compliance per service and severity, weekly trend |
 | GET | `/api/recurring?days=180` | clusters of similar incidents (TF-IDF + clustering) with count, services, sample titles |
 | GET | `/api/anomalies?days=180` | weeks with anomalous incident volume per service |
@@ -214,7 +214,7 @@ Base URL: `https://incidents-insights.marceloroman.com.br`. Reads from `GET /api
 Region `eastus2`, resource group `rg-incident-ops`.
 
 | Resource | SKU | Hosts |
-|---|---|---|
+| --- | --- | --- |
 | Log Analytics + Application Insights | pay-as-you-go | telemetry for every module |
 | Container Apps environment (consumption) | | `ca-incident-ops-api` (`services/api`), `ca-incident-ops-insights` (`services/insights`) |
 | Azure SQL Database | Basic, 5 DTU; exists only while the environment is powered on | API data |
@@ -228,7 +228,7 @@ Region `eastus2`, resource group `rg-incident-ops`.
 Managed identities and RBAC over connection strings wherever the service supports it. DNS lives in Cloudflare:
 
 | Host | Target |
-|---|---|
+| --- | --- |
 | `incidents.marceloroman.com.br` | Static Web App |
 | `incidents-api.marceloroman.com.br` | Container App `ca-incident-ops-api` |
 | `incidents-insights.marceloroman.com.br` | Container App `ca-incident-ops-insights` |
@@ -239,7 +239,7 @@ Managed identities and RBAC over connection strings wherever the service support
 Environment variable names injected by the infrastructure. Every module reads exactly these names.
 
 | Consumer | Variable | Value |
-|---|---|---|
+| --- | --- | --- |
 | API | `ConnectionStrings__IncidentOps` | Azure SQL with `Authentication=Active Directory Managed Identity` |
 | API | `ServiceBus__FullyQualifiedNamespace`, `ServiceBus__TopicName` | namespace host, `incident-events` |
 | API | `ServiceBus__ConnectionString` | local emulator only |

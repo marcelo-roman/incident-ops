@@ -52,7 +52,7 @@ def test_html_report_is_written_to_file(sample_csv: Path, tmp_path: Path) -> Non
     assert "Detected by monitoring" in content
 
 
-def test_invalid_as_of_is_rejected(sample_csv: Path) -> None:
+def test_invalid_as_of_is_rejected() -> None:
     result = runner.invoke(app, ["report", "--source", "csv", "--as-of", "yesterday"])
 
     assert result.exit_code != 0

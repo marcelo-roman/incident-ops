@@ -19,15 +19,15 @@ This repository holds every module: three services, the console, the infrastruct
 ## Live
 
 | What | Where |
-|---|---|
-| Documentation site | https://incidents-docs.marceloroman.com.br, always on |
+| --- | --- |
+| Documentation site | <https://incidents-docs.marceloroman.com.br>, always on |
 | Operations console, Incidents API, Insights API | the Azure deployment defined in [infra](infra) runs from `main` and is started on request for evaluations with the [power workflow](infra/README.md#power-states); it powers down every night, and while it is off the console shows that the demo environment is paused. Everything also runs locally with the [quick start](#quick-start). |
 
 The API is seeded with seven services, a six-engineer on-call rotation and six months of deterministic incident history, so every view has data on first load.
 
 ## Repository layout
 
-```
+```text
 .
 ├── services/
 │   ├── api/             Incident Management: .NET 8 Minimal APIs, EF Core, SignalR, Service Bus outbox
@@ -50,7 +50,7 @@ Each module has its own README with architecture, configuration, tests and deliv
 ## Bounded contexts
 
 | Context | Module | Owns | Relationship |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Incident Management | [`services/api`](services/api) | the `Incident` aggregate, lifecycle, SLA clock, on-call rotation, alert ingestion; the only writer of incident state | upstream supplier; publishes CloudEvents and the HTTP API as the published language |
 | Escalation | [`services/functions`](services/functions) | `AcknowledgementWatch` aggregate, paging decisions | downstream customer; anti-corruption layer over events and HTTP; escalates only through `POST /escalate` |
 | Operational Analytics | [`services/insights`](services/insights) | `IncidentRecord` history, KPIs, recurring clusters, anomalies, RCA drafts | downstream customer; anti-corruption layer over the export endpoint; read-only |
@@ -86,7 +86,7 @@ Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA 
 ## Requirement → evidence
 
 | Requirement | Evidence in this repository |
-|---|---|
+| --- | --- |
 | C#, .NET 8, Minimal APIs | endpoint groups per feature in [services/api/src/IncidentOps.Api](services/api/src/IncidentOps.Api) (for example [IncidentCommandEndpoints.cs](services/api/src/IncidentOps.Api/Incidents/IncidentCommandEndpoints.cs)); [ADR 0001](docs/docs/adr/0001-minimal-apis-over-controllers.md) |
 | EF Core | write model, value-object mappings and migrations in [Persistence](services/api/src/IncidentOps.Infrastructure/Persistence); separate no-tracking read model in [Persistence/ReadModel](services/api/src/IncidentOps.Infrastructure/Persistence/ReadModel) |
 | SignalR | [IncidentsHub.cs](services/api/src/IncidentOps.Api/RealTime/IncidentsHub.cs), client in [apps/web/src/features/realtime](apps/web/src/features/realtime); [ADR 0003](docs/docs/adr/0003-azure-signalr-service.md) |
@@ -114,17 +114,17 @@ cp .env.example .env && docker compose up --build
 `--build` builds the API, Insights and the console from `services/api`, `services/insights` and `apps/web`. Without it, `docker compose up` pulls the published images `ghcr.io/marcelo-roman/incident-ops-{api,insights,web}` (tag from `IMAGE_TAG`).
 
 | Service | URL |
-|---|---|
-| Console | http://localhost:8080 |
-| API Swagger | http://localhost:5080/swagger |
-| Insights docs | http://localhost:8000/docs |
-| Prometheus | http://localhost:9090 |
-| Alertmanager | http://localhost:9093 |
+| --- | --- |
+| Console | <http://localhost:8080> |
+| API Swagger | <http://localhost:5080/swagger> |
+| Insights docs | <http://localhost:8000/docs> |
+| Prometheus | <http://localhost:9090> |
+| Alertmanager | <http://localhost:9093> |
 | Service Bus emulator | `localhost:5672` (AMQP) |
 | SQL Server | `localhost:1433` |
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | [docker-compose.yml](docker-compose.yml) | SQL Server, Service Bus emulator, API (chaos enabled), Insights, console, Prometheus, Alertmanager, notification sink; Azurite under the `functions` profile |
 | [local/servicebus/Config.json](local/servicebus/Config.json) | emulator topology: topic, subscriptions with SQL filters, `sla-checks` queue |
 | [local/prometheus/prometheus.yml](local/prometheus/prometheus.yml) | scrapes the API's `/metrics` every 15 s |
@@ -164,7 +164,7 @@ sequenceDiagram
     API->>W: Resolved, SLA Met
 ```
 
-Open the console at http://localhost:8080, then:
+Open the console at <http://localhost:8080>, then:
 
 ```bash
 ./scripts/demo.sh
@@ -177,7 +177,7 @@ Takes about 15 minutes with the default 420 s fault: the alert needs its `for` d
 Trunk-based: `main` changes only through squash-merged pull requests, and pull requests run build, lint and tests. One workflow per module, each filtered to its own paths, so a change runs only the checks it can affect. Deploy jobs run only on pushes to `main`, behind the `production` environment (which accepts `main` only) and the `DEPLOY_ENABLED` repository variable, authenticate to Azure with OpenID Connect (no stored Azure secret), and container apps ship through the local reusable [deploy-container-app.yml](.github/workflows/deploy-container-app.yml) (new revision, smoke test, rollback). Azure DevOps equivalents live in [infra/azure-devops](infra/azure-devops) as samples.
 
 | Workflow | Runs on changes to | Gates | Delivers |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | [api.yml](.github/workflows/api.yml) | `services/api/**`, `contracts/**` (pull requests), the workflow, the reusable deploy | `dotnet format --verify-no-changes`, build (warnings as errors, analyzers), 204 tests incl. Testcontainers SQL Server and architecture tests, 80% line coverage gate | image to GHCR, `ca-incident-ops-api` |
 | [functions.yml](.github/workflows/functions.yml) | `services/functions/**`, `contracts/**` (pull requests), the workflow | format, build, 186 tests incl. anti-corruption and architecture tests, 80% line and branch coverage | zip to `func-incident-ops` |
 | [insights.yml](.github/workflows/insights.yml) | `services/insights/**`, `contracts/**` (pull requests), the workflow, the reusable deploy | ruff, ruff format, mypy strict, import-linter (7 contracts), 178 tests with 85% coverage floor, image build | image to GHCR, `ca-incident-ops-insights` |

@@ -5,7 +5,7 @@ Trunk-based development with short-lived branches in one repository, [marcelo-ro
 ## Branches
 
 | Prefix | Use | Example |
-|---|---|---|
+| --- | --- | --- |
 | `feature/` | new behavior | `feature/1234-escalation-level-column` |
 | `hotfix/` | production fix that cannot wait for the next normal release | `hotfix/1301-sla-check-null-assignee` |
 | `chore/` | dependencies, build, docs, refactors without behavior change | `chore/bump-efcore-8-0-10` |
@@ -35,7 +35,7 @@ Trunk-based development with short-lived branches in one repository, [marcelo-ro
 Each workflow runs only when its paths change. The check names below are the job names GitHub reports.
 
 | Change under | Workflow | Checks |
-|---|---|---|
+| --- | --- | --- |
 | `services/api/**` | `api.yml` | `Build and test` (`Build and push image`, `Deploy to Azure Container Apps` on `main`) |
 | `services/functions/**` | `functions.yml` | `Build and test` (`Deploy to Azure Functions` on `main`) |
 | `services/insights/**` | `insights.yml` | `Lint, type check and test`, `Container image` (`Deploy to Azure Container Apps` on `main`) |
@@ -43,7 +43,7 @@ Each workflow runs only when its paths change. The check names below are the job
 | `infra/**` | `infra.yml` | `Bicep build and lint`, `ShellCheck and Azure DevOps samples`, `Validate and what-if` (`Deploy` on `main`) |
 | `docs/**` | `docs.yml` | `Build site` (`Deploy to GitHub Pages` on `main`) |
 | `contracts/**` | `api.yml`, `functions.yml`, `insights.yml`, `web.yml` on pull requests | every application check above |
-| `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, any `*.md`, `.github/**` | `platform.yml` | `Compose config`, `Alerting rules and config`, `Markdown links and scripts`, `Workflow lint` |
+| `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, any `*.md`, `*.yml`, `*.yaml` or `Dockerfile`, the lint configs, `.github/**` | `platform.yml` | `Compose config`, `Alerting rules and config`, `Markdown, YAML and Dockerfile lint`, `Markdown links and scripts`, `Workflow lint` |
 | `.github/workflows/<name>.yml` | that workflow and `platform.yml` | its checks and `Workflow lint` |
 | `.github/workflows/deploy-container-app.yml` | `api.yml`, `insights.yml`, `platform.yml` | their checks |
 
@@ -66,7 +66,7 @@ An always-running aggregator workflow that computes the changed paths and waits 
 Configured on `main`. The repository lives on GitHub, so the enforcing mechanism is a GitHub ruleset; the right-hand column is the equivalent Azure Repos branch policy for teams hosting code in Azure DevOps.
 
 | Rule | GitHub ruleset on `main` | Azure Repos branch policy |
-|---|---|---|
+| --- | --- | --- |
 | Reviews | pull request required; 0 approvals while the repository has a single maintainer (GitHub does not let authors approve their own pull requests), 1 approval with dismissal of stale approvals once a second maintainer joins | Minimum reviewers 1; reset votes on new pushes; author cannot approve |
 | Code owners | `CODEOWNERS` review required; `contracts/`, `.github/` and `infra/azure-devops/` always need their owner | Automatically included required reviewers on the same paths |
 | Status checks | path-filtered workflows, reviewed as described in [required checks per path](#required-checks-per-path); branch must be up to date with `main` | Build validation policy per path filter (one per pipeline in `infra/azure-devops/`); expires when `main` updates |
@@ -81,7 +81,7 @@ Configured on `main`. The repository lives on GitHub, so the enforcing mechanism
 Deploy jobs run only on a push to `main`. The power workflow, [`power.yml`](https://github.com/marcelo-roman/incident-ops/blob/main/.github/workflows/power.yml), starts and stops the Azure environment on `workflow_dispatch` and powers it down on a daily `schedule`; GitHub runs scheduled workflows on the default branch only, and a manual run on another branch is skipped by its job guard. Three controls make sure that editing a workflow in a pull request cannot deploy or change the power state from another branch:
 
 | Layer | Control |
-|---|---|
+| --- | --- |
 | Workflow | deploy jobs require `github.event_name == 'push' && github.ref == 'refs/heads/main'`; the power job requires `github.ref == 'refs/heads/main'`; pull requests run build, lint and test only |
 | GitHub environments | `production`, `power` and `github-pages` accept deployments from `main` only (deployment branch policy); manual power runs use `production` and its required reviewer, the scheduled power down uses `power`, which has no reviewer so the nightly run does not wait for an approval |
 | Azure | the OIDC federated credentials trust only `environment:production`, `environment:power` and `ref:refs/heads/main`; a job from a pull request or any other branch cannot obtain a token, so validation and what-if run on `main` right before the deploy |

@@ -27,9 +27,9 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     OTEL_SERVICE_NAME=incident-ops-api
 
 EXPOSE 8080
-USER $APP_UID
+USER 1654
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl --fail --silent http://localhost:8080/health/live || exit 1
+    CMD ["curl", "--fail", "--silent", "http://localhost:8080/health/live"]
 
 ENTRYPOINT ["dotnet", "IncidentOps.Api.dll"]

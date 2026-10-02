@@ -3,7 +3,7 @@ import { useNoteForm } from '../../hooks/useIncidentActionForms';
 import { ActionForm } from './ActionForm';
 import type { IncidentActionFormProps } from './actionProps';
 
-export function NoteForm({ incidentId, onDone, onCancel }: IncidentActionFormProps) {
+export function NoteForm({ incidentId, onDone, onCancel }: Readonly<IncidentActionFormProps>) {
   const form = useNoteForm(incidentId, onDone);
   return (
     <ActionForm

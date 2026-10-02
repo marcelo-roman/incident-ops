@@ -2,11 +2,10 @@
 
 Rules that keep Azure Boards trustworthy enough to plan with. If the board does not match reality, sprint metrics are fiction.
 
-
 ## Work item hierarchy
 
 | Level | Type | Size | Owner |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Epic | a quarter or more; one business outcome | Product Owner |
 | 2 | Feature | 1–3 sprints; independently releasable | Product Owner + lead |
 | 3 | User Story / Bug | ≤ 8 points; fits in one sprint | team |
@@ -17,7 +16,7 @@ Rules: every Story and Bug has a parent Feature; every Feature has a parent Epic
 ## States
 
 | State | Meaning | Entry rule |
-|---|---|---|
+| --- | --- | --- |
 | New | captured, not refined | anyone |
 | Ready | meets [DoR](definition-of-ready.md) | refined, estimated |
 | Active | someone is working on it now | assigned; WIP ≤ 2 per engineer |
@@ -30,7 +29,7 @@ Items do not skip states backward silently: moving Active → Ready requires a d
 
 ## Area and iteration paths
 
-```
+```text
 Area:       IncidentOps
             IncidentOps\API
             IncidentOps\Web
@@ -46,7 +45,7 @@ Area path = owning component. Iteration path = sprint committed in. Unplanned wo
 ## Tags
 
 | Tag | Use | Feeds |
-|---|---|---|
+| --- | --- | --- |
 | `ktlo` | keep-the-lights-on: maintenance, upgrades, operational fixes | KTLO vs feature split |
 | `toil` | manual, repetitive, automatable operational work | toil % |
 | `tech-debt` | deliberate improvement of code or architecture | debt allocation |
@@ -62,7 +61,7 @@ No other tags without a team decision; free-form tags make queries useless.
 ## Required fields
 
 | Field | Story/Bug | Feature |
-|---|---|---|
+| --- | --- | --- |
 | Area path, iteration path | ✔ | ✔ |
 | Parent | ✔ | ✔ |
 | Story points | ✔ | — |
@@ -82,7 +81,7 @@ No other tags without a team decision; free-form tags make queries useless.
 Capacity is set per sprint in the Capacity tab before planning.
 
 | Input | Value |
-|---|---|
+| --- | --- |
 | Sprint length | 10 working days |
 | Focus hours per engineer per day | 6 |
 | On-call primary | 50% capacity that week (interrupt-driven) |
@@ -94,7 +93,7 @@ Plan to 80% of computed capacity. The remaining 20% absorbs unplanned work; if i
 
 Worked example, 6 engineers, one with 3 days PTO, one primary and one secondary on call:
 
-```
+```text
 Base               6 × 10 days × 6 h            = 360 h
 PTO                3 days × 6 h                  = −18 h
 On-call primary    1 × 10 × 6 × 50%              = −30 h
@@ -107,7 +106,7 @@ Plan to 80%                                        240 h
 ## Sprint predictability metrics
 
 | Metric | Definition | Target | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Say/do ratio | points Closed in sprint that were committed at planning ÷ points committed | 80–95% (above 95% suggests sandbagging) | Sprint burndown, committed scope snapshot |
 | Velocity stability | coefficient of variation of the last 6 sprints' completed points | < 20% | Velocity report |
 | Unplanned rate | points tagged `unplanned` ÷ points completed | < 20% | query below |

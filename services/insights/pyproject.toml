@@ -63,11 +63,51 @@ src = ["src", "tests"]
 extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "UP", "SIM", "RET", "PTH", "N", "C4", "PL", "RUF", "ERA", "T20", "DTZ"]
-ignore = ["PLR0913", "PLR2004"]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "UP",
+    "SIM",
+    "RET",
+    "PTH",
+    "N",
+    "C4",
+    "PL",
+    "RUF",
+    "ERA",
+    "T20",
+    "DTZ",
+    "A",
+    "ARG",
+    "ASYNC",
+    "BLE",
+    "FLY",
+    "FURB",
+    "G",
+    "ICN",
+    "ISC",
+    "LOG",
+    "PERF",
+    "PGH",
+    "PIE",
+    "PT",
+    "RSE",
+    "S",
+    "SLF",
+    "TID",
+    "YTT",
+]
+
+[tool.ruff.lint.pylint]
+max-args = 8
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["PLR2004", "DTZ001"]
+"tests/**" = ["PLR2004", "DTZ001", "S101"]
+"tests/builders.py" = ["PLR0913"]
+"src/incident_insights/infrastructure/incidents/retry.py" = ["S311"]
 
 [tool.mypy]
 python_version = "3.12"

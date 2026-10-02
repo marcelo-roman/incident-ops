@@ -79,7 +79,7 @@ sequenceDiagram
 ### Deduplication
 
 | Source | Fingerprint | Effect of repeats |
-|---|---|---|
+| --- | --- | --- |
 | Alertmanager | the alert's `fingerprint` (hash of its label set) | one incident per label set; repeats append `Alert` entries |
 | Azure Monitor | `essentials.alertRule` + first `essentials.alertTargetIDs` entry | one incident per rule and resource |
 
@@ -88,7 +88,7 @@ Dedupe applies only to **open** incidents. After an incident is resolved, the sa
 ### Severity mapping
 
 | Alertmanager `severity` label | Azure Monitor `essentials.severity` | Incident | Pages |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `critical` | `Sev0`, `Sev1` | `Sev1` | yes |
 | `high`, `error` | `Sev2` | `Sev2` | yes |
 | `warning` | `Sev3` | `Sev3` | no |
@@ -105,7 +105,7 @@ The API key is accepted as `X-Api-Key`, `Authorization: Bearer <key>` (Alertmana
 Evaluated every 15 s against the API's `/metrics`. The rules file and its unit tests live in [`local/prometheus/`](https://github.com/marcelo-roman/incident-ops/tree/main/local/prometheus), checked by `promtool` in the `platform` workflow.
 
 | Alert | Expression (summary) | For | Severity | Incident |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `ApiDown` | `up{job="incident-ops-api"} == 0` | 1m | `critical` | Sev1 |
 | `ApiHighErrorRate` | 5xx ÷ all requests > 5% over 5m, with at least 0.2 req/s | 2m | `high` | Sev2 |
 | `ApiHighLatencyP95` | p95 of `http_server_request_duration_seconds` > 1 s over 5m | 5m | `warning` | Sev3 |
@@ -173,7 +173,7 @@ receivers:
 Locally the `engineering-lead` receiver posts to the `notification-sink` echo service; in a real deployment it targets the lead's channel.
 
 | Setting | Value | Why |
-|---|---|---|
+| --- | --- | --- |
 | `group_by` | `alertname`, `service` | one notification per problem per service, not per instance |
 | `group_wait` | 30 s | lets related alerts arrive together on first fire |
 | `group_interval` | 5 min | batches new alerts into an existing group |
@@ -187,7 +187,7 @@ Locally the `engineering-lead` receiver posts to the `notification-sink` echo se
 Defined in Bicep in [`infra/bicep/modules/alerting.bicep`](https://github.com/marcelo-roman/incident-ops/blob/main/infra/bicep/modules/alerting.bicep). All rules route to one Action Group whose webhook targets `/api/alerts/azure-monitor?code=<key>` with the common alert schema enabled.
 
 | Rule | Signal | Condition | Severity | `customProperties.service` |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | API availability | standard availability test on `/health/ready` | 2 of 3 locations failing for 5 min | `Sev1` | `platform` |
 | API failed requests | Application Insights `requests/failed` | > 5% for 5 min, ≥ 50 requests | `Sev2` | `platform` |
 | API server response time | `requests/duration` p95 | > 1 s for 10 min | `Sev3` | `platform` |
@@ -204,7 +204,7 @@ The API cannot record an incident about its own outage. Two independent paths co
 ## Alert hygiene
 
 | Rule | Check |
-|---|---|
+| --- | --- |
 | Actionable only | every alert implies a human action now; if the action is "wait and see", it is a dashboard, not an alert |
 | Runbook linked | `runbook_url` (Prometheus) or the rule description (Azure Monitor) points to a page in [runbooks](runbooks/index.md); no runbook, no merge |
 | Symptoms over causes | page on user-facing symptoms (errors, latency, availability, SLA); cause-level signals (CPU, memory) go to dashboards |
@@ -223,7 +223,7 @@ curl -s "https://incidents-api.marceloroman.com.br/api/incidents/export?from=$(d
 ```
 
 | Signal | Threshold | Action |
-|---|---|---|
+| --- | --- | --- |
 | Alert-created incidents never acknowledged, auto-mitigated | > 3 per rule per week | tune threshold or `for`, or demote severity |
 | Alert-created incidents closed as noise | > 10% of alert incidents | review rule with owner |
 | Rules with no firing in 90 days | any | confirm still meaningful; test it fires |

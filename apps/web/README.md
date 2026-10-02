@@ -44,7 +44,7 @@ The screenshots were captured in mock mode (`pnpm dev:mock`).
 
 ## Architecture
 
-```
+```text
 src/
   app/                    composition root: providers, router, layout shell, theme, global styles
   features/

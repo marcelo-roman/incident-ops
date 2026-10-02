@@ -7,7 +7,7 @@ Operators see acknowledgements, escalations, alert repeats and notes from others
 Path `/hubs/incidents`. Server-to-client only; all writes go through REST so validation and rate limiting live in one place.
 
 | Method | Argument | Sent when |
-|---|---|---|
+| --- | --- | --- |
 | `IncidentChanged` | `Incident` | any field changes: create, transition, escalation, assignee |
 | `TimelineAppended` | `TimelineEntry` | a timeline entry is written: transitions, notes, alerts |
 
@@ -55,7 +55,7 @@ Messages missed while disconnected are not replayed. The client treats REST as t
 ## Limits
 
 | Item | Free_F1 | Standard_S1 (per unit) |
-|---|---|---|
+| --- | --- | --- |
 | Concurrent connections | 20 | 1 000 |
 | Messages per day | 20 000 | 1 000 000 |
 | SLA | none | 99.9% |

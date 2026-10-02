@@ -8,7 +8,7 @@ interface RealtimeProviderProps {
   children: ReactNode;
 }
 
-export function RealtimeProvider({ apiBaseUrl, enabled, children }: RealtimeProviderProps) {
+export function RealtimeProvider({ apiBaseUrl, enabled, children }: Readonly<RealtimeProviderProps>) {
   const status = useIncidentHub(apiBaseUrl, enabled);
   return <RealtimeStatusContext value={status}>{children}</RealtimeStatusContext>;
 }

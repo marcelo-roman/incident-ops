@@ -2,11 +2,10 @@
 
 Review exists to keep `main` releasable, spread knowledge, and catch what tests do not. It is not a gate to prove seniority.
 
-
 ## Service levels
 
 | Item | Target |
-|---|---|
+| --- | --- |
 | Time to first review | 4 business hours |
 | PR size | under 400 changed lines excluding generated files and lockfiles |
 | Approvals | 1; 2 for contract, migration, auth or pipeline changes |
@@ -35,7 +34,7 @@ A PR waiting more than one business day is raised at standup by the author, not 
 ## Comment conventions
 
 | Prefix | Meaning | Blocks merge |
-|---|---|---|
+| --- | --- | --- |
 | `blocker:` | correctness, security, contract break | yes |
 | `issue:` | should change; author decides now or opens a follow-up item | author's call, with a linked item |
 | `suggestion:` | alternative worth considering | no |

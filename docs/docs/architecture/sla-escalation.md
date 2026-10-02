@@ -108,7 +108,7 @@ flowchart LR
 ```
 
 | Severity | Level 1 → 2 after | Level 2 → 3 after | Lead paged at the latest |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Sev1 | 15 min | 15 min | 30 min after trigger |
 | Sev2 | 30 min | 30 min | 1 h |
 | Sev3 | 4 h | 4 h | 8 h (not paged; queue) |

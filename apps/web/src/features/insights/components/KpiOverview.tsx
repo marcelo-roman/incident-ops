@@ -6,7 +6,7 @@ import { KpiTrendPanel } from './KpiTrendPanel';
 import { overallKpis } from '../domain/overallKpis';
 import { ServiceKpiTable } from './ServiceKpiTable';
 
-export function KpiOverview({ days }: { days: number }) {
+export function KpiOverview({ days }: Readonly<{ days: number }>) {
   const query = useKpis(days);
   return (
     <AsyncContent query={query} loadingLabel="Loading KPIs">

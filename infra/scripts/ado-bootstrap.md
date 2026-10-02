@@ -3,7 +3,7 @@
 GitHub Actions is the live delivery path for Incident Ops. The pipelines in [`infra/azure-devops/`](../azure-devops/) are samples: they implement the same flow for Azure DevOps and are not wired to any project. This page describes the one-time setup that makes them runnable. Nothing here is required for the GitHub path.
 
 | Pipeline | Builds and deploys | Path filter (`trigger.paths.include`) |
-|---|---|---|
+| --- | --- | --- |
 | [`api.yml`](../azure-devops/api.yml) | `services/api` → `ca-incident-ops-api` | `services/api`, the pipeline file, the container app template |
 | [`functions.yml`](../azure-devops/functions.yml) | `services/functions` → `func-incident-ops` | `services/functions`, the pipeline file |
 | [`insights.yml`](../azure-devops/insights.yml) | `services/insights` → `ca-incident-ops-insights` | `services/insights`, the pipeline file, the container app template |
@@ -58,7 +58,7 @@ Name: `ghcr-marcelo-roman`. Type: Docker Registry, registry `https://ghcr.io`, w
 Name: `vg-incident-ops`, under Pipelines → Library. The pipeline exposes non-secret variables as environment variables with the same name, which `bicep/main.bicepparam` reads through `readEnvironmentVariable`.
 
 | Variable | Secret | Example |
-|---|---|---|
+| --- | --- | --- |
 | `SQL_ADMIN_GROUP_NAME` | no | `sg-incident-ops-sql-admins` |
 | `SQL_ADMIN_GROUP_OBJECT_ID` | no | Entra group object id |
 | `BUDGET_EMAIL` | no | budget alert recipient |
@@ -87,7 +87,7 @@ Create one pipeline per file: Pipelines → New pipeline → GitHub → `marcelo
 `infra.yml`:
 
 | Stage | Runs on | Does |
-|---|---|---|
+| --- | --- | --- |
 | Validate | every run | `az bicep build`, `az bicep lint`, `az bicep build-params`, `az deployment group validate` |
 | WhatIf | every run | `az deployment group what-if`, published as the `what-if` artifact and as a run summary tab |
 | Deploy | `main`, not pull requests | deployment job on `incident-ops-prod` (approval + branch control), `az deployment group create` |
@@ -95,7 +95,7 @@ Create one pipeline per file: Pipelines → New pipeline → GitHub → `marcelo
 Application pipelines:
 
 | Pipeline | Stages |
-|---|---|
+| --- | --- |
 | `api.yml` | Build (restore, format check, build, tests, 80% line coverage gate) → Publish (image to GHCR) → Deploy (container app template) |
 | `insights.yml` | Verify (ruff, format check, mypy, import-linter, pytest) → Publish (image to GHCR) → Deploy (container app template) |
 | `functions.yml` | Build (restore, format check, build, tests with coverage, zip package) → Deploy (`AzureFunctionApp@2`, Flex Consumption) |

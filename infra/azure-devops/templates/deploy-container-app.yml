@@ -27,7 +27,8 @@ steps:
       inlineScript: |
         set -euo pipefail
         az extension add --name containerapp --upgrade --only-show-errors
-        previous=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --query properties.latestReadyRevisionName --output tsv)
+        previous=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" \
+          --query properties.latestReadyRevisionName --output tsv)
         echo "##vso[task.setvariable variable=previousRevision;isOutput=true]${previous}"
         suffix="ado$(Build.BuildId)-$(System.JobAttempt)"
         az containerapp update \
@@ -39,12 +40,14 @@ steps:
         revision="${{ parameters.containerAppName }}--${suffix}"
         echo "##vso[task.setvariable variable=newRevision;isOutput=true]${revision}"
         for attempt in $(seq 1 ${{ parameters.attempts }}); do
-          ready=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --query properties.latestReadyRevisionName --output tsv)
+          ready=$(az containerapp show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" \
+            --query properties.latestReadyRevisionName --output tsv)
           if [[ "$ready" == "$revision" ]]; then
             echo "revision ${revision} is ready"
             exit 0
           fi
-          state=$(az containerapp revision show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" --revision "$revision" --query properties.provisioningState --output tsv)
+          state=$(az containerapp revision show --name "${{ parameters.containerAppName }}" --resource-group "${{ parameters.resourceGroup }}" \
+            --revision "$revision" --query properties.provisioningState --output tsv)
           if [[ "$state" == "Failed" ]]; then
             echo "##vso[task.logissue type=error]revision ${revision} failed to provision"
             exit 1

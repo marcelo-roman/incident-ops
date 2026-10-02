@@ -14,7 +14,11 @@ export const productionApiBaseUrl = 'https://incidents-api.marceloroman.com.br';
 export const productionInsightsBaseUrl = 'https://incidents-insights.marceloroman.com.br';
 
 export function withoutTrailingSlash(url: string): string {
-  return url.trim().replace(/\/+$/, '');
+  let trimmed = url.trim();
+  while (trimmed.endsWith('/')) {
+    trimmed = trimmed.slice(0, -1);
+  }
+  return trimmed;
 }
 
 function urlOrDefault(value: string | undefined, fallback: string): string {

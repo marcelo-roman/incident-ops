@@ -2,7 +2,7 @@ import { formatShortDate } from '../../../shared/format/dates';
 import styles from './Insights.module.css';
 import type { TrendMetricDefinition, TrendPoint } from '../domain/trendMetrics';
 
-export function TrendDataTable({ points, metric }: { points: TrendPoint[]; metric: TrendMetricDefinition }) {
+export function TrendDataTable({ points, metric }: Readonly<{ points: TrendPoint[]; metric: TrendMetricDefinition }>) {
   return (
     <details className={styles.dataToggle}>
       <summary>Show weekly values</summary>
