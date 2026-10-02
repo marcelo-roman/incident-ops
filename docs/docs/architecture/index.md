@@ -63,7 +63,7 @@ flowchart LR
 
     web["Console<br/>[Container: React, TypeScript]<br/>Static Web App"]:::container
     api["Incidents API<br/>[Container: .NET 8 Minimal APIs]<br/>domain, SLA, alerts, hub"]:::container
-    sql[("Database<br/>[Azure SQL serverless]<br/>incidents, timeline, rotation")]:::store
+    sql[("Database<br/>[Azure SQL Basic]<br/>incidents, timeline, rotation")]:::store
     signalr["Azure SignalR Service<br/>[Container: managed]"]:::container
     bus{{"Service Bus<br/>[topic incident-events,<br/>queue sla-checks]"}}:::store
     fn["Functions<br/>[Container: .NET 8 isolated]<br/>ScheduleSlaCheck, CheckAcknowledgementSla,<br/>NotifyOnCall"]:::container
@@ -118,8 +118,8 @@ Insights pulls `GET /api/incidents/export?from=&to=` and computes with Pandas. I
 | API down while alerts fire | Alert sources retry; incidents created late | Alertmanager retries the webhook; `ApiDown` itself routes to on-call outside the API path ([alerting](../operations/alerting.md#when-the-api-is-the-thing-that-is-down)) |
 | SignalR unavailable | Console stops live-updating | Client refetches every 30 s |
 | Azure OpenAI throttled or down | RCA draft unavailable | Insights returns `502` problem details instead of a mislabelled fallback draft; KPIs unaffected |
-| SQL serverless resumed from pause | First request after idle takes several seconds | Availability test keeps it warm in business hours |
+| Demo environment powered off | API unreachable; the console shows that the environment is paused | Started on request with the power workflow; Service Bus and the database are re-created and the API re-seeds on first start |
 
 ## Capacity and cost
 
-Sized for a team of 6 to 40 engineers and up to a few hundred incidents a month. All compute is consumption-billed and scales to zero, except Service Bus Standard (fixed base charge) and Log Analytics ingestion. Ingestion is the cost to watch: sampling stays off for exceptions and Service Bus dependencies, and is set to 25% for successful `GET` requests.
+Sized for a team of 6 to 40 engineers and up to a few hundred incidents a month. All compute is consumption-billed; the API keeps one warm replica while the environment is on, and Service Bus Standard and the Basic database bill a fixed hourly charge while they exist, which is only while the environment is on. Log Analytics ingestion is billed in both states. Ingestion is the cost to watch: sampling stays off for exceptions and Service Bus dependencies, and is set to 25% for successful `GET` requests.

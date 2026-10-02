@@ -399,7 +399,7 @@ Delivery runs on GitHub Actions with OpenID Connect to Azure (no stored credenti
 
 1. On every pull request and push: restore, format check, build, test with coverage and the coverage gate.
 2. On push to `main`: build the image and push `ghcr.io/marcelo-roman/incident-ops-api:<sha>` and `:latest` with `GITHUB_TOKEN`.
-3. On push to `main`: call the reusable workflow [`deploy-container-app.yml`](../../.github/workflows/deploy-container-app.yml) for `ca-incident-ops-api` in `rg-incident-ops`. It runs in the `production` environment, updates the revision, smoke tests `https://incidents-api.marceloroman.com.br/health/ready` and rolls back on failure.
+3. On push to `main`: call the reusable workflow [`deploy-container-app.yml`](../../.github/workflows/deploy-container-app.yml) for `ca-incident-ops-api` in `rg-incident-ops`. It runs in the `production` environment, updates the revision, smoke tests `https://incidents-api.marceloroman.com.br/health/ready` and rolls back on failure. While the Azure environment is powered off, the revision gets the new image without the readiness wait and smoke test, and the next power up verifies it ([power states](../../infra/README.md#power-states)).
 
 [`infra/azure-devops/api.yml`](../../infra/azure-devops/api.yml) is the Azure DevOps equivalent, kept as a sample: it builds and tests this folder, pushes the image through the `ghcr-marcelo-roman` registry connection and deploys with the step template `infra/azure-devops/templates/deploy-container-app.yml` and the `sc-incident-ops` Azure service connection.
 

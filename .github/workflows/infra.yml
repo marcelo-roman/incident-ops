@@ -53,12 +53,16 @@ jobs:
       - name: Build
         run: |
           az bicep build --file "$TEMPLATE_FILE" --stdout > /dev/null
-          az bicep build-params --file "$PARAMETERS_FILE" --stdout > /dev/null
+          for state in on off; do
+            ENVIRONMENT_STATE="$state" az bicep build-params --file "$PARAMETERS_FILE" --stdout > /dev/null
+          done
 
       - name: Lint
         run: |
           az bicep lint --file "$TEMPLATE_FILE"
-          az bicep lint --file "$PARAMETERS_FILE"
+          for state in on off; do
+            ENVIRONMENT_STATE="$state" az bicep lint --file "$PARAMETERS_FILE"
+          done
 
       - name: Logic App workflow is valid JSON
         run: jq empty bicep/workflows/notify-oncall.json
@@ -110,6 +114,11 @@ jobs:
           az bicep lint --file "$TEMPLATE_FILE"
           az bicep build-params --file "$PARAMETERS_FILE" --stdout > /dev/null
 
+      - name: Detect environment state
+        run: |
+          state=$(scripts/environment-state.sh "$RESOURCE_GROUP")
+          echo "ENVIRONMENT_STATE=${state}" >> "$GITHUB_ENV"
+
       - name: Resolve running images
         run: |
           echo "API_IMAGE=$(scripts/resolve-image.sh "$RESOURCE_GROUP" ca-incident-ops-api ghcr.io/marcelo-roman/incident-ops-api:latest)" >> "$GITHUB_ENV"
@@ -138,6 +147,8 @@ jobs:
             echo
             echo "Images: \`${API_IMAGE}\`, \`${INSIGHTS_IMAGE}\`"
             echo
+            echo "Environment state: \`${ENVIRONMENT_STATE}\`"
+            echo
             echo '```text'
             cat what-if.txt
             echo '```'
@@ -157,6 +168,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: production
+    concurrency:
+      group: azure-rg-incident-ops
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
@@ -176,6 +190,11 @@ jobs:
 
       - name: Install Bicep
         run: az bicep install --version "$BICEP_VERSION"
+
+      - name: Detect environment state
+        run: |
+          state=$(scripts/environment-state.sh "$RESOURCE_GROUP")
+          echo "ENVIRONMENT_STATE=${state}" >> "$GITHUB_ENV"
 
       - name: Resolve running images
         run: |
@@ -203,6 +222,8 @@ jobs:
             echo "## Deployment \`${DEPLOYMENT_NAME}\`"
             echo
             echo "Custom domain binding: \`${CUSTOM_DOMAIN_BINDING}\`"
+            echo
+            echo "Environment state: \`${ENVIRONMENT_STATE}\`"
             echo
             echo "| Host | Default host name |"
             echo "|---|---|"

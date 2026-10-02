@@ -72,6 +72,7 @@ function days(request: Request): number {
 export function createHandlers(store: () => MockIncidentStore) {
   const { apiBaseUrl: api, insightsBaseUrl: insights } = getConfig();
   return [
+    http.get(`${api}/health/ready`, () => new HttpResponse('Healthy', { headers: { 'content-type': 'text/plain' } })),
     http.get(`${api}/api/services`, () => HttpResponse.json(serviceFixtures)),
     http.get(`${api}/api/oncall/current`, () => HttpResponse.json(rosterFixture(Date.now()))),
     http.get(`${api}/api/metrics/summary`, () => HttpResponse.json(store().metricsSummary())),

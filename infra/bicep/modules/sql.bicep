@@ -24,17 +24,17 @@ param entraAdminObjectId string
 ])
 param entraAdminPrincipalType string = 'Group'
 
-@description('Serverless vCore ceiling.')
-@allowed([
-  1
-  2
-  4
-])
-param maxVCores int = 2
+@description('Deploys the database; false leaves only the logical server, which has no compute cost.')
+param deployDatabase bool
 
-@description('Minutes of inactivity before the serverless database pauses.')
-@minValue(15)
-param autoPauseDelayMinutes int = 60
+@description('DTUs of the Basic database.')
+@allowed([
+  5
+])
+param basicDtu int = 5
+
+@description('Maximum database size in bytes; 2 GB is the Basic ceiling.')
+param maxSizeBytes int = 2147483648
 
 resource server 'Microsoft.Sql/servers@2025-01-01' = {
   name: serverName
@@ -64,29 +64,24 @@ resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2025-01-01' = {
   }
 }
 
-resource database 'Microsoft.Sql/servers/databases@2025-01-01' = {
+resource database 'Microsoft.Sql/servers/databases@2025-01-01' = if (deployDatabase) {
   parent: server
   name: databaseName
   location: location
   tags: tags
   sku: {
-    name: 'GP_S_Gen5'
-    tier: 'GeneralPurpose'
-    family: 'Gen5'
-    capacity: maxVCores
+    name: 'Basic'
+    tier: 'Basic'
+    capacity: basicDtu
   }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
-    maxSizeBytes: 34359738368
-    autoPauseDelay: autoPauseDelayMinutes
-    minCapacity: json('0.5')
+    maxSizeBytes: maxSizeBytes
     zoneRedundant: false
     requestedBackupStorageRedundancy: 'Local'
-    useFreeLimit: true
-    freeLimitExhaustionBehavior: 'AutoPause'
   }
 }
 
 output serverName string = server.name
 output serverFqdn string = server.properties.fullyQualifiedDomainName
-output databaseName string = database.name
+output databaseName string = databaseName

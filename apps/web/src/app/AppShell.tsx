@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
+import { EnvironmentGate } from '../features/environment';
 import { ConnectionIndicator, useRealtimeStatus } from '../features/realtime';
 import { BoardIcon, ListIcon, SignalIcon, TrendIcon } from '../shared/ui/icons';
 import { OperatorField } from '../shared/operator/OperatorField';
@@ -60,7 +61,9 @@ export function AppShell() {
           <ConnectionIndicator status={status} />
         </header>
         <main id="main" className={styles.main} tabIndex={-1}>
-          <Outlet />
+          <EnvironmentGate>
+            <Outlet />
+          </EnvironmentGate>
         </main>
       </div>
     </div>

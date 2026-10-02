@@ -3,6 +3,7 @@ using 'main.bicep'
 param owner = 'marcelo-roman'
 param costCenter = 'portfolio'
 
+param environmentState = readEnvironmentVariable('ENVIRONMENT_STATE', 'on')
 param customDomainBinding = readEnvironmentVariable('CUSTOM_DOMAIN_BINDING', 'None')
 
 param apiImage = readEnvironmentVariable('API_IMAGE', 'ghcr.io/marcelo-roman/incident-ops-api:latest')
@@ -15,7 +16,7 @@ param escalationApiKey = readEnvironmentVariable('ESCALATION_API_KEY')
 param notificationWebhookUrl = readEnvironmentVariable('NOTIFICATION_WEBHOOK_URL', '')
 param alertEmail = readEnvironmentVariable('ALERT_EMAIL', '')
 
-param budgetAmount = 25
+param budgetAmount = 30
 param budgetStartDate = '2026-10-01'
 param budgetContactEmails = [
   readEnvironmentVariable('BUDGET_EMAIL', 'owner@example.com')

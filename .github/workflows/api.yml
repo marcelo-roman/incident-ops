@@ -125,4 +125,5 @@ jobs:
       resource-group: rg-incident-ops
       image: ghcr.io/marcelo-roman/incident-ops-api:${{ github.sha }}
       health-url: https://incidents-api.marceloroman.com.br/health/ready
+      requires-environment-on: true
     secrets: inherit

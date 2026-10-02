@@ -40,6 +40,11 @@ param cpu string = '0.25'
 @description('Memory per replica.')
 param memory string = '0.5Gi'
 
+@description('Replicas kept running when there is no traffic; 0 scales to zero.')
+@minValue(0)
+@maxValue(10)
+param minReplicas int = 0
+
 @description('Maximum replica count.')
 @minValue(1)
 @maxValue(10)
@@ -149,7 +154,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-07-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: minReplicas
         maxReplicas: maxReplicas
         rules: [
           {

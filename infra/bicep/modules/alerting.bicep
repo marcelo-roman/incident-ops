@@ -16,8 +16,14 @@ param functionRoleName string
 @description('Cloud role name the API reports to Application Insights.')
 param apiRoleName string
 
-@description('Readiness URL probed by the availability test.')
+@description('Liveness URL probed by the availability test.')
 param healthUrl string
+
+@description('Runs the availability test and evaluates every alert rule; false keeps them deployed and idle.')
+param enabled bool
+
+@description('Deploys the dead-letter alert, which needs the Service Bus namespace to exist.')
+param monitorServiceBus bool
 
 @description('Incidents API base URL that receives Azure Monitor alerts.')
 param alertWebhookBaseUrl string
@@ -29,12 +35,10 @@ param alertWebhookKey string
 @description('Optional email address that also receives every alert; empty skips the receiver.')
 param alertEmail string = ''
 
-@description('Availability test locations; Azure Monitor recommends at least three.')
-@minLength(3)
+@description('Availability test locations.')
+@minLength(1)
 param testLocations array = [
   'us-va-ash-azr'
-  'us-tx-sn1-azr'
-  'latam-br-gru-edge'
 ]
 
 @description('Seconds between availability test runs.')
@@ -47,7 +51,7 @@ param testFrequencySeconds int = 900
 
 @description('Locations that must fail at the same time before the availability alert fires.')
 @minValue(1)
-param failedLocationThreshold int = 2
+param failedLocationThreshold int = 1
 
 @description('Failed API requests in five minutes that raise the failure alert.')
 @minValue(1)
@@ -58,7 +62,7 @@ param failedRequestsThreshold int = 5
 param responseTimeThresholdMs int = 2000
 
 var serviceProperty = 'platform'
-var availabilityTestName = 'webtest-${apiRoleName}-ready'
+var availabilityTestName = 'webtest-${apiRoleName}-live'
 var hasEmail = !empty(alertEmail)
 var webhookReceivers = [
   {
@@ -107,9 +111,9 @@ resource availabilityTest 'Microsoft.Insights/webtests@2022-06-15' = {
   kind: 'standard'
   properties: {
     SyntheticMonitorId: availabilityTestName
-    Name: 'API readiness'
+    Name: 'API liveness'
     Description: 'GET ${healthUrl} expecting 200'
-    Enabled: true
+    Enabled: enabled
     Kind: 'standard'
     Frequency: testFrequencySeconds
     Timeout: 30
@@ -140,9 +144,9 @@ resource availabilityAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
     'hidden-link:${availabilityTest.id}': 'Resource'
   })
   properties: {
-    description: 'API readiness check is failing from ${failedLocationThreshold} or more locations.'
+    description: 'API liveness check is failing from ${failedLocationThreshold} or more locations.'
     severity: 1
-    enabled: true
+    enabled: enabled
     scopes: [
       availabilityTest.id
       appInsights.id
@@ -175,7 +179,7 @@ resource failedRequestsAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
   properties: {
     description: 'API returned more than ${failedRequestsThreshold} failed requests in five minutes.'
     severity: 2
-    enabled: true
+    enabled: enabled
     scopes: [
       appInsights.id
     ]
@@ -225,7 +229,7 @@ resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
   properties: {
     description: 'API average server response time is above ${responseTimeThresholdMs} ms over fifteen minutes.'
     severity: 3
-    enabled: true
+    enabled: enabled
     scopes: [
       appInsights.id
     ]
@@ -268,14 +272,14 @@ resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
   }
 }
 
-resource deadLetterAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
+resource deadLetterAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = if (monitorServiceBus) {
   name: 'alert-${serviceBus.name}-dead-letters'
   location: 'global'
   tags: tags
   properties: {
     description: 'Messages reached a dead-letter queue.'
     severity: 2
-    enabled: true
+    enabled: enabled
     scopes: [
       serviceBus.id
     ]
@@ -326,7 +330,7 @@ resource functionFailuresAlert 'Microsoft.Insights/scheduledQueryRules@2026-03-0
     displayName: 'Function executions failing'
     description: 'At least one function execution failed in the last fifteen minutes.'
     severity: 3
-    enabled: true
+    enabled: enabled
     scopes: [
       appInsights.id
     ]
@@ -371,10 +375,12 @@ resource functionFailuresAlert 'Microsoft.Insights/scheduledQueryRules@2026-03-0
 
 output actionGroupId string = actionGroup.id
 output availabilityTestName string = availabilityTest.name
-output alertRuleNames array = [
-  availabilityAlert.name
-  failedRequestsAlert.name
-  responseTimeAlert.name
-  deadLetterAlert.name
-  functionFailuresAlert.name
-]
+output alertRuleNames array = concat(
+  [
+    availabilityAlert.name
+    failedRequestsAlert.name
+    responseTimeAlert.name
+    functionFailuresAlert.name
+  ],
+  monitorServiceBus ? [deadLetterAlert.name] : []
+)

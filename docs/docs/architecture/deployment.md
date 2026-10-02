@@ -16,9 +16,9 @@ flowchart TB
             capi["Container App<br/>ca-incident-ops-api"]
             cins["Container App<br/>ca-incident-ops-insights"]
         end
-        sql[("Azure SQL Database<br/>serverless, free offer")]
+        sql[("Azure SQL Database<br/>Basic, on only")]
         sig["Azure SignalR Service<br/>Free_F1"]
-        sb{{"Service Bus Standard<br/>incident-events, sla-checks"}}
+        sb{{"Service Bus Standard, on only<br/>incident-events, sla-checks"}}
         func["Function App<br/>Flex Consumption, .NET 8 isolated<br/>func-incident-ops"]
         logic["Logic App<br/>Consumption"]
         aoai["Azure OpenAI S0<br/>deployment rca-drafts"]
@@ -52,6 +52,20 @@ flowchart TB
 | `incidents-docs.marceloroman.com.br` | GitHub Pages of `marcelo-roman/incident-ops`, built from `docs/` |
 
 Hosting rationale: [ADR 0004](../adr/0004-container-apps-for-hosting.md).
+
+## Power states
+
+The environment is started on request and powered down every day at 05:00 UTC by [`power.yml`](https://github.com/marcelo-roman/incident-ops/blob/main/.github/workflows/power.yml), which runs [`infra/scripts/power.sh`](https://github.com/marcelo-roman/incident-ops/blob/main/infra/scripts/power.sh). The documentation site on GitHub Pages is always on.
+
+| | On | Off |
+|---|---|---|
+| Service Bus namespace | present | deleted |
+| Azure SQL database | Basic, 5 DTU, re-created empty and seeded by the API on first start | deleted |
+| API container app | one warm replica | scaled to zero |
+| Availability test and alert rules | enabled | disabled |
+| Console | live | full-width notice that the demo environment is paused |
+
+Infrastructure deploys from `infra.yml` keep the current state. The repository variable `KEEP_ON_UNTIL` (UTC date) skips the nightly power down through that date. Costs per state and the operator steps are in the [infrastructure README](https://github.com/marcelo-roman/incident-ops/blob/main/infra/README.md#power-states).
 
 ## Runtime configuration
 
@@ -121,7 +135,8 @@ sequenceDiagram
 | Functions | `functions.yml` | `services/functions/**` | `Azure/functions-action@v1` to `func-incident-ops` (Flex Consumption) |
 | Web | `web.yml` | `apps/web/**` | `Azure/static-web-apps-deploy@v1` with `SWA_DEPLOYMENT_TOKEN` |
 | Docs | `docs.yml` | `docs/**` | `mkdocs build --strict` on PR; GitHub Pages deploy on `main` |
-| Infra | `infra.yml` | `infra/**` | Bicep build and lint, validate and `what-if` in the job summary; deploy on `main` behind `production` |
+| Infra | `infra.yml` | `infra/**` | Bicep build and lint, validate and `what-if` in the job summary; deploy on `main` behind `production`, keeping the current power state |
+| Power | `power.yml` | none: `workflow_dispatch` and a daily `schedule` on `main` | `infra/scripts/power.sh up` or `down` |
 | Platform | `platform.yml` | `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, `**/*.md`, `.github/**` | no deploy: compose config, alert rule tests, link check, ShellCheck, actionlint |
 
 Every workflow also triggers on changes to its own file; the four application workflows also run on pull requests that change `contracts/**`. Steps run with `defaults.run.working-directory` set to the module.

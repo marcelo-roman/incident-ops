@@ -24,6 +24,10 @@ func resourceNames(workload string, suffix string) object => {
 type customDomainBindingType = 'None' | 'Disabled' | 'SniEnabled'
 
 @export()
+@description('Power state: on deploys the messaging and the database and keeps one API replica warm; off removes them from the template and lets the API scale to zero.')
+type environmentStateType = 'on' | 'off'
+
+@export()
 @description('Public host names served through Cloudflare DNS.')
 type hostNamesType = {
   web: string
@@ -39,4 +43,14 @@ var serviceBusEntities = {
   slaSchedulerSubscription: 'sla-scheduler'
   notifierSubscription: 'notifier'
   slaChecksQueue: 'sla-checks'
+}
+
+@export()
+@description('Role definition ids the template assigns to workload identities.')
+var workloadRoles = {
+  serviceBusDataSender: '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
+  serviceBusDataReceiver: '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
+  signalRAppServer: '420fcaa2-552c-430f-98ca-3264be4806c7'
+  storageBlobDataOwner: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+  cognitiveServicesOpenAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
 }
