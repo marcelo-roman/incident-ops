@@ -1,0 +1,122 @@
+name: power
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: up starts the Azure environment, down stops it
+        type: choice
+        required: true
+        default: up
+        options:
+          - up
+          - down
+  schedule:
+    - cron: "0 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-rg-incident-ops
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+    working-directory: infra
+
+env:
+  RESOURCE_GROUP: rg-incident-ops
+  DEPLOYMENT_NAME: incident-ops
+  BICEP_VERSION: v0.47.16
+  GO_SQLCMD_VERSION: v1.10.0
+  AZURE_CORE_NO_COLOR: "true"
+  AZURE_CORE_ONLY_SHOW_ERRORS: "true"
+  SQL_ADMIN_GROUP_NAME: ${{ vars.SQL_ADMIN_GROUP_NAME }}
+  SQL_ADMIN_GROUP_OBJECT_ID: ${{ vars.SQL_ADMIN_GROUP_OBJECT_ID }}
+  BUDGET_EMAIL: ${{ vars.BUDGET_EMAIL }}
+  ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+  CUSTOM_DOMAIN_BINDING: ${{ vars.CUSTOM_DOMAIN_BINDING || 'None' }}
+  POWER_ACTION: ${{ github.event_name == 'schedule' && 'down' || inputs.action }}
+
+jobs:
+  power:
+    name: Power ${{ github.event_name == 'schedule' && 'down (scheduled)' || inputs.action }}
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'schedule' && 'power' || 'production' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ESCALATION_API_KEY: ${{ secrets.ESCALATION_API_KEY }}
+      NOTIFICATION_WEBHOOK_URL: ${{ secrets.NOTIFICATION_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Keep-on window
+        id: window
+        env:
+          KEEP_ON_UNTIL: ${{ vars.KEEP_ON_UNTIL }}
+        run: |
+          keep_on="false"
+          if [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+            keep_on=$(scripts/keep-on.sh "$KEEP_ON_UNTIL")
+          fi
+          echo "keep-on=${keep_on}" >> "$GITHUB_OUTPUT"
+          if [[ "$keep_on" == "true" ]]; then
+            echo "::notice::KEEP_ON_UNTIL is ${KEEP_ON_UNTIL}; the scheduled power down is skipped"
+          fi
+
+      - name: Azure login
+        if: steps.window.outputs.keep-on != 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Bicep and the Container Apps extension
+        if: steps.window.outputs.keep-on != 'true'
+        run: |
+          az bicep install --version "$BICEP_VERSION"
+          az extension add --name containerapp --upgrade --only-show-errors
+
+      - name: Install go-sqlcmd
+        if: steps.window.outputs.keep-on != 'true' && env.POWER_ACTION == 'up'
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl --silent --show-error --fail --location \
+            "https://github.com/microsoft/go-sqlcmd/releases/download/${GO_SQLCMD_VERSION}/sqlcmd-linux-amd64.tar.bz2" \
+            --output sqlcmd.tar.bz2
+          mkdir -p go-sqlcmd
+          tar -xjf sqlcmd.tar.bz2 -C go-sqlcmd
+          echo "SQLCMD=${RUNNER_TEMP}/go-sqlcmd/sqlcmd" >> "$GITHUB_ENV"
+
+      - name: Power ${{ env.POWER_ACTION }}
+        if: steps.window.outputs.keep-on != 'true'
+        run: scripts/power.sh "$POWER_ACTION" | tee power.txt
+
+      - name: Status
+        if: always() && steps.window.outputs.keep-on != 'true'
+        run: scripts/power.sh status | tee status.txt
+
+      - name: Job summary
+        if: always()
+        env:
+          KEEP_ON: ${{ steps.window.outputs.keep-on }}
+          KEEP_ON_UNTIL: ${{ vars.KEEP_ON_UNTIL }}
+        run: |
+          {
+            echo "## Power ${POWER_ACTION}"
+            echo
+            if [[ "$KEEP_ON" == "true" ]]; then
+              echo "Skipped: \`KEEP_ON_UNTIL\` is \`${KEEP_ON_UNTIL}\`."
+              exit 0
+            fi
+            echo '```text'
+            cat power.txt status.txt 2> /dev/null || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

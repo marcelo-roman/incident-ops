@@ -79,6 +79,7 @@ ensure_federated_credentials() {
   local app_id="$1"
   ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-production" "repo:${REPOSITORY}:environment:production"
   ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-main" "repo:${REPOSITORY}:ref:refs/heads/main"
+  ensure_federated_credential "$app_id" "${GITHUB_REPOSITORY_NAME}-power" "repo:${REPOSITORY}:environment:power"
 }
 
 rbac_condition() {
@@ -119,7 +120,20 @@ ensure_role() {
     --output none
 }
 
+ensure_group_member() {
+  local group_id="$1"
+  local member_id="$2"
+  local label="$3"
+  if [[ "$(az ad group member check --group "$group_id" --member-id "$member_id" --query value --output tsv)" == "true" ]]; then
+    log "${label} is a member of ${SQL_ADMIN_GROUP}"
+    return
+  fi
+  log "adding ${label} to ${SQL_ADMIN_GROUP}"
+  az ad group member add --group "$group_id" --member-id "$member_id"
+}
+
 ensure_sql_admin_group() {
+  local service_principal_id="$1"
   local group_id user_id
   group_id=$(az ad group list --display-name "$SQL_ADMIN_GROUP" --query "[0].id" --output tsv)
   if [[ -z "$group_id" ]]; then
@@ -127,10 +141,8 @@ ensure_sql_admin_group() {
     group_id=$(az ad group create --display-name "$SQL_ADMIN_GROUP" --mail-nickname "$SQL_ADMIN_GROUP" --query id --output tsv)
   fi
   user_id=$(az ad signed-in-user show --query id --output tsv)
-  if [[ "$(az ad group member check --group "$group_id" --member-id "$user_id" --query value --output tsv)" != "true" ]]; then
-    log "adding signed-in user to ${SQL_ADMIN_GROUP}"
-    az ad group member add --group "$group_id" --member-id "$user_id"
-  fi
+  ensure_group_member "$group_id" "$user_id" "signed-in user"
+  ensure_group_member "$group_id" "$service_principal_id" "service principal ${APP_NAME}"
   echo "$group_id"
 }
 
@@ -145,6 +157,7 @@ print_github_commands() {
   echo "gh variable set AZURE_TENANT_ID --repo ${REPOSITORY} --body ${tenant_id}"
   echo "gh variable set AZURE_SUBSCRIPTION_ID --repo ${REPOSITORY} --body ${SUBSCRIPTION_ID}"
   echo "gh api --method PUT repos/${REPOSITORY}/environments/production -F 'reviewers[][type]=User' -F \"reviewers[][id]=\${REVIEWER_ID}\" -F 'deployment_branch_policy[protected_branches]=true' -F 'deployment_branch_policy[custom_branch_policies]=false'"
+  echo "gh api --method PUT repos/${REPOSITORY}/environments/power -F 'deployment_branch_policy[protected_branches]=true' -F 'deployment_branch_policy[custom_branch_policies]=false'"
   echo
   echo "# Infrastructure deployment inputs"
   echo "gh variable set SQL_ADMIN_GROUP_NAME --repo ${REPOSITORY} --body ${SQL_ADMIN_GROUP}"
@@ -152,9 +165,13 @@ print_github_commands() {
   echo "gh variable set BUDGET_EMAIL --repo ${REPOSITORY} --body <email>"
   echo "gh variable set ALERT_EMAIL --repo ${REPOSITORY} --body <email>"
   echo "gh variable set CUSTOM_DOMAIN_BINDING --repo ${REPOSITORY} --body None"
+  echo "gh variable set DEPLOY_ENABLED --repo ${REPOSITORY} --body true"
   echo "openssl rand -hex 32 | gh secret set ESCALATION_API_KEY --repo ${REPOSITORY}"
   echo "gh secret set NOTIFICATION_WEBHOOK_URL --repo ${REPOSITORY}"
   echo "gh secret set CLOUDFLARE_API_TOKEN --repo ${REPOSITORY}"
+  echo
+  echo "# Optional: keep the environment on through a date (UTC, inclusive) so the daily power down skips"
+  echo "gh variable set KEEP_ON_UNTIL --repo ${REPOSITORY} --body <yyyy-mm-dd>"
   echo
   echo "# After the first infrastructure deployment"
   echo "az staticwebapp secrets list --name stapp-incident-ops --resource-group ${RESOURCE_GROUP} --query properties.apiKey --output tsv | gh secret set SWA_DEPLOYMENT_TOKEN --repo ${REPOSITORY}"
@@ -179,7 +196,7 @@ main() {
   ensure_federated_credentials "$app_id"
   ensure_role "$object_id" "$CONTRIBUTOR_ROLE_ID" "$scope"
   ensure_role "$object_id" "$RBAC_ADMIN_ROLE_ID" "$scope" "$(rbac_condition)"
-  group_id=$(ensure_sql_admin_group)
+  group_id=$(ensure_sql_admin_group "$object_id")
   print_github_commands "$app_id" "$tenant_id" "$group_id"
 }
 

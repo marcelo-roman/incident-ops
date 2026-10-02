@@ -1,6 +1,13 @@
 targetScope = 'resourceGroup'
 
-import { resourceNames, customDomainBindingType, hostNamesType, serviceBusEntities } from 'naming.bicep'
+import {
+  resourceNames
+  customDomainBindingType
+  environmentStateType
+  hostNamesType
+  serviceBusEntities
+  workloadRoles
+} from 'naming.bicep'
 
 metadata description = 'Incident Ops platform: telemetry, data, messaging, compute, AI and web hosting in one resource group.'
 
@@ -17,6 +24,9 @@ param owner string
 
 @description('Cost center tag value.')
 param costCenter string
+
+@description('Power state: on runs Service Bus, the SQL database, one warm API replica and the monitors; off removes Service Bus and the database from the template, scales the API to zero and idles the monitors.')
+param environmentState environmentStateType = 'on'
 
 @description('Public host names served through Cloudflare DNS.')
 param hostNames hostNamesType = {
@@ -62,6 +72,14 @@ param openAiModelName string = 'gpt-5.4-mini'
 @description('Azure OpenAI model version.')
 param openAiModelVersion string = '2026-03-17'
 
+@description('Azure OpenAI deployment type; DataZoneStandard keeps processing within the US data zone.')
+@allowed([
+  'GlobalStandard'
+  'DataZoneStandard'
+  'Standard'
+])
+param openAiDeploymentSku string = 'DataZoneStandard'
+
 @description('Azure OpenAI throughput in thousands of tokens per minute.')
 @minValue(1)
 param openAiCapacity int = 10
@@ -71,7 +89,7 @@ param alertEmail string = ''
 
 @description('Monthly budget amount in the billing currency.')
 @minValue(1)
-param budgetAmount int = 25
+param budgetAmount int = 30
 
 @description('First day of the month the budget starts tracking, as yyyy-MM-01.')
 param budgetStartDate string
@@ -88,6 +106,8 @@ var tags = {
   environment: 'production'
   managedBy: 'bicep'
 }
+var isOn = environmentState == 'on'
+var serviceBusFullyQualifiedNamespace = '${names.serviceBus}.servicebus.windows.net'
 var customDomainsServed = customDomainBinding == 'SniEnabled'
 var webOrigins = [
   'https://${hostNames.web}'
@@ -116,6 +136,7 @@ module sql 'modules/sql.bicep' = {
     databaseName: names.sqlDatabase
     entraAdminLogin: sqlEntraAdminLogin
     entraAdminObjectId: sqlEntraAdminObjectId
+    deployDatabase: isOn
   }
 }
 
@@ -140,7 +161,7 @@ module signalR 'modules/signalr.bicep' = {
   }
 }
 
-module serviceBus 'modules/servicebus.bicep' = {
+module serviceBus 'modules/servicebus.bicep' = if (isOn) {
   name: 'servicebus'
   params: {
     location: location
@@ -158,6 +179,7 @@ module openAi 'modules/openai.bicep' = {
     deploymentName: openAiDeploymentName
     modelName: openAiModelName
     modelVersion: openAiModelVersion
+    deploymentSku: openAiDeploymentSku
     capacity: openAiCapacity
   }
 }
@@ -186,8 +208,9 @@ module api 'modules/containerapp.bicep' = {
     targetPort: 8080
     livenessPath: '/health/live'
     readinessPath: '/health/ready'
-    cpu: '0.5'
-    memory: '1Gi'
+    cpu: '0.25'
+    memory: '0.5Gi'
+    minReplicas: isOn ? 1 : 0
     customDomainName: hostNames.api
     customDomainBinding: customDomainBinding
     secrets: {
@@ -213,16 +236,24 @@ module api 'modules/containerapp.bicep' = {
         value: monitoring.outputs.appInsightsConnectionString
       }
       {
+        name: 'Database__ApplyMigrations'
+        value: 'true'
+      }
+      {
+        name: 'Database__Seed'
+        value: 'true'
+      }
+      {
         name: 'ConnectionStrings__IncidentOps'
         value: 'Server=tcp:${sql.outputs.serverFqdn},1433;Database=${sql.outputs.databaseName};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connect Timeout=60;'
       }
       {
         name: 'ServiceBus__FullyQualifiedNamespace'
-        value: serviceBus.outputs.fullyQualifiedNamespace
+        value: serviceBusFullyQualifiedNamespace
       }
       {
         name: 'ServiceBus__TopicName'
-        value: serviceBus.outputs.topicName
+        value: serviceBusEntities.topic
       }
       {
         name: 'Azure__SignalR__ConnectionString'
@@ -309,13 +340,8 @@ module functions 'modules/functions.bicep' = {
     functionAppName: names.functionApp
     storageAccountName: names.functionStorage
     appInsightsName: names.appInsights
-    serviceBusFullyQualifiedNamespace: serviceBus.outputs.fullyQualifiedNamespace
-    serviceBusEntities: {
-      topic: serviceBus.outputs.topicName
-      slaSchedulerSubscription: serviceBus.outputs.slaSchedulerSubscriptionName
-      notifierSubscription: serviceBus.outputs.notifierSubscriptionName
-      slaChecksQueue: serviceBus.outputs.slaChecksQueueName
-    }
+    serviceBusFullyQualifiedNamespace: serviceBusFullyQualifiedNamespace
+    serviceBusEntities: serviceBusEntities
     incidentsApiBaseUrl: apiBaseUrl
     incidentsApiKey: escalationApiKey
     webBaseUrl: webBaseUrl
@@ -339,17 +365,34 @@ module roleAssignments 'modules/roleassignments.bicep' = {
       insights: insights.outputs.principalId
       functions: functions.outputs.principalId
     }
-    serviceBusNamespaceName: names.serviceBus
+    signalRName: names.signalR
+    functionStorageAccountName: names.functionStorage
+    openAiAccountName: names.openAi
+  }
+}
+
+module serviceBusRoleAssignments 'modules/servicebus-roleassignments.bicep' = if (isOn) {
+  name: 'servicebus-roleassignments'
+  params: {
+    identityNames: {
+      api: names.apiContainerApp
+      functions: names.functionApp
+    }
+    principalIds: {
+      api: api.outputs.principalId
+      functions: functions.outputs.principalId
+    }
+    namespaceName: names.serviceBus
     topicName: serviceBusEntities.topic
     functionSubscriptionNames: [
       serviceBusEntities.slaSchedulerSubscription
       serviceBusEntities.notifierSubscription
     ]
     slaChecksQueueName: serviceBusEntities.slaChecksQueue
-    signalRName: names.signalR
-    functionStorageAccountName: names.functionStorage
-    openAiAccountName: names.openAi
   }
+  dependsOn: [
+    serviceBus
+  ]
 }
 
 module alerting 'modules/alerting.bicep' = {
@@ -361,11 +404,16 @@ module alerting 'modules/alerting.bicep' = {
     serviceBusNamespaceName: names.serviceBus
     apiRoleName: 'incident-ops-api'
     functionRoleName: names.functionApp
-    healthUrl: '${apiBaseUrl}/health/ready'
+    healthUrl: '${apiBaseUrl}/health/live'
+    enabled: isOn
+    monitorServiceBus: isOn
     alertWebhookBaseUrl: apiBaseUrl
     alertWebhookKey: escalationApiKey
     alertEmail: alertEmail
   }
+  dependsOn: [
+    serviceBus
+  ]
 }
 
 module budget 'modules/budget.bicep' = {
@@ -439,7 +487,7 @@ output deliveryTargets object = {
 output endpoints object = {
   sqlServer: sql.outputs.serverFqdn
   sqlDatabase: sql.outputs.databaseName
-  serviceBus: serviceBus.outputs.fullyQualifiedNamespace
+  serviceBus: serviceBusFullyQualifiedNamespace
   signalR: signalR.outputs.hostName
   openAi: openAi.outputs.endpoint
   openAiDeployment: openAi.outputs.deploymentName
@@ -447,4 +495,7 @@ output endpoints object = {
 }
 
 @description('Role definition ids assigned to workload identities, for the deployment principal ABAC condition.')
-output assignedRoleDefinitionIds array = roleAssignments.outputs.assignedRoleDefinitionIds
+output assignedRoleDefinitionIds array = map(items(workloadRoles), role => role.value)
+
+@description('Power state this deployment applied.')
+output environmentState environmentStateType = environmentState

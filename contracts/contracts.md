@@ -195,7 +195,7 @@ The API exposes Prometheus metrics at `/metrics` (OpenTelemetry Prometheus expor
 
 Local alerting: Prometheus scrapes the API, evaluates rules (`ApiHighErrorRate`, `ApiHighLatencyP95`, `ApiDown`, `SlaBreachesOpen`) and sends to Alertmanager, which posts to `/api/alerts/alertmanager` with grouping, inhibition (`ApiDown` inhibits the other API alerts) and repeat interval.
 
-Azure alerting: Application Insights standard availability test on `/health/ready`, alert rules on failed request rate, server response time, availability, Service Bus dead-lettered messages and Function failures, all routed to an Action Group whose webhook targets `/api/alerts/azure-monitor?code=<key>` with the common alert schema enabled.
+Azure alerting: Application Insights standard availability test on `/health/live`, alert rules on failed request rate, server response time, availability, Service Bus dead-lettered messages and Function failures, all routed to an Action Group whose webhook targets `/api/alerts/azure-monitor?code=<key>` with the common alert schema enabled.
 
 ## Insights API
 
@@ -217,12 +217,12 @@ Region `eastus2`, resource group `rg-incident-ops`.
 |---|---|---|
 | Log Analytics + Application Insights | pay-as-you-go | telemetry for every module |
 | Container Apps environment (consumption) | | `ca-incident-ops-api` (`services/api`), `ca-incident-ops-insights` (`services/insights`) |
-| Azure SQL Database | serverless, free offer | API data |
+| Azure SQL Database | Basic, 5 DTU; exists only while the environment is powered on | API data |
 | Azure SignalR Service | Free_F1 | real-time hub |
-| Service Bus namespace | Standard | topic, subscriptions, queue |
+| Service Bus namespace | Standard; exists only while the environment is powered on | topic, subscriptions, queue |
 | Function App | Flex Consumption, .NET 8 isolated | `func-incident-ops` (`services/functions`) |
 | Logic App | Consumption | notifications |
-| Azure OpenAI | S0, deployment `rca-drafts` (`gpt-5.4-mini`, parameterized) | RCA drafts |
+| Azure OpenAI | S0, deployment `rca-drafts` (`gpt-5.4-mini`, DataZoneStandard, parameterized) | RCA drafts |
 | Static Web App | Free | `apps/web` |
 
 Managed identities and RBAC over connection strings wherever the service supports it. DNS lives in Cloudflare:

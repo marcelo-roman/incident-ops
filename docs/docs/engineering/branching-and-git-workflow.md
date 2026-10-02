@@ -78,15 +78,15 @@ Configured on `main`. The repository lives on GitHub, so the enforcing mechanism
 
 ## Deploys only from `main`
 
-Deploy jobs run only on a push to `main`, and three controls make sure that editing a workflow in a pull request cannot deploy from another branch:
+Deploy jobs run only on a push to `main`. The power workflow, [`power.yml`](https://github.com/marcelo-roman/incident-ops/blob/main/.github/workflows/power.yml), starts and stops the Azure environment on `workflow_dispatch` and powers it down on a daily `schedule`; GitHub runs scheduled workflows on the default branch only, and a manual run on another branch is skipped by its job guard. Three controls make sure that editing a workflow in a pull request cannot deploy or change the power state from another branch:
 
 | Layer | Control |
 |---|---|
-| Workflow | deploy jobs require `github.event_name == 'push' && github.ref == 'refs/heads/main'`; pull requests run build, lint and test only |
-| GitHub environments | `production` and `github-pages` accept deployments from `main` only (deployment branch policy) |
-| Azure | the OIDC federated credentials trust only `environment:production` and `ref:refs/heads/main`; a job from a pull request or any other branch cannot obtain a token, so validation and what-if run on `main` right before the deploy |
+| Workflow | deploy jobs require `github.event_name == 'push' && github.ref == 'refs/heads/main'`; the power job requires `github.ref == 'refs/heads/main'`; pull requests run build, lint and test only |
+| GitHub environments | `production`, `power` and `github-pages` accept deployments from `main` only (deployment branch policy); manual power runs use `production` and its required reviewer, the scheduled power down uses `power`, which has no reviewer so the nightly run does not wait for an approval |
+| Azure | the OIDC federated credentials trust only `environment:production`, `environment:power` and `ref:refs/heads/main`; a job from a pull request or any other branch cannot obtain a token, so validation and what-if run on `main` right before the deploy |
 
-Azure deploy jobs also require the repository variable `DEPLOY_ENABLED=true`. Until the Azure resources and the OIDC bootstrap exist, deploys report as skipped instead of failing; setting the variable enables them without a code change.
+Azure deploy jobs and the power job also require the repository variable `DEPLOY_ENABLED=true`. Until the Azure resources and the OIDC bootstrap exist, deploys report as skipped instead of failing; setting the variable enables them without a code change.
 
 ## Hotfix flow
 

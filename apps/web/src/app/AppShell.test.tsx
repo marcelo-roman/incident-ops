@@ -1,8 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import { server } from '../mocks/node';
+import { getConfig } from '../shared/config/appConfig';
 import { createTestQueryClient } from '../shared/test/render';
 import { AppShell } from './AppShell';
 
@@ -52,5 +55,19 @@ describe('AppShell', () => {
     await user.type(screen.getByLabelText('On shift as'), 'Ana');
 
     expect(window.localStorage.getItem('incident-ops.operator')).toBe('Ana');
+  });
+
+  it('replaces the page with the paused notice while the environment is off', async () => {
+    server.use(http.get(`${getConfig().apiBaseUrl}/health/ready`, () => new HttpResponse(null, { status: 503 })));
+
+    renderShell();
+
+    expect(
+      await screen.findByText('The demo environment is paused. It is started on request for evaluations.', undefined, {
+        timeout: 4000,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Page content')).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
   });
 });

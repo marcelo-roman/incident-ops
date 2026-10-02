@@ -20,8 +20,8 @@ This repository holds every module: three services, the console, the infrastruct
 
 | What | Where |
 |---|---|
-| Documentation site | https://incidents-docs.marceloroman.com.br |
-| Operations console, Incidents API, Insights API | run locally with the [quick start](#quick-start); the Azure deployment is defined in [infra](infra) and runs from `main` |
+| Documentation site | https://incidents-docs.marceloroman.com.br, always on |
+| Operations console, Incidents API, Insights API | the Azure deployment defined in [infra](infra) runs from `main` and is started on request for evaluations with the [power workflow](infra/README.md#power-states); it powers down every night, and while it is off the console shows that the demo environment is paused. Everything also runs locally with the [quick start](#quick-start). |
 
 The API is seeded with seven services, a six-engineer on-call rotation and six months of deterministic incident history, so every view has data on first load.
 
@@ -181,8 +181,9 @@ Trunk-based: `main` changes only through squash-merged pull requests, and pull r
 | [api.yml](.github/workflows/api.yml) | `services/api/**`, `contracts/**` (pull requests), the workflow, the reusable deploy | `dotnet format --verify-no-changes`, build (warnings as errors, analyzers), 204 tests incl. Testcontainers SQL Server and architecture tests, 80% line coverage gate | image to GHCR, `ca-incident-ops-api` |
 | [functions.yml](.github/workflows/functions.yml) | `services/functions/**`, `contracts/**` (pull requests), the workflow | format, build, 186 tests incl. anti-corruption and architecture tests, 80% line and branch coverage | zip to `func-incident-ops` |
 | [insights.yml](.github/workflows/insights.yml) | `services/insights/**`, `contracts/**` (pull requests), the workflow, the reusable deploy | ruff, ruff format, mypy strict, import-linter (7 contracts), 178 tests with 85% coverage floor, image build | image to GHCR, `ca-incident-ops-insights` |
-| [web.yml](.github/workflows/web.yml) | `apps/web/**`, `contracts/**` (pull requests), the workflow | ESLint (incl. architecture boundaries), Prettier, `tsc`, 161 Vitest tests with coverage thresholds, build, image build | image to GHCR, Static Web App |
-| [infra.yml](.github/workflows/infra.yml) | `infra/**`, the workflow | Bicep build, build-params and lint (all rules at error), Logic App JSON, ShellCheck, Azure DevOps YAML parse, validate and what-if | Bicep deployment to `rg-incident-ops` |
+| [web.yml](.github/workflows/web.yml) | `apps/web/**`, `contracts/**` (pull requests), the workflow | ESLint (incl. architecture boundaries), Prettier, `tsc`, 183 Vitest tests with coverage thresholds, build, image build | image to GHCR, Static Web App |
+| [infra.yml](.github/workflows/infra.yml) | `infra/**`, the workflow | Bicep build, build-params and lint for both power states (all rules at error), Logic App JSON, ShellCheck, Azure DevOps YAML parse, validate and what-if | Bicep deployment to `rg-incident-ops` |
+| [power.yml](.github/workflows/power.yml) | manual dispatch (`up`, `down`) and a daily schedule (`down` at 05:00 UTC), `main` only | job guard on `main`, `production` or `power` environment, `KEEP_ON_UNTIL` window for the schedule | Service Bus, SQL database, warm API replica and monitors on or off |
 | [docs.yml](.github/workflows/docs.yml) | `docs/**`, the workflow | `mkdocs build --strict` | GitHub Pages |
 | [platform.yml](.github/workflows/platform.yml) | `docker-compose.yml`, `.env.example`, `local/**`, `scripts/**`, any `*.md`, `.github/**` | `docker compose config`, `promtool check config`, `promtool test rules`, `amtool check-config`, Service Bus JSON, Markdown link check, ShellCheck, actionlint | |
 

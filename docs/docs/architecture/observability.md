@@ -12,7 +12,7 @@ Two telemetry paths with different jobs. Application Insights is the system of i
 | Structured logs | `traces` table with `incidentId`, `eventType`, `decision` | — |
 | Distributed traces | end-to-end transaction view via `operation_Id` | — |
 | Domain metrics (meter `IncidentOps.Api`) | `customMetrics` | `incidentops_incidents_open{severity}`, `incidentops_sla_breached_open`, `incidentops_sla_compliance_30d`, `incidentops_incident_events_total{kind,severity,source}` |
-| Availability | standard test on `/health/ready`, 5 min, 3 regions | `up{job="incident-ops-api"}` |
+| Availability | standard test on `/health/live`, 15 min, 1 location, while the environment is on | `up{job="incident-ops-api"}` |
 | Alerting | Azure Monitor alert rules → Action Group | rules → Alertmanager |
 | Retention | 90 days (Log Analytics) | 15 days (local Prometheus default) |
 

@@ -75,7 +75,7 @@ dependencies
 
 | Dependency failing | Likely cause | Go to |
 |---|---|---|
-| `SQL` with timeouts | serverless database resuming, DTU/vCore cap, blocking query | Mitigation A |
+| `SQL` with timeouts | DTU cap of the Basic database, blocking query | Mitigation A |
 | `Azure Service Bus` | namespace throttling or outage; RBAC change | Mitigation B |
 | `Azure SignalR` | Free tier quota (20 000 messages/day) exhausted | Mitigation C |
 | none, exceptions in app code | bad deploy or configuration change | Mitigation D |
@@ -94,14 +94,14 @@ A new `application_Version` at the start of the errors points at the deploy. Als
 
 ## Mitigation
 
-**A. SQL.** If the database was paused, the first requests fail while it resumes (up to ~60 s); errors stop on their own. If CPU or workers are at cap:
+**A. SQL.** Check whether DTU or workers are at the cap:
 
 ```bash
 az sql db show -g rg-incident-ops -s <server> -n <db> --query "{sku:currentSku, status:status}"
-az monitor metrics list --resource <db-resource-id> --metric cpu_percent workers_percent --interval PT5M
+az monitor metrics list --resource <db-resource-id> --metric dtu_consumption_percent workers_percent --interval PT5M
 ```
 
-Raise max vCores on the serverless database temporarily; open a work item to find the query.
+Scale the database to Standard S0 (10 DTU) temporarily with `az sql db update --service-objective S0`; open a work item to find the query. The next power down and up re-creates it as Basic.
 
 **B. Service Bus.** The API commits the incident and its outbox rows in one transaction, so reads and writes keep working; the outbox dispatcher retries with capped backoff and delivers the events once Service Bus recovers, so escalation timers start late rather than never. Check namespace health and the API's managed identity role assignment (`Azure Service Bus Data Sender`). Pending escalations must be watched manually until fixed ([sla-breach-escalation-not-firing](sla-breach-escalation-not-firing.md)).
 

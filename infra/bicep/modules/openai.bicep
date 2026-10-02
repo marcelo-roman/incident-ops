@@ -22,7 +22,7 @@ param modelVersion string
   'DataZoneStandard'
   'Standard'
 ])
-param deploymentSku string = 'GlobalStandard'
+param deploymentSku string = 'DataZoneStandard'
 
 @description('Throughput in thousands of tokens per minute.')
 @minValue(1)

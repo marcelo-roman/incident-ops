@@ -15,7 +15,7 @@ Window: rolling 28 days. Excludes `/health/*` and requests rejected by rate limi
 | Real-time freshness | `IncidentChanged` sent within 2 s of the commit | 99% |
 | Escalation timeliness | escalations performed within 60 s of `ackDueAt` | 99% |
 
-Why these numbers: the API runs on consumption infrastructure with cold starts and a serverless database that can pause, which costs a few seconds after idle periods. 99.5% leaves room for that while still flagging real regressions. Escalation timeliness is held tighter because it is the safety net for every other service.
+Why these numbers: the API runs on consumption infrastructure with one warm replica and a Basic database capped at 5 DTU, and the demo environment is powered on only for evaluations, so the SLOs are measured while it is on. 99.5% leaves room for scale-out cold starts and DTU saturation under bursts while still flagging real regressions. Escalation timeliness is held tighter because it is the safety net for every other service.
 
 ## Error budget
 

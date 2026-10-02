@@ -28,6 +28,8 @@ A React single-page application and the Operations Console bounded context: it i
 | Declare incident | Validated form; each severity option shows its SLA targets. Opens the new incident on success.                                                                                                                                                                                           |
 | Insights         | KPI tiles, weekly trend chart (incidents, time to acknowledge, time to resolve, SLA compliance) with a table view, KPIs by service, the ten largest recurring incident clusters (expandable to all), volume anomalies and RCA drafts for recently resolved incidents.                    |
 
+The console probes `GET /health/ready` on load and every five minutes. A network error, a timeout or a 502, 503 or 504 replaces the page with a full-width notice that the demo environment is paused and started on request for evaluations; while paused it probes every 30 seconds and shows the page again once the API answers.
+
 Live updates arrive over SignalR (`/hubs/incidents`). `IncidentChanged` patches the cached incident in place and marks lists and metrics stale; `TimelineAppended` appends to the cached timeline without duplicates. The connection reconnects with capped exponential backoff and jitter, and the header shows its state. Dark and light themes follow the system preference unless the operator picks one.
 
 ## Screenshots
@@ -55,6 +57,7 @@ src/
       index.ts            public API
       testing.ts          test factories for other features
     declare-incident/     declaration form, schema and SLA targets per severity
+    environment/          API availability probe and the paused-environment notice
     oncall/               current rotation and escalation levels
     dashboard/            metrics summary and the command overview
     insights/             KPIs, trend, recurring clusters, anomalies
