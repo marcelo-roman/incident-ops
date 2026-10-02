@@ -18,7 +18,7 @@ const statusDescription: Readonly<Record<ConnectionStatus, string>> = {
   disabled: 'Live updates are disabled in mock mode',
 };
 
-export function ConnectionIndicator({ status }: { status: ConnectionStatus }) {
+export function ConnectionIndicator({ status }: Readonly<{ status: ConnectionStatus }>) {
   return (
     <span className={cx(styles.indicator, styles[status])} role="status" title={statusDescription[status]}>
       <span className={styles.dot} aria-hidden="true" />

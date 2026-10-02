@@ -18,7 +18,7 @@ const actionForms: Readonly<Record<PanelAction, (props: IncidentActionFormProps)
   note: (props) => <NoteForm {...props} />,
 };
 
-export function IncidentActions({ incident }: { incident: Incident }) {
+export function IncidentActions({ incident }: Readonly<{ incident: Incident }>) {
   const panel = useIncidentActionPanel(incident.status);
   return (
     <Panel title="Response">

@@ -5,7 +5,7 @@ import { IncidentTableRow } from './IncidentTableRow';
 
 const columns = ['Incident', 'Title', 'Service', 'Severity', 'Status', 'SLA', 'Source', 'Opened', 'Assignee'] as const;
 
-export function IncidentTable({ incidents }: { incidents: Incident[] }) {
+export function IncidentTable({ incidents }: Readonly<{ incidents: Incident[] }>) {
   const serviceName = useServiceName();
   return (
     <div className={styles.scroller}>

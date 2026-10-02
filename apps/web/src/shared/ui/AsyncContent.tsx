@@ -17,9 +17,9 @@ interface AsyncContentProps<T> {
   children: (data: T) => ReactNode;
 }
 
-export function AsyncContent<T>({ query, loadingLabel, children }: AsyncContentProps<T>) {
+export function AsyncContent<T>({ query, loadingLabel, children }: Readonly<AsyncContentProps<T>>) {
   if (query.data !== undefined) {
-    return children(query.data);
+    return <>{children(query.data)}</>;
   }
   if (query.isPending) {
     return (
@@ -38,6 +38,6 @@ export function AsyncContent<T>({ query, loadingLabel, children }: AsyncContentP
   );
 }
 
-export function EmptyState({ children }: { children: ReactNode }) {
+export function EmptyState({ children }: Readonly<{ children: ReactNode }>) {
   return <p className={styles.state}>{children}</p>;
 }

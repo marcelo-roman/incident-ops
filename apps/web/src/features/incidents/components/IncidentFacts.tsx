@@ -3,7 +3,7 @@ import type { Incident } from '../domain/incident';
 import { incidentFacts } from '../domain/incidentFacts';
 import styles from './IncidentFacts.module.css';
 
-export function IncidentFacts({ incident }: { incident: Incident }) {
+export function IncidentFacts({ incident }: Readonly<{ incident: Incident }>) {
   const serviceName = useServiceName();
   return (
     <dl className={styles.facts}>

@@ -11,7 +11,7 @@ interface IncidentTableRowProps {
   serviceName: string;
 }
 
-export function IncidentTableRow({ incident, serviceName }: IncidentTableRowProps) {
+export function IncidentTableRow({ incident, serviceName }: Readonly<IncidentTableRowProps>) {
   const { state } = useSlaClocks(incident);
   const now = useNow();
   return (

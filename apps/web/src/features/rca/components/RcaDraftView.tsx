@@ -4,7 +4,7 @@ import { describeDraftSource } from '../domain/draftSource';
 import type { RcaActionItem, RcaDraft } from '../domain/rcaDraft';
 import styles from './RcaDraft.module.css';
 
-function BulletSection({ title, items }: { title: string; items: string[] }) {
+function BulletSection({ title, items }: Readonly<{ title: string; items: string[] }>) {
   if (items.length === 0) {
     return null;
   }
@@ -20,7 +20,7 @@ function BulletSection({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function ActionItems({ items }: { items: RcaActionItem[] }) {
+function ActionItems({ items }: Readonly<{ items: RcaActionItem[] }>) {
   if (items.length === 0) {
     return null;
   }
@@ -40,7 +40,7 @@ function ActionItems({ items }: { items: RcaActionItem[] }) {
   );
 }
 
-export function RcaDraftView({ draft }: { draft: RcaDraft }) {
+export function RcaDraftView({ draft }: Readonly<{ draft: RcaDraft }>) {
   const source = describeDraftSource(draft.generatedBy);
   return (
     <article className={styles.draft} aria-label="RCA draft">

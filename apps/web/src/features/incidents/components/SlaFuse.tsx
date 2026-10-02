@@ -9,7 +9,7 @@ interface SlaFuseProps {
   size?: 'regular' | 'large';
 }
 
-export function SlaFuse({ clock, size = 'regular' }: SlaFuseProps) {
+export function SlaFuse({ clock, size = 'regular' }: Readonly<SlaFuseProps>) {
   const reading = clockReading(clock);
   return (
     <div

@@ -14,7 +14,7 @@ interface ActionFormProps {
   children: ReactNode;
 }
 
-export function ActionForm(props: ActionFormProps) {
+export function ActionForm(props: Readonly<ActionFormProps>) {
   return (
     <form className={styles.form} aria-label={props.label} noValidate onSubmit={props.onSubmit}>
       {props.children}

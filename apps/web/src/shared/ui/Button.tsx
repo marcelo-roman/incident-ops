@@ -6,7 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'primary' | 'quiet';
 }
 
-export function Button({ variant = 'default', className, type = 'button', ...props }: ButtonProps) {
+export function Button({ variant = 'default', className, type = 'button', ...props }: Readonly<ButtonProps>) {
   return (
     <button
       type={type}

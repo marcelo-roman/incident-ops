@@ -7,7 +7,7 @@ interface WindowPickerProps {
   onChange: (days: InsightWindow) => void;
 }
 
-export function WindowPicker({ value, onChange }: WindowPickerProps) {
+export function WindowPicker({ value, onChange }: Readonly<WindowPickerProps>) {
   return (
     <div className={styles.windows} role="group" aria-label="Analysis window">
       {insightWindows.map((days) => (

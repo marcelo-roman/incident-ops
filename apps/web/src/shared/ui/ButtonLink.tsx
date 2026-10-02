@@ -6,6 +6,6 @@ interface ButtonLinkProps extends LinkProps {
   variant?: 'default' | 'primary';
 }
 
-export function ButtonLink({ variant = 'default', className, ...props }: ButtonLinkProps) {
+export function ButtonLink({ variant = 'default', className, ...props }: Readonly<ButtonLinkProps>) {
   return <Link className={cx(styles.button, variant === 'primary' && styles.primary, className)} {...props} />;
 }

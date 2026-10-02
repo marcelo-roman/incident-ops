@@ -3,7 +3,7 @@ import { useResolveForm } from '../../hooks/useIncidentActionForms';
 import { ActionForm } from './ActionForm';
 import type { IncidentActionFormProps } from './actionProps';
 
-export function ResolveForm({ incidentId, onDone, onCancel }: IncidentActionFormProps) {
+export function ResolveForm({ incidentId, onDone, onCancel }: Readonly<IncidentActionFormProps>) {
   const form = useResolveForm(incidentId, onDone);
   return (
     <ActionForm

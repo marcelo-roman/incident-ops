@@ -11,7 +11,7 @@ interface RcaDraftPanelProps {
   showGuidance?: boolean;
 }
 
-export function RcaDraftPanel({ incidentId, showGuidance = true }: RcaDraftPanelProps) {
+export function RcaDraftPanel({ incidentId, showGuidance = true }: Readonly<RcaDraftPanelProps>) {
   const mutation = useRcaDraft();
   return (
     <div>

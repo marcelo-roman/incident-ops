@@ -11,7 +11,7 @@ import {
 import { cx } from '../../../shared/lib/cx';
 import styles from './OpenIncidentsBoard.module.css';
 
-export function OpenIncidentRow({ incident }: { incident: Incident }) {
+export function OpenIncidentRow({ incident }: Readonly<{ incident: Incident }>) {
   const clocks = useSlaClocks(incident);
   const serviceName = useServiceName();
   return (

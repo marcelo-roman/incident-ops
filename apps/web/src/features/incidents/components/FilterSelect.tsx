@@ -13,7 +13,7 @@ interface FilterSelectProps {
   onChange: (value: string) => void;
 }
 
-export function FilterSelect({ label, anyLabel, value, options, onChange }: FilterSelectProps) {
+export function FilterSelect({ label, anyLabel, value, options, onChange }: Readonly<FilterSelectProps>) {
   return (
     <SelectField
       label={label}

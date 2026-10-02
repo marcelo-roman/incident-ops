@@ -13,7 +13,7 @@ interface ThemeSwitcherProps {
   onChange: (preference: ThemePreference) => void;
 }
 
-export function ThemeSwitcher({ value, onChange }: ThemeSwitcherProps) {
+export function ThemeSwitcher({ value, onChange }: Readonly<ThemeSwitcherProps>) {
   const group = useThemeRadioGroup(value, onChange);
   return (
     <div className={styles.group} role="radiogroup" aria-label="Theme" onKeyDown={group.onKeyDown}>
