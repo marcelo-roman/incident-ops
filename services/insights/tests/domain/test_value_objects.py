@@ -44,7 +44,7 @@ def test_service_id_rejects_non_slugs(value: str) -> None:
 
 def test_service_ids_compare_by_value() -> None:
     assert ServiceId("search") == ServiceId("search")
-    assert sorted([ServiceId("search"), ServiceId("checkout")])[0] == ServiceId("checkout")
+    assert min([ServiceId("search"), ServiceId("checkout")]) == ServiceId("checkout")
 
 
 def test_percentage_share_and_fraction_round_to_one_decimal() -> None:

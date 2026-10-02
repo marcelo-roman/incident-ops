@@ -21,10 +21,10 @@ class InMemoryIncidentSource:
 
 
 class UnavailableIncidentSource:
-    def export(self, window: ReportingWindow) -> IncidentHistory:
+    def export(self, _window: ReportingWindow) -> IncidentHistory:
         raise IncidentSourceError("Incidents API is unreachable")
 
-    def get(self, incident_id: UUID) -> IncidentRecord | None:
+    def get(self, _incident_id: UUID) -> IncidentRecord | None:
         raise IncidentSourceError("Incidents API is unreachable")
 
 
@@ -47,5 +47,5 @@ class FailingRcaDrafter:
     def name(self) -> str:
         return "failing"
 
-    def draft(self, incident: IncidentRecord) -> RcaDraft:
+    def draft(self, _incident: IncidentRecord) -> RcaDraft:
         raise RcaDraftError("model unavailable")

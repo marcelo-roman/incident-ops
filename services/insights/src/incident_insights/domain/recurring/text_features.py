@@ -15,7 +15,8 @@ MIN_DOCUMENTS = 3
 SEMANTIC_DIMENSIONS = 100
 MIN_SEMANTIC_DIMENSIONS = 2
 DENSE_DOCUMENT_THRESHOLD = 20
-WORD_TOKEN = r"(?u)\b[^\W\d_][\w-]+\b"
+MIN_DISTINCT_CLUSTERS = 2
+WORD_PATTERN = r"(?u)\b[^\W\d_][\w-]+\b"
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,7 @@ def _vectorizer(documents: int) -> TfidfVectorizer:
         frequent_term_cutoff = 0.5
     return TfidfVectorizer(
         stop_words="english",
-        token_pattern=WORD_TOKEN,
+        token_pattern=WORD_PATTERN,
         ngram_range=(1, 2),
         min_df=min(2, documents),
         max_df=frequent_term_cutoff,
@@ -97,7 +98,7 @@ def _cluster(embedding: np.ndarray, k: int, options: ClusteringOptions) -> Clust
         warnings.simplefilter("ignore", ConvergenceWarning)
         labels = np.asarray(model.fit_predict(embedding))
     distinct = len(np.unique(labels))
-    if distinct < 2 or distinct >= embedding.shape[0]:
+    if distinct < MIN_DISTINCT_CLUSTERS or distinct >= embedding.shape[0]:
         return None
     score = float(silhouette_score(embedding, labels, metric="cosine"))
     return Clustering(labels=labels, clusters=k, silhouette=score)

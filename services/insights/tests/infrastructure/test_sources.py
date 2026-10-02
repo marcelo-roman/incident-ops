@@ -24,12 +24,12 @@ TRANSLATOR = IncidentTranslator()
 
 def _api(handler: httpx.MockTransport) -> ApiIncidentSource:
     client = httpx.Client(base_url="https://incidents.test", transport=handler)
-    getter = RetryingGetter(client, RetryPolicy(), sleep=lambda delay: None)
+    getter = RetryingGetter(client, RetryPolicy(), sleep=lambda _delay: None)
     return ApiIncidentSource(getter, TRANSLATOR)
 
 
 def _json(payload: object, status: int = 200) -> httpx.MockTransport:
-    return httpx.MockTransport(lambda request: httpx.Response(status, json=payload))
+    return httpx.MockTransport(lambda _request: httpx.Response(status, json=payload))
 
 
 def test_api_export_sends_window_and_translates_records() -> None:
