@@ -19,12 +19,10 @@ This repository holds every module: three services, the console, the infrastruct
 
 ## Live
 
-| What | URL |
+| What | Where |
 |---|---|
-| Operations console | https://incidents.marceloroman.com.br |
-| Incidents API (Swagger) | https://incidents-api.marceloroman.com.br/swagger |
-| Insights API (OpenAPI) | https://incidents-insights.marceloroman.com.br/docs |
-| Documentation | https://incidents-docs.marceloroman.com.br |
+| Documentation site | https://marcelo-roman.github.io/incident-ops/ |
+| Operations console, Incidents API, Insights API | run locally with the [quick start](#quick-start); the Azure deployment is defined in [infra](infra) and runs from `main` |
 
 The API is seeded with seven services, a six-engineer on-call rotation and six months of deterministic incident history, so every view has data on first load.
 
@@ -84,7 +82,7 @@ flowchart LR
     insights -.-> appi
 ```
 
-Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA escalation loop, alert ingestion, SignalR, delivery pipeline, Azure topology) are on the [documentation site](https://incidents-docs.marceloroman.com.br/architecture/) and in [docs/docs/architecture](docs/docs/architecture).
+Diagrams for each flow (C4 context and containers, lifecycle state machine, SLA escalation loop, alert ingestion, SignalR, delivery pipeline, Azure topology) are on the [documentation site](https://marcelo-roman.github.io/incident-ops/architecture/) and in [docs/docs/architecture](docs/docs/architecture).
 
 ## Requirement → evidence
 
@@ -178,7 +176,7 @@ Takes about 15 minutes with the default 420 s fault: the alert needs its `for` d
 
 ## Continuous integration and delivery
 
-One workflow per module, each filtered to its own paths, so a change runs only the checks it can affect. Deploy jobs run on `main` behind the `production` environment, authenticate to Azure with OpenID Connect (no stored Azure secret), and container apps ship through the local reusable [deploy-container-app.yml](.github/workflows/deploy-container-app.yml) (new revision, smoke test, rollback). Azure DevOps equivalents live in [infra/azure-devops](infra/azure-devops) as samples.
+Trunk-based: `main` changes only through squash-merged pull requests, and pull requests run build, lint and tests. One workflow per module, each filtered to its own paths, so a change runs only the checks it can affect. Deploy jobs run only on pushes to `main`, behind the `production` environment (which accepts `main` only) and the `DEPLOY_ENABLED` repository variable, authenticate to Azure with OpenID Connect (no stored Azure secret), and container apps ship through the local reusable [deploy-container-app.yml](.github/workflows/deploy-container-app.yml) (new revision, smoke test, rollback). Azure DevOps equivalents live in [infra/azure-devops](infra/azure-devops) as samples.
 
 | Workflow | Runs on changes to | Gates | Delivers |
 |---|---|---|---|
