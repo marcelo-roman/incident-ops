@@ -14,6 +14,9 @@ metadata description = 'Incident Ops platform: telemetry, data, messaging, compu
 @description('Azure region for every regional resource.')
 param location string = resourceGroup().location
 
+@description('Azure region for the Azure SQL server and database; Azure SQL provisioning is restricted per region and subscription.')
+param sqlLocation string = 'centralus'
+
 @description('Workload name used to derive resource names.')
 @minLength(3)
 @maxLength(16)
@@ -130,7 +133,7 @@ module monitoring 'modules/monitoring.bicep' = {
 module sql 'modules/sql.bicep' = {
   name: 'sql'
   params: {
-    location: location
+    location: sqlLocation
     tags: tags
     serverName: names.sqlServer
     databaseName: names.sqlDatabase
